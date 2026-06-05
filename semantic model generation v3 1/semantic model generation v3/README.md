@@ -40,24 +40,46 @@ Automated agentic pipeline that converts any Tableau workbook (`.twb`/`.twbx`) i
 ## Workspace Structure
 
 ```
-├── .github/agents/              # 20 pipeline agent definitions
-├── .github/skills/              # 6 agent skill references
-├── .specify/memory/
-│   ├── constitution.md          # Universal model migration rules (shared)
-│   ├── report-constitution.md   # Universal report visual rules (shared)
-│   └── {WorkbookName}/          # Per-workbook artifacts (analysis, DAX, schema, visuals)
-├── Data/
+├── .github/
+│   ├── agents/                  # 20 pipeline agent definitions (.agent.md)
+│   ├── skills/                  # 6 agent skill references
+│   ├── prompts/                 # Reusable prompt assets
+│   ├── scripts/                 # Pipeline helper scripts
+│   └── copilot-instructions.md  # Pipeline orchestration instructions
+├── .specify/
+│   ├── memory/
+│   │   ├── constitution.md          # Universal model migration rules (shared)
+│   │   ├── report-constitution.md   # Universal report visual rules (shared)
+│   │   ├── SalesCustomerDashboards/ # Per-workbook artifacts (analysis, DAX, schema, visuals)
+│   │   ├── NetflixAnalysis/
+│   │   ├── LoanPortfolioAnalysis/
+│   │   └── Q3DealerBuyingEvent/
+│   ├── scripts/                 # speckit feature/branch scripts
+│   ├── templates/               # spec / plan / tasks templates
+│   ├── workflows/               # Pipeline workflow definitions
+│   ├── integrations/            # Integration configs
+│   └── feature.json             # Active feature path resolver
+├── .vscode/                     # Workspace settings
+├── Data/                        # INPUT — .twb + data files per workbook
 │   ├── Sales and Customer/      # .twb + CSVs
 │   ├── Netflix/                 # .twb + CSV
 │   ├── Loan/                    # .twb + CSVs
-│   └── Q3 Buyer/               # .twb + CSV
-├── Output/
-│   ├── SalesCustomerDashboards/ # Generated .pbip + Report + SemanticModel
+│   └── Q3 Buyer/                # .twb + CSV
+├── Output/                      # OUTPUT — generated .pbip (Report + SemanticModel)
+│   ├── SalesCustomerDashboards/
 │   ├── NetflixAnalysis/
 │   ├── LoanPortfolioAnalysis/
 │   └── Q3DealerBuyingEvent/
 ├── plugins/                     # Validation tools + supplementary skills
+│   ├── pbip/                    # TMDL/PBIR validators + format skills
+│   ├── reports/                 # Report design & visual skills
+│   └── semantic-models/         # DAX, Power Query, naming, review skills
 ├── specs/                       # Feature specifications per workbook
+│   ├── 001-sales-customer-pbi/
+│   ├── 004-q3-dealer-buying-event-pbi/
+│   ├── 005-loan-portfolio-pbi/
+│   └── 006-netflix-pbi/
+├── .gitignore
 └── README.md
 ```
 
@@ -136,3 +158,7 @@ Check report design for Output/NetflixAnalysis/NetflixAnalysis.Report/
 - **Constitutions are universal** — `constitution.md` and `report-constitution.md` are shared rulebooks, never overwritten per workbook
 - **Memory is workbook-scoped** — each workbook's design artifacts live in `.specify/memory/{WorkbookName}/`
 - All agents are in `.github/agents/`, skills in `.github/skills/`
+
+
+## Quick commands
+- Analyze the {Tableau workbook name} tableau report and migrate using the pipeline make sure it follows all steps carefully.

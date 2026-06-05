@@ -1,43 +1,45 @@
-# Implementation Plan: Sales & Customer Dashboards — Tableau → Power BI Migration
+# Implementation Plan: Sales & Customer Dashboards — Tableau to Power BI Migration
 
-**Branch**: `007-sales-customer-pbi` | **Date**: 2026-06-04 | **Spec**: [spec.md](specs/001-sales-customer-pbi/spec.md)
+**Branch**: `001-sales-customer-pbi` | **Date**: 2026-06-05 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `specs/001-sales-customer-pbi/spec.md`
 
 ## Summary
 
-Migrate the "Sales & Customer Dashboards" Tableau workbook (4 CSV sources, 28+ calculated fields, 2 dashboards) to a complete Power BI PBIP project. The semantic model uses a star schema (FactOrders + 4 dimensions + 1 parameter table), 39 DAX measures across 8 display folders, and 5 relationships. The report layer produces 2 pages (Sales Dashboard, Customer Dashboard) with KPI line charts, bar charts, tables, slicers, and navigation buttons.
+Migrate the Tableau **Sales & Customer Dashboards** workbook into a complete Power BI Project (`.pbip`) — semantic model (TMDL) plus report (PBIR). The source is a 4-table, semicolon-delimited, en_DE-locale CSV datasource (Orders + Customers + Location + Products). The migration builds an Import-mode star schema (`Orders` fact + 3 dimensions), a DAX-generated `DimDate`, and a disconnected `Select Year` parameter table that is the sole authority for Current Year / Prior Year. It implements **36 explicit DAX measures** (CY/PY pairs, % Diff, KPI window analogs, Min/Max, LOD analogs, base helpers) and reproduces the two 1200×800 dashboards (Sales Dashboard + Customer Dashboard) as PBIR report pages with their KPI trend charts, Subcategory Comparison, Weekly Trends, Customer Distribution, Top Customers, legends, the Select Year slicer, and Category/Sub-Category/Region/State/City filters. The three unused `Test*` worksheets are excluded. All artifacts land in `Output/SalesCustomerDashboards/` and are gated by the PBIP/TMDL validators.
 
 ## Technical Context
 
-**Language/Version**: Power BI PBIP format (TMDL + PBIR JSON), M query (Power Query), DAX  
-**Primary Dependencies**: Power BI Desktop (June 2024+), TMDL format, PBIR enhanced report format  
-**Storage**: CSV files (semicolon-delimited, German locale en_DE, UTF-8/Windows-1252 encoding)  
-**Testing**: `tmdl-validate` (structural TMDL linter), `validate_pbip.py` (cross-cutting PBIP validator), Power BI Desktop open test  
-**Target Platform**: Power BI Desktop / Power BI Service (Import mode)  
-**Project Type**: Power BI semantic model + report (PBIP project)  
-**Performance Goals**: All tables <100K rows; Import mode; sub-second measure evaluation  
-**Constraints**: No DirectQuery, no composite models, no incremental refresh needed  
-**Scale/Scope**: ~10K order rows, 793 customers, 1862 products, 631 locations; 2 report pages, 39 measures
+**Language/Version**: Power BI Project (PBIP) — TMDL (Tabular Model Definition Language) for the model, PBIR (enhanced report folder format) JSON for the report; Power Query M for ingestion; DAX for measures and the date/parameter tables
+**Primary Dependencies**: Power BI Desktop (June 2024+ with PBIP/TMDL/PBIR preview enabled); `Csv.Document` connector; VertiPaq (Import storage)
+**Storage**: Import mode (in-memory VertiPaq) over 4 local CSV files in `Data/Sales and Customer/`
+**Testing**: `plugins/pbip/hooks/bin/tmdl-validate-windows-x64.exe` (TMDL structural lint) + `plugins/pbip/skills/pbip/scripts/validate_pbip.py` (cross-cutting PBIP/PBIR validation); manual open-in-Desktop smoke test per `quickstart.md`
+**Target Platform**: Power BI Desktop / Power BI Service (Import semantic model + interactive report)
+**Project Type**: Single deliverable — PBIP project (semantic model + report) under `Output/SalesCustomerDashboards/`
+**Performance Goals**: Model loads without schema/relationship errors; ~10k Orders rows + small dimensions → sub-second visual evaluation; single-direction relationships for query efficiency
+**Constraints**: en_DE decimal parsing (`,` decimal / `.` thousands) via the `"de-DE"` culture argument of `Table.TransformColumnTypes`; encodings 65001 (Orders, Location) and 1252 (Customers, Products); no measure inside a `CALCULATE` boolean filter; PBIR `visual.json` root limited to `$schema`/`name`/`position`/`visual`; `report.json` must use the minimal enhanced template (no `sections`, `modelExtensions`, `publicCustomVisuals`)
+**Scale/Scope**: 6 tables, 4 active relationships (+1 optional inactive Ship Date), 36 measures, 2 report pages (12 dashboard-used worksheets), 0 unused worksheets carried over
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-| # | Rule | Status | Evidence |
-|---|------|--------|----------|
-| §0 | Single-Table Rule — DO NOT decompose single flat file | ✅ PASS | Multiple source tables (4 CSVs with explicit joins) → star schema decomposition is correct |
-| §1 | Star Schema — fact/dim decomposition for multi-table | ✅ PASS | FactOrders + DimCustomer + DimLocation + DimProduct + DimDate + SelectYear |
-| §2 | Naming Conventions — Fact/Dim prefix, PascalCase | ✅ PASS | FactOrders, DimCustomer, DimLocation, DimProduct, DimDate, SelectYear |
-| §3 | DAX Standards — DIVIDE(), VAR/RETURN, display folders | ✅ PASS | All 39 measures use DIVIDE(), VAR/RETURN pattern, 8 display folders |
-| §4 | Relationships — many-to-one, single direction, no circular | ✅ PASS | 5 relationships (4 active + 1 inactive), all single-direction dim→fact |
-| §5 | M Query — QuoteStyle.Csv, independent loads, no cross-refs | ✅ PASS | Each table loads independently from CSV; QuoteStyle.Csv + Delimiter=";" |
-| §6 | Performance — Import mode, natural text keys for small model | ✅ PASS | <100K rows, text natural keys acceptable |
-| §7 | Parameters — disconnected DATATABLE for integer list | ✅ PASS | SelectYear as DATATABLE with Year values + SELECTEDVALUE |
-| §8 | PBIP Output Structure — correct folder layout | ✅ PASS | Standard .pbip/.SemanticModel/.Report structure |
-| §9 | Report Visual Rules — no grey space, borders, alt text | 🔲 PENDING | Will verify during Phase 3 report generation |
-| §10 | Validation Checklist — all items checked | 🔲 PENDING | Will run validators after generation |
+Evaluated against `.specify/memory/constitution.md`:
 
-**Gate Result**: ✅ PASS — All applicable rules satisfied. Proceeding to Phase 0.
+| Constitution Rule | Plan Compliance | Status |
+|---|---|---|
+| §0 Single-Table Rule | Source has **4 joined tables** → star-schema decomposition is correct (not single-table) | PASS |
+| §1 Star Schema (multi-table) | `Orders` fact + `Customers`/`Location`/`Products` dims; natural keys (Customer ID, Postal Code, Product ID); `DimDate` generated; no snowflaking | PASS |
+| §2 Naming Conventions | Unprefixed source tables (`Orders`, `Customers`, `Location`, `Products`) per spec FR-002/003 + DAX refs; `DimDate`, `Select Year` descriptive; columns keep source names; measures Title Case | PASS |
+| §3 DAX Standards | Measures over calc columns; VAR/RETURN; `DIVIDE()` everywhere; SELECTEDVALUE for parameter; ALLSELECTED/AVERAGEX-MAXX-MINX for WINDOW; ALLEXCEPT/REMOVEFILTERS for LOD; display folders + format strings | PASS |
+| §4 Relationships | All 1:many, single direction Dim→Fact; one active date path (Order Date), Ship Date inactive (USERELATIONSHIP on demand); no bidirectional | PASS |
+| §5 M Query | `Csv.Document` + `QuoteStyle.Csv` + `Delimiter=";"` + explicit encodings; each table loads independently (no cross-query joins); `"de-DE"` culture typing | PASS |
+| §6 Performance | Import mode; minimal calc columns (date attrs in DAX table only); single-direction filters | PASS |
+| §7 Parameter Migration | `Select Year` integer list → disconnected `DATATABLE` + `SELECTEDVALUE` | PASS |
+| §8 PBIP Output Structure | Standard `.pbip` + `.SemanticModel/` (TMDL) + `.Report/` (PBIR); minimal `report.json` template | PASS |
+| §9 Report Visual Layer | 25px edge / 20px gap, borders, titles, alt text, professional theme; no grey gaps/overlaps | PASS |
+| §10 Validation Checklist | tmdl-validate + validate_pbip.py gates at model, report, and end-to-end stages | PASS |
+
+**Gate result**: PASS — no violations; Complexity Tracking not required.
 
 ## Project Structure
 
@@ -45,15 +47,18 @@ Migrate the "Sales & Customer Dashboards" Tableau workbook (4 CSV sources, 28+ c
 
 ```text
 specs/001-sales-customer-pbi/
-├── plan.md              # This file
-├── research.md          # Phase 0 — M query patterns, TMDL syntax research
-├── data-model.md        # Phase 1 — Entity model with fields and relationships
-├── quickstart.md        # Phase 1 — How to open and validate the output
-├── contracts/           # Phase 1 — PBIP file contracts (TMDL schema)
-└── tasks.md             # Phase 2 — Implementation tasks (generated by /speckit.tasks)
+├── plan.md              # This file (/speckit.plan output)
+├── research.md          # Phase 0 — technical decisions
+├── data-model.md        # Phase 1 — tables, columns, relationships, measures
+├── quickstart.md        # Phase 1 — open + validate walkthrough
+├── contracts/
+│   └── pbip-contracts.md # Phase 1 — PBIP/TMDL/PBIR structural contracts
+├── spec.md              # Feature specification (input)
+├── tasks.md             # /speckit.tasks output (separate command)
+└── checklists/          # Quality checklists
 ```
 
-### Source Code (Output artifacts)
+### Source Code (repository root)
 
 ```text
 Output/SalesCustomerDashboards/
@@ -65,174 +70,88 @@ Output/SalesCustomerDashboards/
 │       ├── database.tmdl
 │       ├── model.tmdl
 │       ├── relationships.tmdl
+│       ├── expressions.tmdl          # (optional) shared M / culture expressions
 │       └── tables/
-│           ├── FactOrders.tmdl
-│           ├── DimCustomer.tmdl
-│           ├── DimLocation.tmdl
-│           ├── DimProduct.tmdl
-│           ├── DimDate.tmdl
-│           └── SelectYear.tmdl
+│           ├── Orders.tmdl           # fact (M partition, hidden FKs, measure cols)
+│           ├── Customers.tmdl        # dim
+│           ├── Location.tmdl         # dim (geo data categories)
+│           ├── Products.tmdl         # dim
+│           ├── DimDate.tmdl          # DAX CALENDAR calculated table, marked as date table
+│           └── Select Year.tmdl      # disconnected DATATABLE parameter
 └── SalesCustomerDashboards.Report/
     ├── definition.pbir
     └── definition/
-        ├── report.json
+        ├── report.json               # minimal enhanced template
         ├── version.json
         └── pages/
             ├── pages.json
-            ├── SalesDashboard/
+            ├── SalesDashboard/        # page name ^[\w-]+$
             │   ├── page.json
-            │   └── visuals/
-            │       └── {visual_name}/visual.json
+            │   └── visuals/{visual}/visual.json
             └── CustomerDashboard/
                 ├── page.json
-                └── visuals/
-                    └── {visual_name}/visual.json
+                └── visuals/{visual}/visual.json
 ```
 
-**Structure Decision**: Standard PBIP folder structure per constitution §8. Output to `Output/SalesCustomerDashboards/`. Source data remains in `Data/Sales and Customer/`.
+**Structure Decision**: Single PBIP deliverable. The 36 measures are authored on the `Orders` fact table (base/CY/PY/% Diff/KPI/LOD); `DimDate` and `Select Year` are model-generated tables (DAX). Report pages are PBIR enhanced-format folders, one per dashboard, with `pages.json` naming the active page. Input CSVs stay in `Data/Sales and Customer/`; nothing is copied into `Output/`.
+
+## Build Sequence
+
+The migration executes strictly model-first, then report, with validation gates between stages:
+
+1. **Model scaffolding** — `database.tmdl`, `model.tmdl` (culture, default measure table), `definition.pbism`, `diagramLayout.json`.
+2. **Source tables** — `Orders.tmdl` (M partition, en_DE typing, hide `Row ID`/`Customer ID`/`Postal Code`/`Product ID`), `Customers.tmdl`, `Location.tmdl` (geo data categories: City→City, State→StateOrProvince, Country/Region→Country, Postal Code→PostalCode; **Region = no geo category**), `Products.tmdl`.
+3. **Generated tables** — `DimDate.tmdl` (DAX `CALENDAR` over full calendar years of Order Date; columns Date/Year/Quarter/Month/MonthName/Day/DayOfWeek/WeekNum; MonthName Sort-By Month; mark as date table) and `Select Year.tmdl` (disconnected `DATATABLE` 2020–2023, default 2023).
+4. **Measures** — 36 measures from [dax-measures-output.md](../../.specify/memory/SalesCustomerDashboards/dax-measures-output.md) with display folders + format strings (K-scaling `\$#,##0,"K"`, ▲/▼ `▲ 0.0%;▼ -0.0%`).
+5. **Relationships** — `relationships.tmdl`: 4 active (Customers/Location/Products/DimDate→Orders, 1:many single-direction) + 1 optional inactive `DimDate[Date]→Orders[Ship Date]`.
+6. **Model validation (GATE)** — run `tmdl-validate` on the `definition` folder + `validate_pbip.py` on the project; fix all errors before proceeding.
+7. **Report scaffolding** — `definition.pbir` (byPath dataset reference), `report.json` (minimal enhanced template), `version.json`, `pages.json`.
+8. **Report pages** — `SalesDashboard` and `CustomerDashboard` page folders (1200×800) with their visuals (below), Select Year slicer, and Category/Sub-Category/Region/State/City filters; exclude `Test KPI`, `Test KPI2`, `Test Max Min`.
+9. **Final validation (GATE)** — JSON syntax check on `.Report/`, `tmdl-validate` re-run, and `validate_pbip.py` on the project root; fix any errors, then smoke-test per `quickstart.md`.
+
+### Report Page Inventory
+
+| Page (1200×800) | Visuals | Shared controls |
+|---|---|---|
+| **Sales Dashboard** | Legend KPI; KPI Sales / KPI Profit / KPI Quantity (line + circle marker, Month axis, Min/Max markers); Legend Subcategory; Subcategory Comparison (clustered bar, Sub-Category × CY/PY Sales + KPI CY Less PY ⬤); Weekly Trends (line, Week axis, CY/PY + KPI Avg flags) | Select Year slicer; Category / Sub-Category / Region / State / City filters; 2 page-nav buttons + 1 filter-toggle button |
+| **Customer Dashboard** | Legend KPI; KPI Customers / KPI Sales Per Customers / KPI Orders (line + circle marker, Month axis); Customer Distribution (clustered column, Nr of Orders per Customers × distinct customers); Top Customers (table: Customer Name, CY Sales, CY Orders, last Order Date) | Same shared controls |
 
 ## Complexity Tracking
 
-> No constitution violations — no justification needed.
+> No constitution violations — section intentionally empty.
 
----
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| _(none)_ | — | — |
 
-## Phase 0: Research (Complete)
+## Phase 0 — Outline & Research
 
-**Output**: [research.md](specs/001-sales-customer-pbi/research.md)
+All open questions from the spec were resolved in the 2026-06-05 clarification pass and captured in [research.md](research.md). Key decisions:
 
-All technical unknowns resolved:
-- M query CSV pattern with German locale (semicolon delimiter, per-file encoding, culture in type conversion)
-- TMDL relationship syntax (camelCase properties, oneDirection, single file)
-- DimDate generation (fixed range, List.Dates, no cross-query references)
-- SelectYear DAX DATATABLE pattern
-- Navigation buttons (actionButton + PageNavigation)
-- Cross-filter actions (native Power BI behavior, no config)
+- **en_DE CSV parsing** → `Csv.Document` with `Delimiter=";"`, `QuoteStyle.Csv`, encodings 65001/1252, and `"de-DE"` culture typing.
+- **CY/PY authority** → disconnected `Select Year` + `SELECTEDVALUE`; `DimDate` only supplies trend axes.
+- **WINDOW_AVG/MAX/MIN** → `AVERAGEX`/`MAXX`/`MINX` over `ALLSELECTED(<axis>)` (week axis for KPI Avg, month axis for Min/Max).
+- **LOD FIXED** → `CALCULATE` + `ALLEXCEPT` (CY-scoped order count) and `CALCULATE` + `REMOVEFILTERS` (grand-total CY Sales).
+- **Divide-by-zero** → `DIVIDE()` with no fallback → BLANK().
+- **Geo data categories** → applied per spec; Region intentionally uncategorized.
 
----
+**Output**: research.md (all NEEDS CLARIFICATION resolved).
 
-## Phase 1: Design (Complete)
+## Phase 1 — Design & Contracts
 
-**Outputs**:
-- [data-model.md](specs/001-sales-customer-pbi/data-model.md) — 6 tables, 5 relationships, 39 measures
-- [contracts/pbip-contracts.md](specs/001-sales-customer-pbi/contracts/pbip-contracts.md) — PBIP file schemas
-- [quickstart.md](specs/001-sales-customer-pbi/quickstart.md) — Validation steps
+1. **Entities → [data-model.md](data-model.md)**: 6 tables (Orders fact; Customers/Location/Products dims; DimDate; Select Year), column types/roles, hidden FKs, geo categories, 4+1 relationships, and the 36-measure catalog with format strings and display folders.
+2. **Contracts → [contracts/pbip-contracts.md](contracts/pbip-contracts.md)**: PBIP folder contract, TMDL property-order/quoting rules, PBIR `visual.json`/`page.json`/`report.json` required-field and forbidden-property contracts, and validator exit-code expectations.
+3. **Agent context update**: point the plan reference between the `<!-- SPECKIT START -->` / `<!-- SPECKIT END -->` markers in `.github/copilot-instructions.md` to `specs/001-sales-customer-pbi/plan.md`.
 
-### Constitution Re-Check (Post-Design)
+**Output**: data-model.md, contracts/pbip-contracts.md, quickstart.md, updated agent context file.
 
-| # | Rule | Status |
-|---|------|--------|
-| §0 | Single-Table Rule | ✅ PASS — 4 source tables → decomposition correct |
-| §1 | Star Schema | ✅ PASS — FactOrders central, 4 dims, natural keys |
-| §2 | Naming | ✅ PASS — FactOrders, DimCustomer, DimLocation, DimProduct, DimDate |
-| §3 | DAX Standards | ✅ PASS — DIVIDE(), VAR/RETURN, display folders, no implicit measures |
-| §4 | Relationships | ✅ PASS — 5 many-to-one, single direction, 1 inactive, no circular |
-| §5 | M Query | ✅ PASS — QuoteStyle.Csv, independent loads, absolute paths, culture |
-| §6 | Performance | ✅ PASS — Import mode, text keys appropriate for <100K rows |
-| §7 | Parameters | ✅ PASS — SelectYear as disconnected DATATABLE |
-| §8 | PBIP Structure | ✅ PASS — All required files in correct locations |
+## Validation Strategy
 
----
+| Stage | Command | Pass criterion |
+|---|---|---|
+| Model (TMDL) | `& "plugins\pbip\hooks\bin\tmdl-validate-windows-x64.exe" "Output\SalesCustomerDashboards\SalesCustomerDashboards.SemanticModel\definition"` | No syntax/structural errors |
+| Project (PBIP) | `python "plugins\pbip\skills\pbip\scripts\validate_pbip.py" "Output\SalesCustomerDashboards"` | Exit code 0 (no errors) |
+| Report JSON | `Get-ChildItem "Output\SalesCustomerDashboards\SalesCustomerDashboards.Report" -Recurse -Include "*.json","*.pbir" \| % { Get-Content $_.FullName -Raw \| ConvertFrom-Json \| Out-Null }` | All JSON parses |
+| End-to-end | `validate_pbip.py` on project root | Exit code 0 |
 
-## Phase 2: Semantic Model Implementation
-
-**Goal**: Generate all TMDL files for the semantic model.
-
-| Task | File | Description |
-|------|------|-------------|
-| 2.1 | `SalesCustomerDashboards.pbip` | Root project file |
-| 2.2 | `definition.pbism` | Semantic model definition pointer |
-| 2.3 | `database.tmdl` | Database metadata (compatibilityLevel 1604) |
-| 2.4 | `model.tmdl` | Model config (culture, annotations, query order) |
-| 2.5 | `tables/FactOrders.tmdl` | Fact table: M query + 13 columns + 35 measures |
-| 2.6 | `tables/DimCustomer.tmdl` | Dimension: M query + 2 columns |
-| 2.7 | `tables/DimLocation.tmdl` | Dimension: M query + 5 columns + data categories + hierarchy |
-| 2.8 | `tables/DimProduct.tmdl` | Dimension: M query + 4 columns + hierarchy |
-| 2.9 | `tables/DimDate.tmdl` | Generated: M query (List.Dates) + 12 columns + hierarchy + markAsDateTable |
-| 2.10 | `tables/SelectYear.tmdl` | DAX DATATABLE + 1 column + 2 measures (Current Year, Previous Year) |
-| 2.11 | `relationships.tmdl` | 5 relationship definitions |
-| 2.12 | `diagramLayout.json` | Visual layout for model diagram |
-| 2.13 | Validation | Run `tmdl-validate` + `validate_pbip.py` → fix any errors |
-
-### Key Implementation Details
-
-**M Query Template (CSV tables)**:
-```m
-let
-    Source = Csv.Document(
-        File.Contents("<absolute_path>"),
-        [Delimiter = ";", QuoteStyle = QuoteStyle.Csv, Encoding = <65001|1252>]
-    ),
-    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
-    TypedColumns = Table.TransformColumnTypes(PromotedHeaders, {
-        {"Column", type}
-    }, "de-DE")
-in
-    TypedColumns
-```
-
-**Measure Placement**: All 35 business measures on FactOrders; 2 parameter measures on SelectYear; 2 LOD measures on FactOrders.
-
----
-
-## Phase 3: Report Implementation
-
-**Goal**: Generate PBIR report files with 2 pages matching Tableau dashboard layouts.
-
-| Task | Description |
-|------|-------------|
-| 3.1 | Create `definition.pbir` with byPath reference to semantic model |
-| 3.2 | Create `report.json` (minimal, per constitution §8) |
-| 3.3 | Create `pages.json` with page ordering |
-| 3.4 | Sales Dashboard page: 3 KPI line charts, subcategory bar, weekly trends line, slicers, nav buttons |
-| 3.5 | Customer Dashboard page: 3 KPI line charts, customer distribution bar, top customers table, slicers, nav buttons |
-| 3.6 | Layout calculation: 1280×720 canvas, 25px padding, 20px gaps |
-| 3.7 | Visual properties: titles, borders, alt text, backgrounds per constitution §9 |
-| 3.8 | Navigation buttons: actionButton with PageNavigation actions |
-| 3.9 | Validation: JSON syntax + `validate_pbip.py` on report folder |
-
-### Visual Mapping (Tableau → Power BI)
-
-| Tableau Worksheet | Power BI Visual Type | Page |
-|-------------------|---------------------|------|
-| KPI Sales | lineChart (with markers) | Sales |
-| KPI Profit | lineChart (with markers) | Sales |
-| KPI Quantity | lineChart (with markers) | Sales |
-| Subcategory Comparison | barChart (horizontal) | Sales |
-| Weekly Trends | lineChart (dual-axis → combo) | Sales |
-| KPI Customers | lineChart (with markers) | Customer |
-| KPI Sales Per Customers | lineChart (with markers) | Customer |
-| KPI Orders | lineChart (with markers) | Customer |
-| Customer Distribution | columnChart (vertical) | Customer |
-| Top Customers | table | Customer |
-| Legend KPI | card (multi-row) | Both |
-| Select Year | slicer | Both |
-| Category/Sub-Category/Region/State/City | slicer (dropdown) | Both |
-
----
-
-## Dependencies & Ordering
-
-```mermaid
-graph TD
-    A[Phase 0: Research] --> B[Phase 1: Design]
-    B --> C[Phase 2: Semantic Model]
-    C --> D[Phase 3: Report]
-    D --> E[Final Validation]
-```
-
-- Phase 2 depends on: star-schema-output.md, dax-measures-output.md, research.md
-- Phase 3 depends on: Phase 2 complete (semantic model must exist for report binding)
-- Final validation: both `tmdl-validate` and `validate_pbip.py` must pass with exit code 0
-
----
-
-## Risk Register
-
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| German locale parsing fails for decimal values | Data corruption | Explicit `"de-DE"` culture in TransformColumnTypes |
-| DimDate range doesn't cover all dates | Missing data in measures | Fixed range 2020-01-01 to 2023-12-31 covers all 4 years |
-| TMDL syntax errors | Desktop won't load | Run tmdl-validate after every file generation |
-| Bookmark toggle not functional | Button does nothing | Document as known limitation; user creates bookmark manually |
-| Unmatched postal codes in FactOrders | Blank geography | Graceful handling — rows still appear with blank dimension values |
+Errors at any gate are fixed before advancing; exit code 2 (errors) blocks progression.

@@ -78,6 +78,37 @@ Identify columns with nested `<calculation>` elements:
 - Extract join type, left/right tables, and join clauses from `<clause>` elements
 - Also check for multi-table `<relation type='collection'>` (logical model)
 
+#### 2.9 Sets (MANDATORY — extract if present)
+Tableau sets are `<group>` elements that define a subset of dimension members.
+- **Fixed (constant) set**: `<group name='[... Set]'>` containing `<groupfilter function='member' ...>` clauses listing explicit member values
+- **Computed (dynamic) set**: `<group name='[... Set]'>` containing `<groupfilter function='filter' ...>` or a top-N condition (e.g. `function='end'` with a `<groupfilter function='top'>` child)
+- Extract: set name, source dimension/field, set type (fixed vs computed), and the member list or top-N condition
+- If NO `<group>` set elements exist, write `None` — do not invent sets
+
+#### 2.10 Groups (MANDATORY — extract if present)
+Tableau groups merge dimension members under an alias.
+- Look for `<group name='[... (group)]'>` elements OR `<calculation class='categorical-bin'>` group columns
+- Extract: group field name, source dimension, and each alias → list of member values it maps
+- If NO group elements exist, write `None` — do not invent groups
+
+#### 2.11 Bins (MANDATORY — extract if present)
+- Look for `<column>` elements with `<calculation class='bin' ... />`
+- Extract: bin field name, source numeric field, and bin size (`decimal-bin-size` / `bin-size` attribute)
+- If NO bin elements exist, write `None` — do not invent bins
+
+#### 2.12 Data Blending (MANDATORY — extract if present)
+Blending occurs when a workbook has MORE THAN ONE real datasource and worksheets reference fields across them on common dimensions.
+- Count real `<datasource>` elements (excluding the `Parameters` datasource)
+- If more than one, inspect worksheets for cross-datasource field references and look for `<datasource-dependencies>` blocks naming a secondary datasource
+- Extract: primary datasource, secondary datasource(s), and the linking field(s) (common dimension names)
+- If only ONE real datasource exists, write `Single datasource — no blending` — do not invent a blend
+
+#### 2.13 Field Formatting (MANDATORY — extract if present)
+- For columns and calculated fields, capture any `<format>` / `default-format` / `aggregation` formatting attributes that define a display format (currency, percentage, decimals, date pattern)
+- Record the raw Tableau format string verbatim (e.g. `$#,##0`, `0.0%`, `[h]:mm:ss`, `mmmm yyyy`)
+- These map to Power BI `formatString` values in the DAX/PBIP stages
+- If a field has no explicit format, write `Default` — do not invent a format
+
 ### Step 3: Output Format
 
 Present the extracted metadata in a structured markdown format:
@@ -121,7 +152,29 @@ Present the extracted metadata in a structured markdown format:
 ## Relationships
 | Left Table | Right Table | Join Type | Condition |
 |------------|-------------|-----------|-----------|
+
+## Sets
+| Set Name | Source Field | Type (Fixed/Computed) | Members / Condition |
+|----------|--------------|-----------------------|---------------------|
+
+## Groups
+| Group Field | Source Dimension | Alias | Member Values |
+|-------------|------------------|-------|---------------|
+
+## Bins
+| Bin Field | Source Field | Bin Size |
+|-----------|--------------|----------|
+
+## Data Blending
+| Primary Datasource | Secondary Datasource | Linking Field(s) |
+|--------------------|----------------------|------------------|
+
+## Field Formatting
+| Field | Tableau Format String | Kind (Currency/Percent/Date/Number) |
+|-------|-----------------------|-------------------------------------|
 ```
+
+> **NOTE**: Include the Sets, Groups, Bins, Data Blending, and Field Formatting sections in EVERY analysis output. If a category has no items in the workbook, keep the section heading and write a single row stating `None` (or `Single datasource — no blending`). Never omit a section and never fabricate rows.
 
 ### Step 4: Save Analysis Output
 
@@ -135,8 +188,19 @@ After saving, **automatically** call the `migration-constitution` agent which ha
 3. **Clarify** — Resolve ambiguities (measure vs column, unclear joins, table calcs, data categories)
 
 ### Step 6: Additional Analysis (if requested)
-- Identify unused fields, complex calculations (LOD, nested table calcs)
-- Note data blending, sets, groups, bins, filter definitions
+- Identify unused fields and overly complex calculations (deeply nested table calcs) for cleanup recommendations
+- Flag any Tableau feature with no documented Power BI mapping (e.g. `SCRIPT_*()` R/Python calls, forecasting, trend lines) so a human can decide
+
+## Anti-Hallucination Rules (MANDATORY)
+
+These rules keep extraction grounded in the actual `.twb` XML and prevent scope inflation:
+
+1. **Extract only what exists.** Every table, column, calculated field, parameter, set, group, bin, relationship, and format MUST be traceable to a concrete XML element in the workbook. Never invent names, fields, or values.
+2. **Use `None` for absent categories.** If a section (Sets, Groups, Bins, Data Blending, etc.) has no source elements, write `None` — do not fabricate plausible-sounding entries.
+3. **Quote, don't paraphrase, formulas and format strings.** Copy Tableau calculation formulas and format strings verbatim (after decoding XML entities). Do not "improve" or guess them.
+4. **One pass, fixed scope.** Extract the sections defined in Step 2 and Step 3 only. Do not add extra analyses, speculative measures, or design recommendations beyond what is requested.
+5. **Mark uncertainty explicitly.** If an element is ambiguous or unparseable, label it `UNVERIFIED` rather than guessing a value. Do not silently fill gaps.
+6. **No downstream design here.** This skill EXTRACTS metadata only. Do not generate DAX, star-schema designs, or visuals — those are separate pipeline stages.
 
 ## Notes
 

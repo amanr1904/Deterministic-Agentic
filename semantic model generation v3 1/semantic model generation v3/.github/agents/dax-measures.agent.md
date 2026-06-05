@@ -42,6 +42,20 @@ For each Tableau calculated field, generate the equivalent DAX:
 **Parameters** → What-If parameters:
 - Create disconnected table + slicer measure
 
+**LOD expressions** → CALCULATE patterns:
+- `{FIXED [d]: SUM([m])}` → `CALCULATE(SUM(Table[m]), REMOVEFILTERS(), VALUES(Table[d]))`
+- `{INCLUDE ...}` / `{EXCLUDE ...}` → `CALCULATE(..., VALUES(...))` / `CALCULATE(..., REMOVEFILTERS(...))`
+
+**Sets / Groups / Bins** → calculated columns/measures (see SKILL mapping tables):
+- Set → `IF(Table[Col] IN {..}, "In Set", "Not In Set")` (or RANKX for top-N sets)
+- Group → `SWITCH(TRUE(), ...)` alias mapping
+- Bin → `FLOOR/MROUND(Table[Num], size)` or `SWITCH` range buckets
+
+**Field formatting** → measure `formatString`:
+- Apply the Tableau format string captured in the analysis output (see Format Strings table in the SKILL). If none, use the model default — do not guess.
+
+> Read the **Sets**, **Groups**, **Bins**, **Data Blending**, and **Field Formatting** sections of `tableau-analysis-output.md`. Generate DAX for every item listed; if a section says `None`, generate nothing for it.
+
 ### 3. Apply DAX Best Practices
 
 Ref: https://maqsoftware.com/insights/dax-best-practices
@@ -93,3 +107,11 @@ Show all generated DAX with clear mapping back to Tableau sources.
 - Every measure MUST have a description and display folder
 - Prefer measures over calculated columns for aggregations
 - Parameters use What-If pattern (disconnected table + measure)
+
+## Anti-Hallucination Guardrails
+
+- **Convert only listed items.** Generate DAX strictly for the calculated fields, parameters, sets, groups, and bins present in `tableau-analysis-output.md`. Never invent measures.
+- **Bounded helper measures.** Add standard aggregates only for columns that actually exist, and keep them minimal — no speculative metrics.
+- **Verbatim source.** Base each expression on the exact Tableau formula. If a function has no DAX equivalent (e.g. `SCRIPT_*`, forecasting), output `UNSUPPORTED — needs manual review`, not an approximation.
+- **No fabricated refs.** Never reference a table/column absent from the analysis or star-schema output.
+- **Flag assumptions** with a `-- REVIEW:` comment instead of silently guessing.

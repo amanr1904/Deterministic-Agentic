@@ -193,13 +193,14 @@ Map Tableau `goto-sheet` buttons to Power BI `actionButton` with page navigation
         "show": {"expr": {"Literal": {"Value": "true"}}},
         "text": {"expr": {"Literal": {"Value": "'{button_label}'"}}},
         "fontColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'#FFFFFF'"}}}}}
-      }}],
-      "action": [{"properties": {
-        "type": {"expr": {"Literal": {"Value": "'PageNavigation'"}}},
-        "page": {"expr": {"Literal": {"Value": "'{target_page_name}'"}}}
       }}]
     },
     "visualContainerObjects": {
+      "visualLink": [{"properties": {
+        "show": {"expr": {"Literal": {"Value": "true"}}},
+        "type": {"expr": {"Literal": {"Value": "'PageNavigation'"}}},
+        "navigationSection": {"expr": {"Literal": {"Value": "'{target_page_name}'"}}}
+      }}],
       "title": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "false"}}}
       }}],
@@ -214,6 +215,8 @@ Map Tableau `goto-sheet` buttons to Power BI `actionButton` with page navigation
   }
 }
 ```
+
+> **CRITICAL — button action goes in `visualContainerObjects.visualLink`, NOT `objects.action`**: Power BI wires button navigation through the `visualLink` container-level object. The target page is set via `navigationSection` (the page's `name`), NOT a `page` property. Putting the action under `visual.objects.action` (or using a `page` key) makes the button render but do nothing — navigation silently fails. `type` values: `'PageNavigation'`, `'Bookmark'`, `'Back'`, `'Drillthrough'`, `'Url'`, `'WebUrl'`, `'QnA'`.
 
 #### Bookmark Toggle Buttons (Tableau `toggle-action`)
 
@@ -242,13 +245,14 @@ Toggle buttons require bookmarks (must be created manually in PBI Desktop after 
       }}],
       "text": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "false"}}}
-      }}],
-      "action": [{"properties": {
-        "type": {"expr": {"Literal": {"Value": "'Bookmark'"}}},
-        "bookmark": {"expr": {"Literal": {"Value": "''"}}}
       }}]
     },
     "visualContainerObjects": {
+      "visualLink": [{"properties": {
+        "show": {"expr": {"Literal": {"Value": "true"}}},
+        "type": {"expr": {"Literal": {"Value": "'Bookmark'"}}},
+        "bookmark": {"expr": {"Literal": {"Value": "''"}}}
+      }}],
       "title": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "false"}}}
       }}],
@@ -270,8 +274,8 @@ Toggle buttons require bookmarks (must be created manually in PBI Desktop after 
 - **Title**: ALWAYS `title.show = false` — buttons don't need container titles
 - **Label text**: Use Tableau tooltip (e.g., "Go to Sales Dashboard")
 - **Styling**: Match Tableau nav bar `background-color` (extract from parent zone style)
-- **Page target**: `action.page` must match the `name` from the target page's `page.json`
-- **Bookmark toggle**: Leave `action.bookmark` empty — user creates bookmark pairs manually
+- **Page target**: `visualContainerObjects.visualLink.navigationSection` must match the `name` from the target page's `page.json` (NOT a `page` property, and NOT under `objects.action`)
+- **Bookmark toggle**: Leave `visualLink.bookmark` empty — user creates bookmark pairs manually
 - **Icon shapes**: `'Arrow'` for navigation, `'Filter'` for filter toggles, `'Blank'` for custom
 - **Active state**: Use distinct fill color or border for the "current page" button
 

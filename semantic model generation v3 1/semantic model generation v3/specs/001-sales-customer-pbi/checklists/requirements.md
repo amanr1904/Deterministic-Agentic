@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain
+- [ ] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- All items pass. Spec is ready for `/speckit.clarify` or `/speckit.plan`.
-- No [NEEDS CLARIFICATION] markers were needed — the user provided comprehensive details about source structure, calculated fields, parameters, and expected behavior.
-- Reasonable defaults applied: German locale parsing, BLANK() for division-by-zero, disconnected table for year parameter.
+- One [NEEDS CLARIFICATION] marker remains (Select Year vs DimDate authority for CY/PY comparison year) — a sensible default is documented inline, resolve via `/speckit.clarify` if needed.
+- Spec refreshed to add the generated `DimDate` date dimension (FR-003a, fourth relationship), broaden US4 to full dashboard reproduction, exclude unused Test worksheets, and preserve currency/percent formatting intent.
+- Reasonable defaults applied: German locale parsing, BLANK() for division-by-zero, disconnected table for year parameter, CALENDAR-generated DimDate marked as date table.

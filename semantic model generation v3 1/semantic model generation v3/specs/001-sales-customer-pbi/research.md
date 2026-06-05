@@ -47,8 +47,8 @@ in
 **Pattern**:
 ```tmdl
 relationship <guid>
-	fromColumn: FactOrders.'Customer ID'
-	toColumn: DimCustomer.'Customer ID'
+	fromColumn: Orders.'Customer ID'
+	toColumn: Customers.'Customer ID'
 	crossFilteringBehavior: oneDirection
 	fromCardinality: many
 	toCardinality: one
@@ -64,45 +64,45 @@ relationship <guid>
 
 ---
 
-### 3. DimDate M Query Generation (List.Dates Pattern)
+### 3. DimDate as a DAX CALENDAR Calculated Table
 
-**Decision**: Generate DimDate using `List.Dates` with a dynamic date range spanning all Order Date and Ship Date values.
+**Decision**: Generate `DimDate` as a **DAX calculated table** using `CALENDAR` over the full calendar years spanning `MIN(Orders[Order Date])` → `MAX(Orders[Order Date])`, marked as the model's date table.
 
-**Rationale**: A contiguous date table is required for time intelligence. Generating from data ensures complete coverage.
+**Rationale**: A DAX `CALENDAR` table auto-adapts to the loaded data range (snapped to Jan 1 / Dec 31) without hardcoded boundaries and without cross-query M references. It keeps all date attributes in one declarative expression and is marked as the date table for time intelligence. Required axis columns are `WeekNum` (KPI Avg week axis) and `MonthName` (Min/Max month axis, Sort-By Month).
 
-**Pattern**:
-```m
-let
-    MinDate = List.Min(FactOrders[Order Date]),
-    MaxDate = List.Max(FactOrders[Ship Date]),
-    DateList = List.Dates(MinDate, Duration.Days(MaxDate - MinDate) + 1, #duration(1, 0, 0, 0)),
-    DateTable = Table.FromList(DateList, Splitter.SplitByNothing(), {"Date"}, null, ExtraValues.Error),
-    TypedDate = Table.TransformColumnTypes(DateTable, {{"Date", type date}}),
-    // Add computed columns
-    AddYear = Table.AddColumn(TypedDate, "Year", each Date.Year([Date]), Int64.Type),
-    AddQuarter = Table.AddColumn(AddYear, "Quarter", each Date.QuarterOfYear([Date]), Int64.Type),
-    AddMonth = Table.AddColumn(AddQuarter, "Month", each Date.Month([Date]), Int64.Type),
-    AddMonthName = Table.AddColumn(AddMonth, "MonthName", each Date.MonthName([Date]), type text),
-    AddDay = Table.AddColumn(AddMonthName, "Day", each Date.Day([Date]), Int64.Type)
-in
-    AddDay
+**Pattern** (DAX):
+```dax
+DimDate =
+VAR _MinDate = MIN(Orders[Order Date])
+VAR _MaxDate = MAX(Orders[Order Date])
+VAR _Start = DATE(YEAR(_MinDate), 1, 1)
+VAR _End = DATE(YEAR(_MaxDate), 12, 31)
+RETURN
+    ADDCOLUMNS(
+        CALENDAR(_Start, _End),
+        "Year", YEAR([Date]),
+        "Quarter", QUARTER([Date]),
+        "Month", MONTH([Date]),
+        "MonthName", FORMAT([Date], "MMMM"),
+        "Day", DAY([Date]),
+        "DayOfWeek", WEEKDAY([Date]),
+        "WeekNum", WEEKNUM([Date])
+    )
 ```
 
-**Important**: DimDate MUST NOT reference other queries (constitution §5 rule). Use hardcoded date boundaries or `#date(2020, 1, 1)` to `#date(2023, 12, 31)` as safe alternative since data spans 2020–2023.
-
-**Decision refined**: Use fixed boundaries `#date(2020, 1, 1)` to `#date(2023, 12, 31)` to avoid cross-query references.
+**Important**: `MonthName` must use Sort-By-Column = `Month` so chart axes order Jan→Dec. Mark `DimDate` as a date table on the `Date` column.
 
 ---
 
-### 4. SelectYear as DAX Calculated Table
+### 4. Select Year as DAX Calculated Table
 
-**Decision**: Define SelectYear using `DATATABLE` DAX expression as a calculated table in TMDL.
+**Decision**: Define the disconnected `Select Year` table using a `DATATABLE` DAX expression as a calculated table in TMDL.
 
-**Rationale**: Disconnected parameter tables with static values are best expressed as DAX calculated tables (constitution §7).
+**Rationale**: Disconnected parameter tables with static values are best expressed as DAX calculated tables (constitution §7). It is the sole CY/PY authority via `SELECTEDVALUE('Select Year'[Year], 2023)`.
 
 **Pattern** (TMDL):
 ```tmdl
-table SelectYear
+table 'Select Year'
 
 	calculatedTableExpression =
 		DATATABLE(
@@ -169,8 +169,8 @@ All NEEDS CLARIFICATION items from Technical Context are now resolved:
 |------|-----------|
 | CSV German locale M pattern | `Delimiter=";"`, culture in TransformColumnTypes, per-file encoding |
 | TMDL relationship syntax | Single `relationships.tmdl` file, camelCase properties, oneDirection |
-| DimDate generation | Fixed boundaries `#date(2020,1,1)` to `#date(2023,12,31)`, List.Dates pattern |
-| SelectYear implementation | DAX DATATABLE calculated table in SelectYear.tmdl |
+| DimDate generation | DAX `CALENDAR` calculated table over full calendar years of `Orders[Order Date]`, marked as date table |
+| Select Year implementation | DAX `DATATABLE` calculated table in `Select Year.tmdl`, disconnected |
 | File encodings | UTF-8 for Orders/Location, Windows-1252 for Customers/Products |
 | Navigation buttons | actionButton visual + PageNavigation action |
 | Cross-filter actions | Native Power BI cross-filtering (no config needed) |

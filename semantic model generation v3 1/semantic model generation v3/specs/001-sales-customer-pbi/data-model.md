@@ -1,164 +1,162 @@
 # Data Model: Sales & Customer Dashboards
 
+> Aligned with `.specify/memory/SalesCustomerDashboards/star-schema-output.md` and
+> `.specify/memory/SalesCustomerDashboards/dax-measures-output.md`. Table names are
+> **unprefixed** (`Orders`, `Customers`, `Location`, `Products`) so the spec (FR-002/003)
+> and every DAX measure resolve verbatim; `DimDate` and `Select Year` keep descriptive names.
+
 ## Entity Overview
 
-6 tables: 1 fact + 4 dimensions + 1 disconnected parameter table.
+6 tables: 1 fact (`Orders`) + 3 dimensions (`Customers`, `Location`, `Products`) + 1 generated date table (`DimDate`) + 1 disconnected parameter table (`Select Year`).
 
 ---
 
-## FactOrders (Fact Table)
+## Orders (Fact Table)
 
-**Source**: `Data/Sales and Customer/Orders.csv` (semicolon-delimited, UTF-8)  
-**Grain**: One row per order line item (unique Row ID)  
-**Row Count**: ~10,000 rows
+**Source**: `Data/Sales and Customer/Orders.csv` (semicolon-delimited, UTF-8 / 65001)
+**Grain**: One row per order line item (unique Row ID)
+**M typing culture**: `"de-DE"` (en_DE decimals/dates)
 
-| Column | Data Type | Role | Notes |
-|--------|-----------|------|-------|
-| Row ID | Int64 | Degenerate dimension | Unique identifier |
-| Order ID | Text | Degenerate dimension | Multi-line orders share ID |
-| Order Date | Date | FK → DimDate[Date] (active) | Transaction date |
-| Ship Date | Date | FK → DimDate[Date] (inactive) | Fulfillment date |
-| Ship Mode | Text | Attribute | Standard/Second/First/Same Day |
-| Customer ID | Text | FK → DimCustomer[Customer ID] | Natural key |
-| Segment | Text | Attribute | Consumer/Corporate/Home Office |
-| Postal Code | Text | FK → DimLocation[Postal Code] | Natural key |
-| Product ID | Text | FK → DimProduct[Product ID] | Natural key |
-| Sales | Decimal | Measure column | Revenue amount |
-| Quantity | Int64 | Measure column | Units sold |
-| Discount | Decimal | Measure column | Discount % |
-| Profit | Decimal | Measure column | Profit amount |
+| Column | Data Type | Role | Hidden | Notes |
+|--------|-----------|------|--------|-------|
+| Row ID | Int64 | Degenerate dimension | Yes | Technical row id |
+| Order ID | Text | Degenerate dimension | No | Used by `DISTINCTCOUNT` |
+| Order Date | Date | FK → DimDate[Date] (active) | No | Transaction date |
+| Ship Date | Date | FK → DimDate[Date] (inactive) | No | Fulfillment date |
+| Ship Mode | Text | Attribute | No | Standard/Second/First/Same Day |
+| Customer ID | Text | FK → Customers[Customer ID] | Yes | Natural key |
+| Segment | Text | Attribute | No | Consumer/Corporate/Home Office |
+| Postal Code | Int64 | FK → Location[Postal Code] | Yes | Natural key |
+| Product ID | Text | FK → Products[Product ID] | Yes | Natural key |
+| Sales | Decimal | Measure column | No | Revenue amount |
+| Quantity | Int64 | Measure column | No | Units sold |
+| Discount | Decimal | Measure column | No | Discount % |
+| Profit | Decimal | Measure column | No | Profit amount |
 
-**M Query Parameters**: `Delimiter = ";"`, `QuoteStyle = QuoteStyle.Csv`, `Encoding = 65001`, `Culture = "de-DE"`
-
----
-
-## DimCustomer (Dimension)
-
-**Source**: `Data/Sales and Customer/Customers.csv` (semicolon-delimited, Windows-1252)  
-**Key**: Customer ID (text, natural key)  
-**Row Count**: ~793 rows
-
-| Column | Data Type | Role | Notes |
-|--------|-----------|------|-------|
-| Customer ID | Text | Primary key | e.g., "CG-12520" |
-| Customer Name | Text | Display attribute | Full name |
+**M Query Parameters**: `Delimiter = ";"`, `QuoteStyle = QuoteStyle.Csv`, `Encoding = 65001`, `Columns = 13`, type culture `"de-DE"`.
 
 ---
 
-## DimLocation (Dimension)
+## Customers (Dimension)
 
-**Source**: `Data/Sales and Customer/Location.csv` (semicolon-delimited, UTF-8)  
-**Key**: Postal Code (text, natural key)  
-**Row Count**: ~631 rows
+**Source**: `Data/Sales and Customer/Customers.csv` (semicolon-delimited, Windows-1252 / 1252)
+**Key**: Customer ID (text natural key, hidden)
 
-| Column | Data Type | Role | Data Category |
-|--------|-----------|------|---------------|
-| Postal Code | Text | Primary key | PostalCode |
-| City | Text | Attribute | City |
-| State | Text | Attribute | StateOrProvince |
-| Region | Text | Attribute | — |
-| Country/Region | Text | Attribute | Country |
-
-**Hierarchy**: Geography → Country/Region > Region > State > City > Postal Code
+| Column | Data Type | Role | Hidden | Notes |
+|--------|-----------|------|--------|-------|
+| Customer ID | Text | Primary key (→ Orders[Customer ID]) | Yes | e.g., "CG-12520" |
+| Customer Name | Text | Display attribute | No | Full name; grouping field |
 
 ---
 
-## DimProduct (Dimension)
+## Location (Dimension)
 
-**Source**: `Data/Sales and Customer/Products.csv` (semicolon-delimited, Windows-1252)  
-**Key**: Product ID (text, natural key)  
-**Row Count**: ~1862 rows
+**Source**: `Data/Sales and Customer/Location.csv` (semicolon-delimited, UTF-8 / 65001)
+**Key**: Postal Code (Int64 natural key, hidden)
 
-| Column | Data Type | Role | Notes |
-|--------|-----------|------|-------|
-| Product ID | Text | Primary key | e.g., "FUR-BO-10001798" |
-| Category | Text | Attribute | Furniture/Office Supplies/Technology |
-| Sub-Category | Text | Attribute | 17 sub-categories |
-| Product Name | Text | Attribute | Full product description |
+| Column | Data Type | Role | Hidden | Data Category |
+|--------|-----------|------|--------|---------------|
+| Postal Code | Int64 | Primary key (→ Orders[Postal Code]) | Yes | PostalCode |
+| City | Text | Attribute / slicer | No | City |
+| State | Text | Attribute / slicer | No | StateOrProvince |
+| Region | Text | Attribute / slicer | No | **(none — business region, not geo)** |
+| Country/Region | Text | Attribute | No | Country |
 
-**Hierarchy**: Product Category → Category > Sub-Category > Product Name
-
----
-
-## DimDate (Generated Dimension)
-
-**Source**: M query (List.Dates pattern), fixed range 2020-01-01 to 2023-12-31  
-**Key**: Date (date, natural key)  
-**Row Count**: 1,461 rows  
-**Mark as Date Table**: Yes (on Date column)
-
-| Column | Data Type | Role | Notes |
-|--------|-----------|------|-------|
-| Date | Date | Primary key | Contiguous daily |
-| Year | Int64 | Attribute | 2020–2023 |
-| Quarter | Int64 | Attribute | 1–4 |
-| QuarterLabel | Text | Display | "Q1"–"Q4" |
-| Month | Int64 | Attribute | 1–12 |
-| MonthName | Text | Display | January–December |
-| MonthShort | Text | Display | Jan–Dec |
-| Day | Int64 | Attribute | 1–31 |
-| WeekNum | Int64 | Attribute | ISO week number |
-| DayOfWeek | Int64 | Attribute | 1–7 |
-| DayName | Text | Display | Monday–Sunday |
-| YearMonth | Text | Sort key | "2023-01" format |
-
-**Hierarchy**: Date → Year > Quarter > Month > Day
+**Hierarchy**: Geography → Country/Region > Region > State > City
 
 ---
 
-## SelectYear (Disconnected Parameter Table)
+## Products (Dimension)
 
-**Source**: DAX DATATABLE expression  
-**Key**: Year (Int64)  
-**Relationships**: NONE (disconnected)
+**Source**: `Data/Sales and Customer/Products.csv` (semicolon-delimited, Windows-1252 / 1252)
+**Key**: Product ID (text natural key, hidden)
 
-| Column | Data Type | Role | Notes |
-|--------|-----------|------|-------|
-| Year | Int64 | Slicer value | 2020, 2021, 2022, 2023 |
+| Column | Data Type | Role | Hidden | Notes |
+|--------|-----------|------|--------|-------|
+| Product ID | Text | Primary key (→ Orders[Product ID]) | Yes | e.g., "FUR-BO-10001798" |
+| Category | Text | Attribute / slicer | No | Furniture/Office Supplies/Technology |
+| Sub-Category | Text | Attribute / slicer | No | 17 sub-categories |
+| Product Name | Text | Display attribute | No | Full product description |
 
-**Usage**: Single-select slicer → `SELECTEDVALUE(SelectYear[Year])` in YoY measures.
+**Hierarchy**: Product → Category > Sub-Category > Product Name
+
+---
+
+## DimDate (Generated Date Dimension)
+
+**Source**: DAX calculated table via `CALENDAR` over full calendar years of `Orders[Order Date]`
+**Key**: Date (date) — **Mark as Date Table: Yes**
+
+| Column | Data Type | Notes |
+|--------|-----------|-------|
+| Date | Date | PK; relationship key; date-table marker column |
+| Year | Int64 | `YEAR(Date)` |
+| Quarter | Int64 | `QUARTER(Date)` (1–4) |
+| Month | Int64 | `MONTH(Date)` (1–12); Sort-By for MonthName |
+| MonthName | Text | `FORMAT(Date,"MMMM")`; **Sort By Month** |
+| Day | Int64 | `DAY(Date)` |
+| DayOfWeek | Int64 | `WEEKDAY(Date)` (1=Sun…7=Sat) |
+| WeekNum | Int64 | `WEEKNUM(Date)` — required by KPI Avg week axis |
+
+**Hierarchy**: Date → Year > Quarter > Month (label MonthName) > Day
+**Axis usage**: KPI Sales/Profit Avg iterate `ALLSELECTED(DimDate[WeekNum])`; Min/Max measures iterate `ALLSELECTED(DimDate[MonthName])`.
+
+---
+
+## Select Year (Disconnected Parameter Table)
+
+**Source**: DAX `DATATABLE` — **no relationships**
+**Authority**: sole CY/PY source — `CY = SELECTEDVALUE('Select Year'[Year], 2023)`, `PY = CY − 1`
+
+| Column | Data Type | Values | Default |
+|--------|-----------|--------|---------|
+| Year | Int64 | 2020, 2021, 2022, 2023 | 2023 |
+
+**Usage**: single-select slicer bound to `'Select Year'[Year]`. `DimDate` is **never** used to derive CY/PY.
 
 ---
 
 ## Relationships
 
-| # | From Table | From Column | To Table | To Column | Cardinality | Cross-Filter | Active |
-|---|-----------|-------------|----------|-----------|-------------|--------------|--------|
-| 1 | DimCustomer | Customer ID | FactOrders | Customer ID | 1:* | Single | Yes |
-| 2 | DimLocation | Postal Code | FactOrders | Postal Code | 1:* | Single | Yes |
-| 3 | DimProduct | Product ID | FactOrders | Product ID | 1:* | Single | Yes |
-| 4 | DimDate | Date | FactOrders | Order Date | 1:* | Single | Yes |
-| 5 | DimDate | Date | FactOrders | Ship Date | 1:* | Single | No |
+| # | From (Dim) | From Column | To (Fact) | To Column | Cardinality | Cross-Filter | Active |
+|---|-----------|-------------|-----------|-----------|-------------|--------------|--------|
+| 1 | Customers | Customer ID | Orders | Customer ID | 1:* | Single | Yes |
+| 2 | Location | Postal Code | Orders | Postal Code | 1:* | Single | Yes |
+| 3 | Products | Product ID | Orders | Product ID | 1:* | Single | Yes |
+| 4 | DimDate | Date | Orders | Order Date | 1:* | Single | Yes |
+| 5 | DimDate | Date | Orders | Ship Date | 1:* | Single | No (optional) |
 
 **Notes**:
-- Relationship 5 (Ship Date) is inactive — use `USERELATIONSHIP(FactOrders[Ship Date], DimDate[Date])` when needed
-- SelectYear has NO relationships (disconnected parameter)
-- All relationships are single-direction (dimension → fact)
-- No bidirectional filtering anywhere
+- Relationship 5 (Ship Date) is inactive — activate via `USERELATIONSHIP(Orders[Ship Date], DimDate[Date])`; may be omitted if not required.
+- `Select Year` has NO relationships (disconnected parameter).
+- All active relationships are single-direction (dimension → fact); no bidirectional filtering.
+- Unmatched FK rows are preserved with blank dimension attributes (single-direction relationship does not drop fact rows).
 
 ---
 
-## Measures (39 total, 8 display folders)
+## Measures (36 total)
 
-| Folder | Count | Key Measures |
-|--------|-------|-------------|
-| Core Metrics | 8 | Total Sales, Total Profit, Total Quantity, Order Count, Customer Count |
-| Year-over-Year\Current Year | 6 | CY Sales, CY Profit, CY Quantity, CY Customers, CY Orders, CY Sales per Customer |
-| Year-over-Year\Previous Year | 6 | PY Sales, PY Profit, PY Quantity, PY Customers, PY Orders, PY Sales per Customer |
+| Display Folder | Count | Measures |
+|----------------|-------|----------|
+| Base Metrics | 5 | Total Sales, Total Profit, Total Quantity, Total Orders, Total Customers |
+| Parameters | 2 | Current Year, Previous Year |
+| Year-over-Year\Current Year | 6 | CY Sales, CY Profit, CY Quantity, CY Orders, CY Customers, CY Sales per Customer |
+| Year-over-Year\Previous Year | 6 | PY Sales, PY Profit, PY Quantity, PY Orders, PY Customers, PY Sales per Customer |
 | Year-over-Year\% Change | 6 | % Diff Sales, % Diff Profit, % Diff Quantity, % Diff Customers, % Diff Orders, % Diff Sales per Customers |
 | KPI Indicators | 3 | KPI Sales Avg, KPI Profit Avg, KPI CY Less PY |
-| KPI Indicators\Min Max | 6 | Min/Max Sales, Min/Max Profit, Min/Max Quantity, Min/Max Customers, Min/Max Orders, Min/Max Sales Per Customers |
-| Parameters | 2 | Current Year, Previous Year |
-| LOD Equivalents | 2 | Nr of Orders per Customer, Grand Total CY Sales |
+| KPI Indicators\Min Max | 6 | Min/Max Sales, Min/Max Profit, Min/Max Quantity, Min/Max Customers, Min/Max Orders, Min/Max Sales per Customers |
+| LOD Equivalents | 2 | Nr of Orders per Customers, Grand Total CY Sales |
 
-**Full DAX definitions**: See `.specify/memory/dax-measures-output.md`
+**Format strings**: currency KPIs use K-scaling (`\$#,##0,"K";-\$#,##0,"K"`); % Diff use ▲/▼ arrows (`▲ 0.0%;▼ -0.0%`); counts use `#,##0`.
+**Authority rule**: CY/PY filter `Orders[Order Date]` via `FILTER(ALL(Orders[Order Date]), YEAR(...) = _CY)` — no measure inside a `CALCULATE` boolean filter, no `DimDate` dependence.
+**Full DAX definitions**: `.specify/memory/SalesCustomerDashboards/dax-measures-output.md`.
 
 ---
 
 ## Validation Rules
 
-- All foreign keys in FactOrders must have matching values in dimension tables (referential integrity assumed)
-- DimDate must cover full range of Order Date AND Ship Date values
-- SelectYear values (2020–2023) must align with years present in the data
-- No circular relationship paths
-- All measures must evaluate without error when year slicer has a selection
+- All foreign keys in `Orders` should have matching values in the dimension tables (referential integrity assumed; unmatched rows handled gracefully).
+- `DimDate` must cover the full range of `Order Date` (and `Ship Date` if the inactive relationship is used).
+- `Select Year` values (2020–2023) align with years present in the data; default 2023.
+- No circular relationship paths; no bidirectional filtering on standard dim→fact relationships.
+- All 36 measures evaluate without error when the Select Year slicer has a selection.

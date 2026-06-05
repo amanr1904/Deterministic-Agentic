@@ -109,6 +109,19 @@ For EACH `<worksheet>`, parse the `<table><panes><pane>` element to extract:
    - `<text column='...'>` → Data labels
    - `<wedge-size column='...'>` → Pie chart measure
 
+4. **Dual-axis / combo** (detect, do not assume): a worksheet with TWO measures on one axis or a `<dual-axis>` marker →
+   - Bar/Column + Line → `lineClusteredColumnComboChart` / `lineStackedColumnComboChart`
+   - Two lines, independent scales → `lineChart` with secondary value axis
+   - Record both measures and which is the secondary axis. If none, treat as single-measure visual.
+
+5. **Reference / trend lines** (`<reference-line>`, `<reference-line-aggregation>`, `<trend-lines>`) →
+   - Constant/average/min/max → analytics-pane constant/average/min/max line
+   - Trend → analytics-pane trend line
+   - If none present, add no analytics lines (do not invent them).
+
+**Step 1b-i: Field formatting**
+- Apply the Tableau field format strings captured in `tableau-analysis-output.md` to the matching visual fields / measures (see the Format String Translation table in `tableau-visual-extraction/SKILL.md`). Where no format was captured, leave the model default — do not guess.
+
 **Step 1c: Parse dashboard zone layout from TWB XML**
 
 For EACH `<dashboard>`, extract:
@@ -626,5 +639,16 @@ After generating the report folder structure:
     - Button positions match extracted zone coordinates (scaled to PBI canvas)
     - Navigation buttons have `title.show = false`
 24. Verify navigation button `action.page` targets match actual page `name` values in page.json files
+25. Verify dual-axis worksheets are mapped to a combo visual (`lineClusteredColumnComboChart` / `lineStackedColumnComboChart`) or a secondary-axis line — NOT split into two unrelated visuals
+26. Verify reference/trend lines from Tableau are represented via the analytics pane only when they existed in the source (none invented)
 
 Report success/failure and list all pages with their visuals (types and positions).
+
+## Anti-Hallucination Guardrails
+
+- **Generate only source-backed visuals.** Every page, visual, field binding, button, combo measure, and reference line MUST trace to a concrete element in the `.twb` XML or the analysis output. Never invent visuals, pages, or bindings to "fill" a layout.
+- **Match counts exactly.** Pages = dashboards; visuals per page = that dashboard's zones. Do not add extra decorative visuals.
+- **`None` means none.** If a worksheet has no dual-axis, no reference line, no filter, or no custom format, produce nothing for it — do not fabricate.
+- **Bind only to real model fields.** Every `queryRef` must resolve to an actual TMDL table/column/measure. If a field is missing, stop and report it rather than guessing a name.
+- **Ask on ambiguity.** Use `vscode_askQuestions` for unclear chart mappings instead of inventing one. Mark unresolved items in the spec as `UNVERIFIED`.
+- **Stay in the report layer.** Do not create or modify semantic-model measures/tables here — that is the dax-measures / pbip-generator stage.

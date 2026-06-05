@@ -1,6 +1,7 @@
 # Implementation Plan: Netflix Workbook Power BI Migration
 
 **Feature Branch**: `006-netflix-pbi`  
+**Date**: 2026-06-05  
 **Spec**: [specs/006-netflix-pbi/spec.md](specs/006-netflix-pbi/spec.md)  
 **Output**: `Output/NetflixAnalysis/`  
 **Status**: Ready for Implementation
@@ -9,7 +10,7 @@
 
 ## Summary
 
-Migrate the "Netfix Workbook" Tableau workbook to a Power BI semantic model (.pbip). Single CSV source (netflix_titles.csv) loaded via M query into a denormalized NetflixTitles table (Single-Table Rule §0), with a generated DimDate for time intelligence. 8 DAX measures across 3 display folders. Output as TMDL-based PBIP project.
+Migrate the single-CSV "Netfix Workbook" Tableau workbook into a Power BI Project (PBIP) semantic model with a PBIR report. The source `netflix_titles.csv` (12 columns, one row per title) loads as a single `NetflixTitles` table per the Single-Table Rule (constitution §0) — no fact/dimension decomposition. A generated `DimDate` table (DAX `CALENDAR`) provides time intelligence via an active many-to-one relationship `NetflixTitles[date_added]` → `DimDate[Date]`. Five lean DAX measures (Total Titles, Distinct Titles, Movies Count, TV Shows Count, Titles Added by Year) and a geographic Data Category on `country` complete the model. Build proceeds model → validation → report → final validation.
 
 ---
 
@@ -17,164 +18,221 @@ Migrate the "Netfix Workbook" Tableau workbook to a Power BI semantic model (.pb
 
 | Aspect | Decision |
 |--------|----------|
-| Format | Power BI PBIP (TMDL semantic model) |
-| Data Source | CSV file via `Csv.Document(File.Contents(...))` M query |
-| Model Type | Single-table (constitution §0) — no decomposition |
+| Format | Power BI PBIP (TMDL semantic model + PBIR report) |
+| Data Source | Single CSV via `Csv.Document(File.Contents(...))` Power Query M |
+| Model Type | **Single-table** (single flat CSV → constitution §0, no star decomposition) |
 | Storage Mode | Import |
-| Key Strategy | Natural keys (Date column on DimDate) — dataset <1M rows |
-| DAX Patterns | VAR/RETURN, DIVIDE(), RANKX, COUNTROWS |
-| Validation | `tmdl-validate` + `validate_pbip.py` |
+| Date Dimension | `DimDate` generated via **DAX `CALENDAR`** (self-deriving range, no extra M query) |
+| Key Strategy | Natural keys; `DimDate[Date]` is the only relationship key; `show_id` is a degenerate grain key |
+| DAX Patterns | `COUNTROWS`, `DISTINCTCOUNT`, `CALCULATE` + `KEEPFILTERS` (literal boolean), VAR/RETURN |
+| Multi-value fields | `country`, `listed_in`, `cast`, `director` kept as comma-separated strings (no bridge tables — deferred) |
+| Validation | `tmdl-validate-windows-x64.exe` + `validate_pbip.py` |
 | Output Path | `Output/NetflixAnalysis/` |
+| Language/Version | TMDL (compatibilityLevel 1601), Power Query M, DAX |
+| Target Platform | Power BI Desktop (PBIP project) |
+
+**CSV absolute path** (for M partition):
+`C:\Users\ShashankDwivediMAQSo\Desktop\New folder (2)\speckit_solution\semantic model generation v3 1\semantic model generation v3\Data\Netflix\netflix_titles.csv`
 
 ---
 
 ## Constitution Check
 
+*GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
+
 | Rule | Status | Evidence |
 |------|--------|----------|
-| §0 Single-Table Rule | ✅ Pass | Single CSV source → keep NetflixTitles intact, add only DimDate |
-| §1 Star Schema | ✅ N/A | Single-table rule applies; no multi-table decomposition |
-| §2 Naming Conventions | ✅ Pass | NetflixTitles (PascalCase), DimDate, measures in Title Case |
-| §3 DAX Standards | ✅ Pass | VAR/RETURN, DIVIDE(), explicit measures, display folders |
-| §4 Relationships | ✅ Pass | Single many-to-one, single direction, no circular deps |
-| §5 M Query Rules | ✅ Pass | Independent loads, QuoteStyle.Csv, absolute path, no cross-refs |
-| §6 Performance | ✅ Pass | Import mode, natural date key (small dataset ~8800 rows) |
-| §7 Parameter Migration | ✅ Pass | Tableau Year param → DimDate slicer (no What-If needed) |
-| §8 PBIP Structure | ✅ Pass | Standard folder layout with .pbip, .SemanticModel/, .Report/ |
-| §10 Validation | Pending | Run after implementation |
+| §0 Single-Table Rule | ✅ Pass | Single flat CSV → `NetflixTitles` kept intact; only `DimDate` added for time intelligence |
+| §1 Star Schema | ✅ N/A | Decomposition deliberately NOT applied (single source) |
+| §2 Naming Conventions | ✅ Pass | `NetflixTitles`, `DimDate`; measures in Title Case; source column names preserved |
+| §3 DAX Standards | ✅ Pass | Explicit measures, VAR/RETURN, literal boolean filters in `KEEPFILTERS`, display folders, format strings |
+| §4 Relationships | ✅ Pass | Single many-to-one, single-direction, active; no circular deps; no bidirectional filtering |
+| §5 M Query Rules | ✅ Pass | Independent load, `QuoteStyle.Csv`, Encoding 65001, types after header promotion, absolute path |
+| §6 Performance | ✅ Pass | Import mode, natural keys (dataset <1M rows), measures over calculated columns |
+| §7 Parameter Migration | ✅ Pass | Tableau `Year` date parameter → date slicer on `DimDate` (no What-If table) |
+| §8 PBIP Structure | ✅ Pass | Standard `.pbip` + `.SemanticModel/` (TMDL) + `.Report/` (PBIR) layout |
+| §10 Validation | ⏳ Pending | Run `tmdl-validate` + `validate_pbip.py` after generation |
 
-**Gate Evaluation**: ALL PASS — proceed to implementation.
+**Gate Evaluation**: ALL PASS — no complexity violations to track. Proceed to implementation.
+
+---
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/006-netflix-pbi/
+├── plan.md              # This file
+├── research.md          # Phase 0 — M/TMDL/DimDate decisions
+├── data-model.md        # Phase 1 — tables, columns, relationship, measures
+├── quickstart.md        # Phase 1 — build & validation walkthrough
+├── spec.md              # Clarified specification
+└── tasks.md             # Phase 2 (generated by /speckit.tasks)
+```
+
+### Source Code (generated output)
+
+```text
+Output/NetflixAnalysis/
+├── NetflixAnalysis.pbip
+├── NetflixAnalysis.SemanticModel/
+│   ├── definition.pbism
+│   ├── .platform
+│   ├── diagramLayout.json
+│   └── definition/
+│       ├── database.tmdl
+│       ├── model.tmdl
+│       ├── relationships.tmdl
+│       └── tables/
+│           ├── NetflixTitles.tmdl
+│           └── DimDate.tmdl
+└── NetflixAnalysis.Report/
+    ├── definition.pbir
+    ├── .platform
+    └── definition/
+        └── report.json
+```
+
+**Structure Decision**: Single-table semantic model (2 tables: `NetflixTitles` + `DimDate`). PBIP file-based output to `Output/NetflixAnalysis/`; no application source tree — the deliverable is the PBIP project itself.
 
 ---
 
 ## Phase 0: Research
 
-### M Query Patterns for CSV Loading
+### CSV Loading via Power Query M
 
-**Decision**: Use `Csv.Document(File.Contents(absolute_path))` with UTF-8 encoding, comma delimiter, QuoteStyle.Csv.
+**Decision**: `Csv.Document(File.Contents(absolute_path))` with UTF-8, comma delimiter, `QuoteStyle.Csv`, then promote headers and apply explicit type transforms.
 
-**Pattern** (per constitution §5):
+**Rationale**: `QuoteStyle.Csv` (constitution §5) is required so quoted multi-value fields (`country`, `cast`, `listed_in`) that contain embedded commas parse as single columns. `Encoding = 65001` preserves UTF-8 title/description text. Types applied immediately after header promotion.
+
 ```m
 let
     Source = Csv.Document(
-        File.Contents("C:\Users\AmanRajMAQSoftware\Downloads\semantic model generation v2\semantic model generation v2\Data\Netflix\netflix_titles.csv"),
+        File.Contents("C:\...\Data\Netflix\netflix_titles.csv"),
         [Delimiter = ",", Columns = 12, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]
     ),
-    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
-    ChangedTypes = Table.TransformColumnTypes(PromotedHeaders, {
-        {"show_id", Int64.Type},
-        {"type", type text},
-        {"title", type text},
-        {"director", type text},
-        {"cast", type text},
-        {"country", type text},
-        {"date_added", type date},
-        {"release_year", Int64.Type},
-        {"rating", type text},
-        {"duration", type text},
-        {"listed_in", type text},
-        {"description", type text}
+    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+    Typed = Table.TransformColumnTypes(Promoted, {
+        {"show_id", Int64.Type}, {"type", type text}, {"title", type text},
+        {"director", type text}, {"cast", type text}, {"country", type text},
+        {"date_added", type date}, {"release_year", Int64.Type}, {"rating", type text},
+        {"duration", type text}, {"listed_in", type text}, {"description", type text}
     })
 in
-    ChangedTypes
+    Typed
 ```
 
-**Key rules**:
-- Each table loads independently (no cross-query references)
-- Promote headers immediately
-- Apply type transformations after header promotion
-- `date_added` parsed as `type date` (Power Query handles "Month Day, Year" format)
-- Null/blank values in director, cast, country are acceptable (no error handling needed)
+**Alternatives considered**: M-generated DimDate via `List.Dates` (rejected in favor of DAX `CALENDAR` — no second query, self-deriving range, no load-order dependency); splitting multi-value fields (deferred — out of scope per spec).
 
-### TMDL Syntax (from plugins/pbip/skills/tmdl/SKILL.md)
+### DimDate via DAX CALENDAR
 
-**Decision**: Use tab-based indentation, multi-line DAX with indented block syntax.
+**Decision**: Generate `DimDate` as a calculated table using `CALENDAR` over the full-calendar-year boundaries of non-null `date_added`, with derived columns added via `ADDCOLUMNS`.
 
-**Key rules**:
-- `///` (triple-slash) sets Description — must immediately precede declaration
-- Indentation is semantic: tabs, one per level
-- Only quote names with spaces/special chars/leading digits
-- Measures: DAX body indented 2 levels deeper than declaration (depth 3 for table measures)
-- `formatString` at depth 2 after DAX body
-- `summarizeBy: none` for all key/attribute/non-additive columns
-- Boolean flags (`isHidden`, `isKey`) are keywords on their own line
+**Rationale**: Auto-derives the range from `date_added` (no hardcoded dates), needs no separate M query or CSV, and avoids any cross-table load-order risk. Full Jan 1 → Dec 31 coverage keeps time-intelligence contiguous.
 
-### DimDate Generation via M
-
-**Decision**: Generate DimDate in M query using `List.Dates` to cover the date range of Netflix content additions (2008–2026).
-
-**Pattern**:
-```m
-let
-    StartDate = #date(2008, 1, 1),
-    EndDate = #date(2026, 12, 31),
-    DateList = List.Dates(StartDate, Duration.TotalDays(EndDate - StartDate) + 1, #duration(1,0,0,0)),
-    ToTable = Table.FromList(DateList, Splitter.SplitByNothing(), {"Date"}, null, ExtraValues.Error),
-    ChangedType = Table.TransformColumnTypes(ToTable, {{"Date", type date}}),
-    AddYear = Table.AddColumn(ChangedType, "Year", each Date.Year([Date]), Int64.Type),
-    AddMonth = Table.AddColumn(AddYear, "Month", each Date.Month([Date]), Int64.Type),
-    AddMonthName = Table.AddColumn(AddMonth, "MonthName", each Date.ToText([Date], "MMMM"), type text),
-    AddQuarter = Table.AddColumn(AddMonthName, "Quarter", each "Q" & Text.From(Date.QuarterOfYear([Date])), type text),
-    AddDayOfWeek = Table.AddColumn(AddQuarter, "DayOfWeek", each Date.DayOfWeekName([Date]), type text)
-in
-    AddDayOfWeek
+```dax
+DimDate =
+VAR _MinDate = DATE ( YEAR ( MIN ( NetflixTitles[date_added] ) ), 1, 1 )
+VAR _MaxDate = DATE ( YEAR ( MAX ( NetflixTitles[date_added] ) ), 12, 31 )
+RETURN
+ADDCOLUMNS (
+    CALENDAR ( _MinDate, _MaxDate ),
+    "Year", YEAR ( [Date] ),
+    "Quarter", QUARTER ( [Date] ),
+    "Month", MONTH ( [Date] ),
+    "MonthName", FORMAT ( [Date], "MMMM" ),
+    "Day", DAY ( [Date] ),
+    "DayOfWeek", WEEKDAY ( [Date] )
+)
 ```
 
-**Rationale**: Netflix dataset has date_added values from 2008 through 2021+. Extending to 2026 future-proofs the date table for ongoing use.
+### TMDL Syntax (from `plugins/pbip/skills/tmdl/SKILL.md`)
+
+**Decision**: Tab-based semantic indentation; one tab per nesting level.
+
+**Key rules**:
+- `///` (triple-slash) Description must immediately precede the declaration it documents.
+- Only quote names with spaces, special characters, or leading digits (none of the Netflix columns need quoting).
+- Measure DAX bodies indented two levels deeper than the measure declaration (depth 3 inside a table); `formatString` follows the body.
+- `summarizeBy: none` for keys/attributes; `show_id` and `release_year` set to `Do Not Summarize`.
+- Boolean flags (`isHidden`, `isKey`) are keywords on their own line.
+- `dataCategory: Country` applied to `NetflixTitles[country]`.
+- `DimDate` marked as a date table; `MonthName` sorted by `Month`.
+
+### PBIR Report Format (from `plugins/pbip/skills/pbir-format/SKILL.md`)
+
+**Decision**: Minimal PBIR enhanced `report.json` (`$schema` + `themeCollection` + `settings`). Visual containers (`visualContainer/2.4.0`) carry only `$schema`, `name`, `position`, and `visual`. No `filters`/`filterConfig` at visual root; Top-N behavior (Top 10 Genre worksheet) handled via DAX/visual-filter in Desktop, not in JSON.
+
+**Rationale**: PBI Desktop rejects undefined root properties. Keeping `report.json` minimal and visuals schema-compliant prevents "schema does not allow additional properties" failures.
+
+**Output**: research.md (all NEEDS CLARIFICATION resolved — none remain; spec is fully clarified).
 
 ---
 
-## Phase 1: Design
+## Phase 1: Design & Contracts
 
-### Star Schema Validation (Single-Table Rule)
+### Tables (data-model.md)
 
-| Table | Source | Type | Keys | Status |
-|-------|--------|------|------|--------|
-| NetflixTitles | netflix_titles.csv | Primary (single-table) | show_id (natural identifier, NOT enforced PK) | ✅ |
-| DimDate | M-generated | Dimension | Date (PK, isKey=true) | ✅ |
+| Table | Source | Role | Grain |
+|-------|--------|------|-------|
+| `NetflixTitles` | `netflix_titles.csv` (M query) | Base table + measures host | One row per title (`show_id`) |
+| `DimDate` | DAX `CALENDAR` | Date dimension (Mark as Date Table) | One row per day |
 
-**Single-Table Rule Compliance**: ✅
-- Only 1 source CSV → no decomposition
-- NetflixTitles retains all 12 columns intact
-- Multi-value fields (country, listed_in, cast, director) kept as comma-separated strings
-- DimDate is the only added table (for time intelligence only)
+### NetflixTitles Columns
 
-### Relationship Integrity
+| Column | Data Type | summarizeBy | Data Category | Notes |
+|--------|-----------|-------------|---------------|-------|
+| `show_id` | Int64 | none | — | Degenerate grain key |
+| `type` | String | none | — | Movie / TV Show slicer |
+| `title` | String | none | — | Descriptive |
+| `director` | String | none | — | Multi-value CSV (kept) |
+| `cast` | String | none | — | Multi-value CSV (kept) |
+| `country` | String | none | **Country/Region** | FR-011 map support |
+| `date_added` | DateTime | none | — | FK → DimDate[Date] (active) |
+| `release_year` | Int64 | none | — | Attribute |
+| `rating` | String | none | — | Categorical slicer |
+| `duration` | String | none | — | Mixed "min"/"Seasons" (kept as string) |
+| `listed_in` | String | none | — | Genre, multi-value CSV (kept) |
+| `description` | String | none | — | Descriptive |
 
-| Relationship | From (Many) | To (One) | Key Type | Direction | Status |
-|-------------|-------------|----------|----------|-----------|--------|
-| TitlesToDate | NetflixTitles[date_added] | DimDate[Date] | Date | Single | ✅ |
+### DimDate Columns
 
-- No circular dependencies (only 1 relationship)
-- No bidirectional filtering
-- Unmatched rows: titles with null date_added will not link to DimDate (expected behavior)
+`Date` (DateTime, key) · `Year` (Int64) · `Quarter` (Int64) · `Month` (Int64) · `MonthName` (String, sort-by `Month`) · `Day` (Int64) · `DayOfWeek` (Int64).
 
-### DAX Measure Verification
+### Relationship
 
-| # | Measure | Table | Folder | Format | Column Refs | Status |
-|---|---------|-------|--------|--------|-------------|--------|
-| 1 | Total Titles | NetflixTitles | Core Metrics | #,##0 | COUNTROWS(NetflixTitles) | ✅ |
-| 2 | Total Movies | NetflixTitles | Core Metrics | #,##0 | NetflixTitles[type] | ✅ |
-| 3 | Total TV Shows | NetflixTitles | Core Metrics | #,##0 | NetflixTitles[type] | ✅ |
-| 4 | % Movies | NetflixTitles | Core Metrics | 0.0% | [Total Movies], [Total Titles] | ✅ |
-| 5 | % TV Shows | NetflixTitles | Core Metrics | 0.0% | [Total TV Shows], [Total Titles] | ✅ |
-| 6 | Genre Rank | NetflixTitles | Ranking | #,##0 | NetflixTitles[listed_in], [Total Titles] | ✅ |
-| 7 | Is Top 10 Genre | NetflixTitles | Ranking | #,##0 | [Genre Rank] | ✅ |
-| 8 | Titles Added This Year | NetflixTitles | Year-over-Year | #,##0 | NetflixTitles[date_added] | ✅ |
+| From (Many) | To (One) | Key | Cardinality | Direction | Active |
+|-------------|----------|-----|-------------|-----------|--------|
+| `NetflixTitles[date_added]` | `DimDate[Date]` | DateTime | Many-to-One | Single | Yes |
 
-**All 8 measures reference valid columns**: `type`, `listed_in`, `date_added` all exist in NetflixTitles. No broken references.
+Null `date_added` rows remain in `NetflixTitles` but are unmatched (blank key) — excluded from year trends, matching the Tableau null filter.
 
-### Calculated Columns
+### Measures (host: NetflixTitles)
 
-| # | Column Name | Table | Expression | Type | Purpose |
-|---|-------------|-------|-----------|------|---------|
-| — | (none required) | — | — | — | All Tableau calculated fields handled via DimDate relationship |
+| # | Measure | Folder | Format | Pattern |
+|---|---------|--------|--------|---------|
+| 1 | Total Titles | Core Metrics | #,##0 | `COUNTROWS(NetflixTitles)` |
+| 2 | Distinct Titles | Core Metrics | #,##0 | `DISTINCTCOUNT(NetflixTitles[show_id])` |
+| 3 | Movies Count | Category Counts | #,##0 | `CALCULATE(DISTINCTCOUNT(show_id), KEEPFILTERS(type="Movie"))` |
+| 4 | TV Shows Count | Category Counts | #,##0 | `CALCULATE(DISTINCTCOUNT(show_id), KEEPFILTERS(type="TV Show"))` |
+| 5 | Titles Added by Year | Time Intelligence | #,##0 | `CALCULATE(DISTINCTCOUNT(show_id), KEEPFILTERS(NOT ISBLANK(date_added)))` |
 
-### Data Categories
+Boolean filters use literal value comparisons inside `KEEPFILTERS` (no measure references) per constitution §3.
 
-| Column | Table | Category |
-|--------|-------|----------|
-| country | NetflixTitles | Country |
+### Calculated Columns / What-If Parameters
+
+None. The Tableau `Year` calculated field (`DATETIME([date_added])`) is satisfied by the `DimDate` relationship; the `Year` date parameter maps to a date slicer on `DimDate` (no What-If table).
+
+### Contracts
+
+N/A — PBIP is file-based output with no external API/CLI interface. The "contract" is the PBIP folder structure validated by `validate_pbip.py` and TMDL parse validity.
+
+### Agent Context Update
+
+Updated the plan reference between the `<!-- SPECKIT START -->` / `<!-- SPECKIT END -->` markers in `.github/copilot-instructions.md` to point to this plan.
+
+**Output**: data-model.md, quickstart.md, research.md, updated agent context. Re-check of Constitution gates after design: **ALL PASS** (no new violations introduced).
 
 ---
 
@@ -196,88 +254,62 @@ Output/NetflixAnalysis/
 │       └── tables/
 │           ├── NetflixTitles.tmdl
 │           └── DimDate.tmdl
-├── NetflixAnalysis.Report/
-│   ├── definition.pbir
-│   ├── .platform
-│   └── definition/
-│       └── report.json
+└── NetflixAnalysis.Report/
+    ├── definition.pbir
+    ├── .platform
+    └── definition/
+        └── report.json
 ```
 
-### Task Sequence
+### Build Sequence
 
-#### Task 1: Create Project Scaffold
-- Generate `NetflixAnalysis.pbip` (JSON, byPath reference to SemanticModel)
-- Generate `.platform` files for SemanticModel and Report
-- Generate `definition.pbism` (version 4.2)
-- Generate `definition.pbir` (version 4.0, byPath binding to semantic model)
-- Generate `report.json` (minimal PBIR enhanced schema — themeCollection + settings)
-- Generate `diagramLayout.json` (empty layout)
+#### Stage A — Semantic Model
 
-#### Task 2: Generate database.tmdl
-- compatibilityLevel: 1601
-- Model ID annotation (GUID)
+1. **Project scaffold**: `NetflixAnalysis.pbip` (byPath reference), `.platform` files (SemanticModel + Report), `definition.pbism`, `definition.pbir` (byPath binding to the semantic model), `diagramLayout.json`.
+2. **database.tmdl**: `compatibilityLevel: 1601`, model ID annotation.
+3. **model.tmdl**: culture `en-US`, `defaultPowerBIDataSourceVersion: powerBI_V3`, `ref table NetflixTitles`, `ref table DimDate`, DimDate `markAsDateTable` annotation.
+4. **tables/NetflixTitles.tmdl**: M partition (`Csv.Document` for `netflix_titles.csv`), 12 typed columns, `dataCategory: Country` on `country`, all 5 measures with display folders + format strings.
+5. **tables/DimDate.tmdl**: calculated-table partition (`CALENDAR` + `ADDCOLUMNS`), 7 columns, `MonthName` sort-by `Month`.
+6. **relationships.tmdl**: single relationship `NetflixTitles[date_added]` → `DimDate[Date]`, `manyToOne`, single direction, active.
 
-#### Task 3: Generate model.tmdl
-- `ref table` entries for NetflixTitles and DimDate
-- Culture: en-US
-- Default Power BI DataSource Version: powerBI_V3
-- DimDate marked as date table
+#### Stage B — Model Validation (run before report)
 
-#### Task 4: Generate NetflixTitles.tmdl
-- M partition: `Csv.Document(File.Contents(...))` for netflix_titles.csv
-- 12 source columns with correct dataType:
-  - show_id: Int64, summarizeBy: none
-  - type: text, summarizeBy: none
-  - title: text, summarizeBy: none
-  - director: text, summarizeBy: none
-  - cast: text, summarizeBy: none
-  - country: text, summarizeBy: none, dataCategory: Country
-  - date_added: dateTime (date)
-  - release_year: Int64, summarizeBy: none
-  - rating: text, summarizeBy: none
-  - duration: text, summarizeBy: none
-  - listed_in: text, summarizeBy: none
-  - description: text, summarizeBy: none
-- 8 DAX measures organized by display folder:
-  - Core Metrics: Total Titles, Total Movies, Total TV Shows, % Movies, % TV Shows
-  - Ranking: Genre Rank, Is Top 10 Genre
-  - Year-over-Year: Titles Added This Year
-- Format strings on all measures
+7. `tmdl-validate` on the semantic model `definition` folder → fix any syntax/indentation/property-order issues.
+8. `validate_pbip.py` on `Output/NetflixAnalysis/` → fix any exit-code-2 errors before proceeding.
 
-#### Task 5: Generate DimDate.tmdl
-- M partition: Date generation via List.Dates (2008-01-01 to 2026-12-31)
-- Columns: Date (key, isKey=true), Year, Month, MonthName, Quarter, DayOfWeek
-- All columns: summarizeBy: none
-- Mark as date table (annotation)
+#### Stage C — Report Pages
 
-#### Task 6: Generate relationships.tmdl
-- 1 relationship: NetflixTitles[date_added] → DimDate[Date]
-- Type: manyToOne, singleDirection
+9. Generate `report.json` (minimal PBIR enhanced schema) and PBIR page/visual containers covering the Tableau worksheets/dashboard (Country distribution map using `country` Country/Region category, Movies vs TV Shows split, Rating distribution, Top 10 Genre, Total Movies & TV Shows by Years trend over `DimDate`). Each visual: title shown, 1px `#E0E0E0` border, alt text, projections `active: true`, 25px edge padding / 20px gaps.
 
-#### Task 7: Validate
-- Run `tmdl-validate` on `Output/NetflixAnalysis/NetflixAnalysis.SemanticModel/definition`
-- Run `validate_pbip.py` on `Output/NetflixAnalysis/`
-- Fix any errors before completion
+#### Stage D — Final End-to-End Validation
+
+10. Re-run JSON validity on `.Report/`, `tmdl-validate` on the model, and `validate_pbip.py` on the project root. Fix all errors.
+
+### Validation Commands
+
+```powershell
+# TMDL structural syntax
+& "plugins\pbip\hooks\bin\tmdl-validate-windows-x64.exe" "Output\NetflixAnalysis\NetflixAnalysis.SemanticModel\definition"
+
+# Cross-cutting PBIP structure
+python "plugins\pbip\skills\pbip\scripts\validate_pbip.py" "Output\NetflixAnalysis"
+
+# Report JSON quick check
+Get-ChildItem "Output\NetflixAnalysis\NetflixAnalysis.Report" -Recurse -Include "*.json","*.pbir" | ForEach-Object { try { Get-Content $_.FullName -Raw | ConvertFrom-Json | Out-Null } catch { Write-Error "Invalid JSON: $($_.FullName) — $_" } }
+```
 
 ---
 
 ## Implementation Notes
 
-1. **File path in M query**: Use absolute path `C:\Users\AmanRajMAQSoftware\Downloads\semantic model generation v2\semantic model generation v2\Data\Netflix\netflix_titles.csv`
-
-2. **DimDate range**: Generate dates from 2008-01-01 to 2026-12-31 (covers all Netflix date_added values plus future buffer). Mark as date table with Date column as the key.
-
-3. **date_added parsing**: The CSV contains dates in "Month Day, Year" format (e.g., "January 1, 2020"). Power Query's `type date` handles this natively. Null/blank values remain as null (no error).
-
-4. **No calculated columns**: All Tableau calculated fields map to DimDate relationship or DAX measures. No calculated columns needed on NetflixTitles.
-
-5. **TMDL indentation**: All files use tabs (one per level). Measure DAX bodies at depth 3 (two extra tabs from the table root).
-
-6. **lineageTag**: Generate unique GUIDs for all objects (tables, columns, measures, relationships).
-
-7. **Multi-value fields**: `country`, `listed_in`, `cast`, `director` remain as comma-separated strings. No bridge table decomposition per constitution §0 single-table override.
-
-8. **Data Category**: Apply `dataCategory: Country` to NetflixTitles[country] for geographic map visual support.
+1. **M query path**: Use the absolute CSV path under `Data\Netflix\netflix_titles.csv` (see Technical Context). Keep the partition independent — no references to other queries/tables.
+2. **DimDate**: DAX `CALENDAR` calculated table (not M) — self-derives the range from `date_added`; mark as date table on `Date`.
+3. **country Data Category**: Set `dataCategory: Country` so map visuals resolve the geographic role migrated from the Tableau ISO3166_2 mapping.
+4. **Measures host**: All 5 measures live on `NetflixTitles` (single-table rule). No measures reference `DimDate` directly; year slicing comes through the relationship.
+5. **Boolean filters**: Movies/TV Shows/Titles-Added measures compare a column to a literal inside `KEEPFILTERS` — never a measure reference (constitution §3).
+6. **Deferred**: multi-value split of `country`/`listed_in`/`cast`/`director` and numeric parsing of `duration` are out of scope (flagged for report authors).
+7. **lineageTag**: Generate unique GUIDs for every table, column, measure, and relationship.
+8. **TMDL indentation**: Tabs only, one per level; measure DAX bodies at depth 3.
 
 ---
 
@@ -285,23 +317,31 @@ Output/NetflixAnalysis/
 
 | Artifact | Path | Purpose |
 |----------|------|---------|
-| Research | (inline above — Phase 0) | M query patterns, TMDL syntax, DimDate generation |
-| Data Model | `.specify/memory/star-schema-output.md` | Star schema design (referenced, not regenerated) |
-| DAX Measures | `.specify/memory/dax-measures-output.md` | 8 measures with full definitions |
-| Contracts | N/A | No external interfaces (PBIP is file-based output) |
 | Plan | `specs/006-netflix-pbi/plan.md` | This file |
+| Research | `specs/006-netflix-pbi/research.md` | M / TMDL / DimDate / PBIR decisions |
+| Data Model | `specs/006-netflix-pbi/data-model.md` | Tables, columns, relationship, measures |
+| Quickstart | `specs/006-netflix-pbi/quickstart.md` | Build + validation walkthrough |
+| Star schema source | `.specify/memory/NetflixAnalysis/star-schema-output.md` | Upstream design input |
+| DAX source | `.specify/memory/NetflixAnalysis/dax-measures-output.md` | Upstream measure input |
+| Contracts | N/A | No external interface (file-based PBIP output) |
+
+---
+
+## Complexity Tracking
+
+No constitution violations — no entries required.
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| None | — | — |
 
 ---
 
 ## Success Gate
 
 Implementation is complete when:
-1. All 10 files generated in `Output/NetflixAnalysis/`
-2. `tmdl-validate` exits with code 0
-3. `validate_pbip.py` exits with code 0 or 1 (no code 2 errors)
-4. .pbip opens in Power BI Desktop without errors (manual verification)
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+1. All files generated in `Output/NetflixAnalysis/` per the manifest.
+2. `tmdl-validate` exits with code 0 (zero TMDL errors — SC-006).
+3. `validate_pbip.py` exits with code 0 or 1 (no code-2 errors — SC-007).
+4. `.pbip` opens in Power BI Desktop without errors/warnings (SC-001), with `NetflixTitles` (12 columns, correct types), populated `DimDate`, the active date relationship, and all 5 measures responding to date/category filters (SC-002 → SC-005).

@@ -14,22 +14,22 @@
 ## Validation Steps
 
 ### 1. Verify Data Loading
-- Switch to **Model View** — all 6 tables should appear (FactOrders, DimCustomer, DimLocation, DimProduct, DimDate, SelectYear)
+- Switch to **Model View** — all 6 tables should appear (Orders, Customers, Location, Products, DimDate, Select Year)
 - Click each table → Data Preview should show rows with correct types
 
 ### 2. Verify Relationships
-- In Model View, confirm 5 relationship lines:
-  - DimCustomer → FactOrders (Customer ID)
-  - DimLocation → FactOrders (Postal Code)
-  - DimProduct → FactOrders (Product ID)
-  - DimDate → FactOrders (Order Date) — active
-  - DimDate → FactOrders (Ship Date) — inactive (dashed line)
+- In Model View, confirm relationship lines:
+  - Customers → Orders (Customer ID)
+  - Location → Orders (Postal Code)
+  - Products → Orders (Product ID)
+  - DimDate → Orders (Order Date) — active
+  - DimDate → Orders (Ship Date) — inactive (dashed line, optional)
 
 ### 3. Verify Measures
 - Switch to **Report View**
-- Add a Card visual → drag `CY Sales` → should show a dollar value
-- Add SelectYear slicer → select 2023 → CY Sales updates
-- Add `% Diff Sales` card → should show percentage (positive or negative)
+- Add a Card visual → drag `CY Sales` → should show a currency value (K-scaled)
+- Add the Select Year slicer → select 2023 → CY Sales updates
+- Add `% Diff Sales` card → should show a ▲/▼ percentage (positive or negative)
 
 ### 4. Verify Navigation
 - Sales Dashboard page: click "Customer Dashboard" button → navigates
@@ -51,4 +51,4 @@ Both should return exit code 0.
 
 - Bookmark toggle button requires manual bookmark creation in Power BI Desktop (PBIP cannot define bookmark states)
 - File paths in M queries are absolute — update if moving files to different location
-- DimDate uses fixed range 2020-01-01 to 2023-12-31 — extend if data grows beyond 2023
+- DimDate is a DAX `CALENDAR` table that auto-spans the full calendar years of `Orders[Order Date]` — it adapts automatically as data grows

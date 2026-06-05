@@ -117,6 +117,26 @@ For each `<worksheet name='...'>` element, extract:
   - `ordering-field` → compute direction
   - Note: These affect how the DAX equivalent should be visualized
 
+#### 2.7 Dual-Axis & Combo Charts (MANDATORY — detect if present)
+A dual-axis worksheet places two measures on the same axis with independent scales.
+- Detect `<rows>` (or `<cols>`) containing TWO measure pills, OR a `<mark>` element whose pane has multiple `<encodings>` blocks, OR an axis with `<dual-axis>` / `mark-mapping` indicating two marks
+- Identify the mark type of EACH measure (e.g. one `Bar` + one `Line`)
+- Power BI mapping:
+  - Bar/Column + Line → `lineClusteredColumnComboChart` (or `lineStackedColumnComboChart`)
+  - Two lines on independent scales → `lineChart` with a secondary value axis
+  - Two bars → `clusteredColumnChart` with both measures on the Y-axis (shared scale)
+- Record both measures, both mark types, and which is primary vs secondary axis
+- If NO dual-axis worksheet exists, write `None` — do not invent combo charts
+
+#### 2.8 Reference / Trend / Constant Lines (MANDATORY — detect if present)
+- Look for `<reference-line>`, `<reference-line-aggregation>`, or `<trend-lines>` elements within a worksheet's `<panes>`/`<axis>`
+- Extract: line type (constant, average, median, total, min/max, trend), the value or aggregation, scope (per-cell / per-pane / per-table), and label
+- Power BI mapping:
+  - Constant / average / min / max → analytics-pane **constant line** / **min line** / **max line** / **average line** on the cartesian visual
+  - Trend line → analytics-pane **trend line** (Power BI built-in) on a `lineChart` / `scatterChart`
+- Record these as an "Analytics Lines" note on the affected visual
+- If NO reference/trend lines exist, write `None` — do not invent lines
+
 ### Step 3: Extract Dashboard Layout
 
 For each `<dashboard name='...'>` element:
@@ -206,6 +226,8 @@ Save extracted visualization metadata to `.specify/memory/tableau-visuals-output
 - **Color**: {field_name}
 - **Size**: {field_name}
 - **Labels**: {field_name}
+- **Secondary Axis / Combo**: {second measure + mark type, or None}
+- **Analytics Lines**: {constant/average/trend line details, or None}
 - **Filters**: {filter_description}
 - **Format**: {number_format}
 - **Sort**: {sort_field} {direction}
@@ -243,6 +265,20 @@ Save extracted visualization metadata to `.specify/memory/tableau-visuals-output
 | Date Format | {format} |
 ```
 
+## Format String Translation (Tableau → Power BI)
+Translate captured Tableau format strings to Power BI `formatString` values. Only include rows for formats actually found in the workbook; otherwise write `None`.
+
+| Tableau Format | Power BI formatString | Notes |
+|---|---|---|
+| `$#,##0` / `$#,##0.00` | `\$#,##0` / `\$#,##0.00` | Currency (escape `$`) |
+| `0%` / `0.0%` | `0%` / `0.0%` | Percentage |
+| `#,##0` / `#,##0.00` | `#,##0` / `#,##0.00` | Thousands separator |
+| `0.0"K"` / `0.0,"M"` | `#,0.0,"K"` / `#,0.0,,"M"` | Scaled abbreviations |
+| `mmmm yyyy` | `mmmm yyyy` | Month-Year |
+| `mm/dd/yyyy` | `mm/dd/yyyy` | Date |
+| `[h]:mm:ss` | `h:mm:ss` | Duration (Power BI has no elapsed `[h]`) |
+| (no format) | `Default` | Leave model default |
+
 ### Step 5: Validate Extraction Completeness (MANDATORY)
 
 Before handing off, verify the output contains:
@@ -251,6 +287,8 @@ Before handing off, verify the output contains:
 - [ ] **Color/Size/Text encodings** for worksheets that have them (crucial for treemap/legend detection)
 - [ ] **Field shelf data** (rows, cols) to determine axis orientation
 - [ ] **Navigation buttons** extracted for ALL dashboards that have `<button>` elements (goto-sheet, toggle actions)
+- [ ] **Dual-axis / combo** detection recorded per worksheet (value or `None`)
+- [ ] **Reference/trend lines** recorded per worksheet (value or `None`)
 
 **If ANY worksheet is missing mark type or encoding data, re-parse the TWB XML before proceeding.**
 
@@ -330,3 +368,12 @@ After saving, automatically invoke the `report-visual-constitution` agent which 
 - **IMPORTANT**: Text marks are the most common mark type in Tableau. They are used for tables/matrices, NOT for charts. Always map them to `tableEx` or `pivotTable`.
 - **IMPORTANT**: Extract ALL dashboards in the workbook. Each becomes a Power BI page.
 - **IMPORTANT**: When a Tableau visual type has no clear Power BI equivalent, use `vscode_askQuestions` to ask the user which visual to use, presenting 2-3 alternatives with descriptions.
+
+## Anti-Hallucination Rules (MANDATORY)
+
+1. **Recreate only what exists.** Every visual, field binding, position, color, combo measure, and reference line MUST come from a concrete element in the `.twb` XML. Never invent visuals or bindings.
+2. **Use `None` for absent features.** If a worksheet has no dual-axis, no analytics lines, no filters, or no special format, write `None`. Do not fabricate plausible-looking values.
+3. **One worksheet → assess once.** Map each worksheet to exactly one decision. Do not generate extra speculative visuals or duplicate pages.
+4. **Ask, don't guess, on ambiguity.** When a mark type or format is unclear, use `vscode_askQuestions` rather than inventing a mapping. Mark unresolved items `UNVERIFIED`.
+5. **Preserve real coordinates.** Use the actual zone `x/y/w/h` (scaled), not estimated layouts. Do not reposition visuals arbitrarily.
+6. **No new measures or DAX here.** This skill describes visuals only; it never creates semantic-model fields or DAX.

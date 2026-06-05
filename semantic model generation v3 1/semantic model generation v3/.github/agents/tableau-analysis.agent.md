@@ -113,6 +113,39 @@ Output as:
 
 This data is **essential** for the report-visual-migration agent to generate correctly-typed and correctly-positioned visuals.
 
+### 2d. Extract Sets, Groups, Bins, Blending & Formats (MANDATORY)
+
+These constructs drive downstream DAX and MUST be captured (write `None` when absent — never fabricate):
+
+1. **Sets** — `<group name='[... Set]'>` with `<groupfilter>` children. Record set name, source field, type (Fixed list vs Computed/top-N), and members/condition.
+2. **Groups** — `<group name='[... (group)]'>` or `<calculation class='categorical-bin'>`. Record group field, source dimension, and each alias → member values.
+3. **Bins** — `<column>` with `<calculation class='bin' decimal-bin-size='...'>`. Record bin field, source field, bin size.
+4. **Data Blending** — Count real `<datasource>` elements (excluding `Parameters`). If more than one and worksheets reference fields across them (or `<datasource-dependencies>` exist), record primary + secondary datasources and the linking field(s). If only one, write `Single datasource — no blending`.
+5. **Field Formatting** — Capture each field's display format string verbatim (e.g. `$#,##0`, `0.0%`, `mmmm yyyy`, `[h]:mm:ss`). Write `Default` when none.
+
+Output as:
+```markdown
+## Sets
+| Set Name | Source Field | Type | Members / Condition |
+|----------|--------------|------|---------------------|
+
+## Groups
+| Group Field | Source Dimension | Alias | Member Values |
+|-------------|------------------|-------|---------------|
+
+## Bins
+| Bin Field | Source Field | Bin Size |
+|-----------|--------------|----------|
+
+## Data Blending
+| Primary Datasource | Secondary Datasource | Linking Field(s) |
+|--------------------|----------------------|------------------|
+
+## Field Formatting
+| Field | Tableau Format String | Kind |
+|-------|-----------------------|------|
+```
+
 ### 3. Decode XML Entities
 
 - `&quot;` → `"`, `&gt;` → `>`, `&lt;` → `<`, `&amp;` → `&`, `&#13;&#10;` → newline
@@ -160,6 +193,9 @@ Output structured markdown:
 ## Worksheet Visual Details    ← NEW (mark types, field shelves, encodings)
 ## Dashboard Layout             ← NEW (zone positions, sizes)
 ## Navigation Buttons           ← NEW (goto-sheet, toggle buttons per dashboard)
+## Sets / Groups / Bins         ← NEW (None when absent)
+## Data Blending                ← NEW (Single datasource when one source)
+## Field Formatting             ← NEW (Tableau format strings)
 ## Worksheets
 ## Dashboards
 ## Relationships
@@ -192,3 +228,11 @@ runSubagent(
 - Cross-datasource: `[datasource_id].[field_name]`
 - Parameters datasource named `'Parameters'` — list separately
 - The handoff to migration-constitution is AUTOMATIC — do not skip or ask
+
+## Anti-Hallucination Guardrails
+
+- **Extract only what the XML contains.** Never invent tables, fields, calculated fields, sets, groups, bins, or relationships. Every item must trace to a concrete element.
+- **Write `None` for empty categories** instead of fabricating plausible entries.
+- **Copy formulas and format strings verbatim** (after entity decoding) — do not rewrite or guess them.
+- **Label ambiguous items `UNVERIFIED`** rather than filling gaps with assumptions.
+- **Do not perform downstream work** (DAX, schema design, visuals) in this agent — only extract metadata, then hand off.

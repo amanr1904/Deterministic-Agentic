@@ -106,6 +106,19 @@ Generate DAX measures, calculated columns, and What-If parameters equivalent to 
 | `DATETRUNC('month', [date])` | `EOMONTH(Table[DateCol], -1) + 1` or `DATE(YEAR(...), MONTH(...), 1)` |
 | `TODAY()` | `TODAY()` |
 
+### Format Strings (Tableau format → measure `formatString`)
+Apply the Tableau field's display format to the generated measure's `formatString`. Use the format captured in `tableau-analysis-output.md`; if none was captured, leave the model default.
+
+| Tableau Format | Power BI `formatString` | Notes |
+|---|---|---|
+| `$#,##0` / `$#,##0.00` | `"\$#,##0"` / `"\$#,##0.00"` | Currency — escape `$` |
+| `0%` / `0.0%` | `"0%"` / `"0.0%"` | Percentage |
+| `#,##0` / `#,##0.00` | `"#,##0"` / `"#,##0.00"` | Integer / decimal w/ separator |
+| `0.0"K"` / `0.0,,"M"` | `"#,0.0,\"K\""` / `"#,0.0,,\"M\""` | Scaled units |
+| `mmmm yyyy` / `mm/dd/yyyy` | `"mmmm yyyy"` / `"mm/dd/yyyy"` | Date columns |
+| `[h]:mm:ss` | `"h:mm:ss"` | Duration (no elapsed `[h]` in Power BI) |
+| (none) | omit / model default | Do not guess a format |
+
 ## DAX Best Practices Checklist
 
 1. Use `DIVIDE()` for all division operations
@@ -122,6 +135,15 @@ Generate DAX measures, calculated columns, and What-If parameters equivalent to 
 12. Organize into display folders by business domain
 13. Format using DAX Formatter conventions
 14. Use `(a-b)/b` with variables for growth ratios
+
+## Anti-Hallucination Rules (MANDATORY)
+
+1. **Convert only listed calculations.** Generate DAX ONLY for the calculated fields, parameters, sets, groups, and bins recorded in `tableau-analysis-output.md`. Do not invent measures that were not in the source workbook.
+2. **Standard aggregate measures are bounded.** When adding helper aggregates (row counts, distinct counts, sums/averages), create them ONLY for columns that actually exist in the model. Keep the set minimal and relevant — do not generate dozens of speculative measures.
+3. **Preserve source semantics.** Base each DAX expression on the verbatim Tableau formula. If a Tableau function has no DAX equivalent (e.g. `SCRIPT_*`, forecasting), record it as `UNSUPPORTED — needs manual review` instead of approximating silently.
+4. **No fabricated columns or relationships.** Never reference a table or column that is not defined in the analysis/star-schema output.
+5. **Flag uncertainty.** If a translation is ambiguous, annotate the measure with a `-- REVIEW:` comment explaining the assumption rather than guessing.
+6. **Stay in scope.** This skill produces DAX only. Do not design the schema, build visuals, or restructure tables.
 
 ## Output
 

@@ -31,7 +31,7 @@ Required properties:
 ## File: relationships.tmdl
 
 5 relationship declarations with properties:
-- `fromColumn` / `toColumn`: Table[Column] references
+- `fromColumn` / `toColumn`: Table[Column] references (Customers/Location/Products/DimDate → Orders)
 - `crossFilteringBehavior`: `oneDirection`
 - `fromCardinality`: `many`
 - `toCardinality`: `one`
@@ -44,7 +44,7 @@ Required properties:
 Each table file contains:
 - Table declaration with partition (M expression or DAX expression)
 - Column declarations with: `dataType`, `sourceColumn`, `summarizeBy`, `lineageTag`
-- Measure declarations (on FactOrders and SelectYear) with: `expression`, `formatString`, `displayFolder`, `lineageTag`
+- Measure declarations (on the `Orders` fact table) with: `expression`, `formatString`, `displayFolder`, `lineageTag`
 - Optional: `dataCategory` for geographic columns, `isHidden` for internal columns
 
 ### M Query Partition Contract (CSV tables)
@@ -57,7 +57,7 @@ Csv.Document(
 ```
 Followed by: `Table.PromoteHeaders`, `Table.TransformColumnTypes` with `"de-DE"` culture.
 
-### DAX Calculated Table Contract (SelectYear)
+### DAX Calculated Table Contract (Select Year)
 
 ```dax
 DATATABLE("Year", INTEGER, {{2020}, {2021}, {2022}, {2023}})
