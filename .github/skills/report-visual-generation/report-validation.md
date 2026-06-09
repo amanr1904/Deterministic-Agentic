@@ -113,9 +113,10 @@ Compare generated visuals against the Tableau source metadata in `tableau-visual
 
 | Check | Rule |
 |---|---|
-| Page targets exist | Every `action.page` value must match a `name` in some page.json |
+| Action placement | Every button action lives in `visualContainerObjects.visualLink` (never `objects.action`) |
+| Page targets exist | Every `visualLink.navigationSection` value must match a `name` in some page.json |
 | Button count | Number of nav buttons per page matches Tableau dashboard button count |
-| Toggle buttons noted | Toggle/bookmark buttons have empty bookmark value (noted for manual setup) |
+| Bookmarks generated | Each toggle button's `visualLink.bookmark` references a real bookmark in `definition/bookmarks/` (never empty); a Show/Hide pair exists with resolved `targetVisualNames` |
 | Z-index | All button visuals have `z ≥ 1000` |
 | Title disabled | All button visuals have `title.show = false` |
 
@@ -195,7 +196,7 @@ After validation, produce a summary:
 
 ### Navigation
 - ✅ 2 page navigation buttons target valid pages
-- ⚠️ 1 bookmark toggle requires manual bookmark setup
+- ✅ 1 toggle button wired to a generated Show/Hide bookmark pair
 
 ### Cross-Page
 - ✅ pageOrder matches folder structure

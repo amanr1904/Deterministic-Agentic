@@ -73,6 +73,7 @@ The `visualContainer/2.4.0` schema permits ONLY: `$schema`, `name`, `position`, 
 
 - **NEVER** add `filters`, `filterConfig`, `config`, or ANY other property at the root of `visual.json`. Power BI Desktop rejects it with "Property has not been defined and the schema does not allow additional properties".
 - For Top N / measure-based filtering, rely on DAX logic (e.g. `Top N Filter = IF([State Rank] <= SELECTEDVALUE(...), 1, 0)`) and let users add visual filters in the Desktop UI.
+- ⚠️ **NEVER hand-author a `VisualTopN` filterConfig.** The PBIR `filterConfig` schema is NOT the semantic-query format: `VisualTopN` does NOT accept `Expression`/`Count`/`OrderBy`/`IsAscending` — those crash the whole report on open with *"Property 'X' has not been defined and the schema does not allow additional properties"* + *"Required properties are missing: ItemCount"*. Do Top-N via a DAX rank measure instead; do not emit a TopN filterConfig at all.
 - Page-level filters go in `page.json`; report-level filters go in `report.json`.
 
 ## Query Roles
@@ -80,6 +81,14 @@ The `visualContainer/2.4.0` schema permits ONLY: `$schema`, `name`, `position`, 
 - Use the correct role bucket per visual type: `Category` (axis/rows), `Y`/`Values` (measures), `Series`/`Legend` (color split), `Size` (bubble/treemap).
 - `Column` → dimensions; `Measure` → measures. Match `Entity`/`Property` to real TMDL names.
 - `queryRef` format: `{TableName}.{ColumnOrMeasureName}` (e.g. `FactLoan.Total Loan Amount`).
+
+## ⚠️ CRITICAL — Projection `active` flag (prevents BLANK visuals)
+
+- EVERY projection that should be DISPLAYED must be `"active": true`. **NEVER set `"active": false` on a field you want shown.**
+- A projection marked `"active": false` is excluded from the visual's query, so it does not render. If you mark a card's second value or a table's grouping column `active: false`, the visual renders BLANK (title only, no data).
+- This is the #1 cause of "card shows title but no number" and "table is empty": multi-field cards (value + % diff) and multi-column tables (name + measures) where only the first projection was `active: true`.
+- RULE: in multi-row cards, KPI cards, and tables, set `"active": true` on ALL displayed value/column projections. Reserve `active: false` only for fields intentionally hidden (e.g. field-parameter alternates) — which is rare in migrations.
+- Validators do NOT catch this — only opening in Power BI Desktop reveals the blank visual.
 
 ## Visual Type Mapping
 

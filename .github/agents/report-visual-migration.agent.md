@@ -171,7 +171,7 @@ For EACH `<dashboard>`, find all zones with `type-v2='dashboard-object'` contain
 
 **Power BI mapping for buttons** (canonical detail in `.github/skills/report-navigation-buttons/SKILL.md`):
 - `goto-sheet` → `actionButton` visual with `visualContainerObjects.visualLink.type = "PageNavigation"` and `navigationSection` target page name (NOT `objects.action`)
-- `toggle` (show/hide zones) → `actionButton` visual with `visualContainerObjects.visualLink.type = "Bookmark"` (note: requires bookmark pairs for show/hide states — generate a comment in output noting manual bookmark setup needed)
+- `toggle` (show/hide zones) → `actionButton` visual with `visualContainerObjects.visualLink.type = "Bookmark"`, wired to an **auto-generated Show/Hide bookmark pair** under `definition/bookmarks/` that toggles the target visuals' visibility (see `report-navigation-buttons` — no manual setup required)
 
 **Step 1d: Save comprehensive visual extraction output**
 
@@ -271,7 +271,7 @@ Review the specification for ambiguities:
 4. Are there interactive features (actions, highlights) that need bookmarks?
 5. Are there dual-axis charts that need combo chart mapping?
 6. Are there navigation buttons that target dashboards not in this workbook?
-7. Are there toggle buttons — note that bookmark-based toggling requires manual bookmark creation in Power BI Desktop after opening?
+7. Are there toggle buttons — generate a Show/Hide bookmark pair under `definition/bookmarks/` and wire each button's `visualLink.bookmark` to it (no manual setup)?
 
 **CRITICAL Visual Type Matching Rules:**
 - Tableau Text mark with rows only → `tableEx` (flat table) — NEVER bar/column chart
@@ -518,7 +518,7 @@ Output/{WorkbookName}/{ProjectName}.Report/
       }}],
       "fill": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "true"}}},
-        "fillColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'#072a35'"}}}}}
+        "fillColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'{button_fill_color}'"}}}}}
       }}],
       "text": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "true"}}},
@@ -537,7 +537,7 @@ Output/{WorkbookName}/{ProjectName}.Report/
       }}],
       "background": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "true"}}},
-        "color": {"solid": {"color": {"expr": {"Literal": {"Value": "'#072a35'"}}}}}
+        "color": {"solid": {"color": {"expr": {"Literal": {"Value": "'{button_fill_color}'"}}}}}
       }}],
       "border": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "false"}}}
@@ -553,7 +553,7 @@ Output/{WorkbookName}/{ProjectName}.Report/
 > - `visualLink.navigationSection` = the `name` field from the target page's `page.json` (e.g. `"'ReportSection2'"`).
 > - Button label (`text.text`) should use the extracted tooltip text from Tableau (e.g. "Go to Sales Dashboard").
 > - Use high z-index (1000+) so buttons render above other visuals.
-> - Style the button background/fill to match the Tableau button bar color (e.g., `#072a35` for dark nav bars).
+> - Style the button background/fill from the Tableau button-bar zone style (`{button_fill_color}`) — do NOT hardcode a color.
 > - Set `title.show = false` — buttons don't need titles.
 > - Group navigation buttons together at the same y-position with consistent spacing.
 
@@ -577,7 +577,7 @@ Output/{WorkbookName}/{ProjectName}.Report/
       }}],
       "fill": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "true"}}},
-        "fillColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'#072a35'"}}}}}
+        "fillColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'{button_fill_color}'"}}}}}
       }}],
       "text": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "false"}}}
@@ -587,14 +587,14 @@ Output/{WorkbookName}/{ProjectName}.Report/
       "visualLink": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "true"}}},
         "type": {"expr": {"Literal": {"Value": "'Bookmark'"}}},
-        "bookmark": {"expr": {"Literal": {"Value": "''"}}}
+        "bookmark": {"expr": {"Literal": {"Value": "'{bookmark_id}'"}}}
       }}],
       "title": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "false"}}}
       }}],
       "background": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "true"}}},
-        "color": {"solid": {"color": {"expr": {"Literal": {"Value": "'#072a35'"}}}}}
+        "color": {"solid": {"color": {"expr": {"Literal": {"Value": "'{button_fill_color}'"}}}}}
       }}],
       "border": [{"properties": {
         "show": {"expr": {"Literal": {"Value": "false"}}}
@@ -606,11 +606,13 @@ Output/{WorkbookName}/{ProjectName}.Report/
 
 > **Toggle Button Notes** (canonical detail in `.github/skills/report-navigation-buttons/SKILL.md`):
 > - **The action MUST be in `visualContainerObjects.visualLink`, NOT `objects.action`.**
-> - `visualLink.type` = `'Bookmark'` — requires bookmarks to be created manually in Power BI Desktop.
-> - Leave `visualLink.bookmark` empty (`"''"`) — user must assign bookmarks after opening in Desktop.
+> - `visualLink.type` = `'Bookmark'`, and `visualLink.bookmark` = the `name` (hex id) of an auto-generated bookmark — NEVER leave it empty.
+> - Generate a Show/Hide bookmark pair under `definition/bookmarks/` (`bookmarks.json` + one `.bookmark.json` per state) that toggles the visibility of the visuals mapped from the Tableau `toggle-action` `zone-ids`. No manual Desktop setup required.
+> - **`display.mode` enum — `"visible"` is INVALID.** Only `hidden`, `maximize`, `spotlight`, `elevation` are allowed (`bookmark/1.4.0` schema). To SHOW a visual in a bookmark, OMIT it from `visualContainers`; each bookmark lists ONLY the visuals it HIDES (`"display": {"mode": "hidden"}`). Using `"visible"` makes Desktop reject the `.pbip` with *"JSON does not match any schemas from 'anyOf' … singleVisual.display.mode"* — and the validators do NOT catch it.
+> - Reproduce a full toggle with two stacked buttons (Show + Hide) at the same position, each wired to one bookmark and hidden by the opposite bookmark; for a single button, wire it to the Show bookmark and note the single-direction limitation.
+> - Style the button fill from the Tableau button-bar zone style (`{button_fill_color}`) — do NOT hardcode a color.
 > - Use `icon.shapeType = "'Filter'"` for filter toggle buttons (matches the filter icon concept).
-> - Add a comment in the visual-spec noting that bookmark pairs (show/hide states) must be created manually.
-> - Tooltip text from Tableau (e.g., "Show Dashboard Filters" / "Close Dashboard Filters") should be noted in spec for user reference.
+> - Tooltip text from Tableau (e.g., "Show Dashboard Filters" / "Close Dashboard Filters") drives the bookmark `displayName`.
 
 **Write ALL files using UTF-8 without BOM.**
 

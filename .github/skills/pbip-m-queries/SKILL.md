@@ -102,6 +102,20 @@ in
 3. **Use absolute file paths** — `File.Contents("C:\\full\\path\\file.csv")`.
 4. **Use `QuoteStyle.Csv`** (not `QuoteStyle.None`) — quoted CSV fields fail otherwise.
 5. **Null-check before text functions** — check `[col] = null or [col] = ""` BEFORE `Text.BeforeDelimiter`, etc.
+6. **ALWAYS deduplicate dimension key columns** — any table on the "one" side of a many-to-one relationship MUST end with `Table.Distinct(PreviousStep, {"KeyColumn"})`. Pre-built dimension exports (separate CSV/table per dimension) frequently contain duplicate keys (e.g. one Postal Code mapping to two Cities, one Product ID with two Product Names). A duplicate on the one-side fails the relationship with "Column contains a duplicate value and this is not allowed" AND cascades to "Load was cancelled by an error in loading a previous table" for every other table. Validators do NOT catch this — only Power BI Desktop's loader does.
+
+### Dimension key dedup (one-side of relationship)
+```m
+let
+    Source = Csv.Document(File.Contents("{ABSOLUTE_PATH}"), [Delimiter=",", Columns={N}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    TrimKey = Table.TransformColumns(Promoted, {{"{KeyColumn}", each Text.Trim(_), type text}}),
+    Deduped = Table.Distinct(TrimKey, {"{KeyColumn}"})
+in
+    Deduped
+```
+- `Table.Distinct(table, {"KeyColumn"})` keeps the FIRST row per distinct key (preserves all other columns).
+- Apply to EVERY dimension/lookup table. NOT needed for fact tables (many-side) or M-generated DimDate (unique by construction).
 
 ### First value from comma-separated field
 ```m

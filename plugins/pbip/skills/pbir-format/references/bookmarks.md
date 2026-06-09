@@ -89,10 +89,17 @@ Individual bookmark state. Each bookmark captures a snapshot of the report at a 
 | Path | Description |
 |------|-------------|
 | `singleVisual.display.mode: "hidden"` | Hide the visual (the actual mechanism for bookmark show/hide) |
-| `singleVisual.display.mode: "visible"` | Show the visual (explicitly set visible in this bookmark) |
 | `singleVisual.objects.merge` | Override specific formatting properties |
 | `singleVisual.activeProjections` | Active drill-down field |
 | `filters.byExpr[]` | Visual-level filter state |
+
+> **⚠️ `display.mode` enum — `"visible"` does NOT exist.** The `bookmark/1.4.0` schema
+> (`VisualContainerDisplayMode`) allows ONLY `hidden`, `maximize`, `spotlight`, `elevation`.
+> Writing `"mode": "visible"` makes Power BI Desktop reject the `.pbip` with
+> *"JSON does not match any schemas from 'anyOf' … singleVisual.display.mode"*.
+> **To make a visual visible in a bookmark, OMIT its entry from `visualContainers`** (keep it in
+> `options.targetVisualNames`). Each bookmark's `visualContainers` should list ONLY the visuals it HIDES.
+> Neither `tmdl-validate` nor `validate_pbip.py` catches this — only Desktop's loader does.
 
 ### Filter snapshot (byExpr)
 

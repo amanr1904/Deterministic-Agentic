@@ -41,6 +41,17 @@ Relationship:
 - Dimension "to" side is always unique (guaranteed by DISTINCT).
 - No fragile surrogate-key generation to keep in sync.
 
+## Multi-Source Dimensions (separate file/table per dimension)
+
+When EACH dimension comes from its OWN source (e.g. `Customers.csv`, `Location.csv`, `Products.csv` plus a fact `Orders.csv`), the dimension key is NOT built via `DISTINCT` of a fact column — it is read directly from the dimension export. These exports are often denormalized and **contain duplicate keys**, so each dimension MUST be deduplicated on its key:
+
+1. **Each dimension loads its own source file independently.**
+2. **The key column is the relationship "one" side** (e.g. `Customer ID`, `Postal Code`, `Product ID`).
+3. **End every dimension M query with `Table.Distinct(PreviousStep, {"KeyColumn"})`** — keeps the first row per distinct key. (M code: see **`pbip-m-queries`** → "Dimension key dedup".)
+4. **The fact table (many-side) is NOT deduplicated** — it keeps every row.
+
+> A duplicate key on the one-side throws "Column contains a duplicate value and this is not allowed for columns on the one side of a many-to-one relationship" and cascades to "Load was cancelled by an error in loading a previous table" for all other tables. Validators do NOT detect this; only Power BI Desktop does. ALWAYS dedup dimension keys.
+
 ## Many-to-Many (comma-separated values)
 
 ```

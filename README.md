@@ -1,6 +1,6 @@
 # Tableau → Power BI Migration Pipeline
 
-Automated agentic pipeline that converts any Tableau workbook (`.twb`/`.twbx`) into a complete Power BI project (`.pbip`) — including semantic model AND report visuals.
+Automated agentic pipeline that converts any Tableau workbook (`.twb`) into a complete Power BI project (`.pbip`) — including semantic model AND report visuals.
 
 ## Prerequisites
 

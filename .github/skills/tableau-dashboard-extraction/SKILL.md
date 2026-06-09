@@ -57,7 +57,7 @@ Output per dashboard:
 
 **Power BI mapping** (informs `report-navigation-buttons`):
 - `goto-sheet` → `actionButton` with `visualLink.type = 'PageNavigation'` and `navigationSection` = target page name.
-- `toggle` → `actionButton` with `visualLink.type = 'Bookmark'` (requires 2 bookmarks: show + hide; created manually in Desktop).
+- `toggle` → `actionButton` with `visualLink.type = 'Bookmark'`, wired to an auto-generated Show/Hide bookmark pair under `definition/bookmarks/` (see `report-navigation-buttons` — no manual Desktop setup).
 
 ## Layout Containers
 

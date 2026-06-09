@@ -47,6 +47,7 @@ Read these before proceeding. The generation guide is decomposed into focused sk
   - For many-to-many (comma-separated values): create a bridge table that splits values independently
   - DimDate generated via M (no file dependency)
 - **If MULTIPLE source files/tables**: Each table loads from its own source. Can use surrogate keys if sources are independent.
+- **ALWAYS deduplicate dimension key columns** — every dimension/lookup table (the "one" side of a many-to-one relationship) MUST end its M query with `Table.Distinct(PreviousStep, {"KeyColumn"})`. Pre-built dimension exports (e.g. separate `Customers.csv`, `Location.csv`, `Products.csv`) frequently contain duplicate keys (one Postal Code → two Cities, one Product ID → two Product Names). A duplicate on the one-side fails with "Column contains a duplicate value... not allowed for columns on the one side of a many-to-one relationship" and cascades to "Load was cancelled by an error in loading a previous table" for every other table. Validators do NOT catch this — only Power BI Desktop does. Do NOT dedup the fact table (many-side) or M-generated DimDate.
 - **NEVER use `Table.NestedJoin` referencing other table names** in M partitions — this creates circular dependencies.
 - **ALWAYS use absolute file paths** in `File.Contents()` — resolve the full path to data files in `Data/{subfolder}/`.
 

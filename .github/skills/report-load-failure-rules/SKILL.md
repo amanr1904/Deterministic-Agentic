@@ -62,6 +62,22 @@ The canonical mapping (with Automatic-mark inference) is in **`tableau-mark-mapp
 
 - All files UTF-8 WITHOUT BOM (see `report-pbir-folder-format`).
 
+## Rule 8 — Bookmark `display.mode` Enum — NEVER `"visible"`
+
+- In `definition/bookmarks/{id}.bookmark.json`, the path
+  `explorationState.sections.{page}.visualContainers.{visual}.singleVisual.display.mode`
+  accepts ONLY `hidden`, `maximize`, `spotlight`, `elevation` (per `bookmark/1.4.0` → `VisualContainerDisplayMode`).
+- `"mode": "visible"` → Desktop rejects the `.pbip`: *"JSON does not match any schemas from 'anyOf' … singleVisual.display.mode"*.
+- To SHOW a visual in a bookmark, **OMIT its entry** from `visualContainers`. Each bookmark lists ONLY the visuals it HIDES.
+- ⚠️ `tmdl-validate` and `validate_pbip.py` do NOT catch this — verify bookmark JSON manually. See `report-navigation-buttons`.
+
+## Rule 9 — Projection `active` flag — NEVER `false` for Displayed Fields
+
+- A projection with `"active": false` is dropped from the visual's query → the field does NOT render. The visual loads but shows BLANK data (title only).
+- This silently breaks multi-field cards (value + % diff) and multi-column tables (name + measures) when only the first projection is `active: true`.
+- RULE: set `"active": true` on EVERY displayed value/column projection in cards and tables. See **`report-visual-json`**.
+- ⚠️ Validators do NOT catch this — only Power BI Desktop reveals the blank visual.
+
 ## Final Pre-Write Checklist
 
 - [ ] `themeCollection` is `{}`
@@ -73,4 +89,6 @@ The canonical mapping (with Automatic-mark inference) is in **`tableau-mark-mapp
 - [ ] All slicers have `title.show = false` (see `report-slicers`)
 - [ ] All visuals have a border (see `report-borders-titles`)
 - [ ] No visual overlaps; edge padding respected (see `report-layout-gapping`)
+- [ ] No bookmark uses `display.mode: "visible"` — visible visuals are OMITTED (see Rule 8)
+- [ ] Every displayed projection is `active: true` (no blank cards/tables — see Rule 9)
 - [ ] All files UTF-8 without BOM

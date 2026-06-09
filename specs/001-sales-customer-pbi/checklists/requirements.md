@@ -1,7 +1,7 @@
-# Specification Quality Checklist: Netflix RLS Dashboard Migration (Tableau → Power BI)
+# Specification Quality Checklist: Sales & Customer Dashboards — Tableau → Power BI Migration
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning  
-**Created**: 2026-06-08  
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-06-09
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -31,6 +31,5 @@
 
 ## Notes
 
-- Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`.
-- The migration targets a Power BI artifact, so domain terms (PBIP, RLS, USERPRINCIPALNAME) appear as references to the user's stated requirements rather than as prescriptive implementation; functional requirements remain outcome-focused.
-- Key risk flagged for the planning/modeling stage: multi-valued `country` field affecting RLS join accuracy (Edge Cases, FR-007, Assumptions).
+- Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
+- Spec describes migration scope at the WHAT level; specific DAX syntax, TMDL structure, and PBIR JSON are deferred to the dax-measures, star-schema, and pbip-generator stages.

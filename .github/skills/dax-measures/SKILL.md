@@ -51,6 +51,8 @@ Generate DAX measures, calculated columns, and What-If parameters equivalent to 
 | `{INCLUDE [dim]: ...}` | `CALCULATE(..., VALUES(Table[Dim]))` |
 | `{EXCLUDE [dim]: ...}` | `CALCULATE(..., REMOVEFILTERS(Table[Dim]))` |
 
+> ⚠️ **FIXED LOD grain trap (causes UNIFORM values in visuals):** Do NOT wrap a FIXED LOD in `ALLEXCEPT(Dim, Dim[Key])`. `ALLEXCEPT` on the key column clears every other filter, so when the visual groups by a *related attribute* (e.g. `Customer Name` while you fixed on `Customer ID`), the grouping is stripped and every row shows the SAME grand-total value. Use `VALUES(Dim[Key])` / `REMOVEFILTERS()` per the table above so the measure still respects the visual's grouping column. Validators do NOT catch this — verify per-row variation in Power BI Desktop.
+
 ### String Functions
 | Tableau | DAX |
 |---------|-----|

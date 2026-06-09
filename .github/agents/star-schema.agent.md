@@ -57,6 +57,13 @@ If all tables come from ONE source (one CSV, one database table), use **NATURAL 
 - Do NOT design surrogate integer keys that require cross-table M joins
 - This prevents circular dependencies and "Load was cancelled" errors in Power BI
 
+**CRITICAL — Multi-Source Dimension Dedup:**
+If each dimension comes from its OWN source file/table (e.g. separate `Customers.csv`, `Location.csv`, `Products.csv` + fact `Orders.csv`), the dimension key MUST be UNIQUE:
+- Every dimension/lookup table (the "one" side) MUST end its M query with `Table.Distinct(PreviousStep, {"KeyColumn"})`.
+- Dimension exports are often denormalized and contain duplicate keys (one Postal Code → two Cities, one Product ID → two Product Names).
+- A duplicate on the one-side throws "Column contains a duplicate value... not allowed for columns on the one side of a many-to-one relationship" and cascades to "Load was cancelled by an error in loading a previous table" for ALL tables.
+- Do NOT dedup the fact table (many-side) or M-generated DimDate. Note this requirement in the star-schema output so `pbip-generator` applies it.
+
 ### 4. Define Hierarchies
 
 For each dimension, identify natural hierarchies:
