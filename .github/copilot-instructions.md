@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/002-q3-dealer-buying-pbi/plan.md
+at specs/004-midnight-census-pbi/plan.md
 <!-- SPECKIT END -->
 
 # Tableau → Power BI Semantic Model Migration Pipeline
@@ -9,6 +9,35 @@ at specs/002-q3-dealer-buying-pbi/plan.md
 ## Overview
 
 This workspace contains an automated end-to-end agentic pipeline that converts any Tableau workbook (.twb) into a complete Power BI project (.pbip) — including both the semantic model AND report visuals. When a user places a Tableau workbook in the workspace and runs the `tableau-analysis` agent, the full pipeline executes automatically.
+
+## ⚡ Hybrid Deterministic + Agentic Engine (token-saving)
+
+Four token-heavy stages have deterministic Python engines under `scripts/` so the LLM
+never reads raw `.twb` XML nor writes TMDL/PBIR boilerplate. The agents on those stages
+run the scripts and only fill the reasoning gaps.
+
+| Stage | Script | Replaces (LLM work) | Output |
+|-------|--------|---------------------|--------|
+| 1 Analysis | `scripts/twb/parse_twb.py` | reading raw `.twb` XML | `Output/{Pascal}/analysis.json` (IR) |
+| 6 DAX | `scripts/dax/map_dax.py` | translating trivial calcs | `Output/{Pascal}/dax-partial.json` |
+| 10 Model | `scripts/emit/emit_tmdl.py` | writing `.SemanticModel` TMDL | `{Model}.SemanticModel/` |
+| 13 Report | `scripts/emit/emit_pbir.py` | writing `.Report` PBIR JSON | `{Model}.Report/` |
+
+**Contracts** (`scripts/contracts/`): `ir_schema.json` (parser output) and
+`decisions_schema.json` (the ONLY artifact the LLM authors for code generation).
+
+**Two-phase orchestration** (`scripts/pipeline.py`):
+```powershell
+python scripts/pipeline.py prepare  "Data/{Subfolder}/{workbook}.twb"          # Stage 1 + 6
+# → agent reads analysis.json + dax-partial.json, writes decisions.json (gap-fill)
+python scripts/pipeline.py generate "Output/{Pascal}/analysis.json" --decisions "Output/{Pascal}/decisions.json"   # Stage 10 + 13 + validation
+```
+
+What stays agentic (irreducible reasoning): complex DAX (LOD/table-calcs flagged
+`complexity: complex`), ambiguous chart types (`inferredVisualType: null`), spec/plan
+prose, multi-source star-schema design. Recorded in `decisions.json`; the deterministic
+emitters consume IR + decisions and emit every file, then validators run. The mandatory
+`runSubagent` rule is unchanged — scripts run *inside* the relevant agent stages.
 
 ## Pipeline Flow
 

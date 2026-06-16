@@ -10,6 +10,24 @@ $ARGUMENTS
 
 You **MUST** consider the user input before proceeding (if not empty).
 
+## ⚡ Deterministic Fast Path (PREFERRED — saves tokens)
+
+**Do NOT hand-write PBIR JSON.** A deterministic emitter scaffolds the entire
+`.Report/` folder (definition.pbir, report.json, version.json, `.platform`, pages,
+per-visual `visual.json`) from the IR dashboards + your `decisions.json`. Zone
+coordinates are scaled to Power BI pixels deterministically:
+
+```powershell
+python scripts/emit/emit_pbir.py "Output/{PascalName}/analysis.json" --decisions "Output/{PascalName}/decisions.json"
+```
+
+Your only token spend is resolving **ambiguous chart types** — worksheets where the IR
+left `inferredVisualType == null`. Record each as a `visualDecisions` entry in
+`decisions.json` (`{ "worksheet": "...", "visualType": "barChart", "reason": "..." }`).
+The emitter reads these to pick the right visual. After emitting, validate JSON + run
+`validate_pbip.py`. Only hand-tune individual `visual.json` files for advanced
+formatting the emitter does not cover.
+
 ## Skill References
 
 These skills are decomposed into focused, single-responsibility files so no rule is skipped. Read the router first, then the specific skill for each step.
@@ -96,6 +114,22 @@ These rules MUST be followed for every migration. They ensure the Power BI repor
 
 ## Execution — Full Visual Migration Pipeline (ALL stages MANDATORY)
 
+> **⛔ HARD GATE — EXTRACTION DOCUMENT FIRST (NON-NEGOTIABLE) ⛔**
+>
+> Your VERY FIRST file write in this pipeline MUST be `.specify/memory/{WorkbookName}/tableau-visuals-output.md`.
+> You are FORBIDDEN from creating, editing, or generating ANY `visual.json`, `page.json`, `report.json`,
+> or other PBIR file until that extraction document exists on disk AND you have read it back.
+>
+> Enforce this with a literal check:
+> 1. Parse the `.twb` XML (Stage 1) and WRITE `tableau-visuals-output.md`.
+> 2. Run `Test-Path ".specify/memory/{WorkbookName}/tableau-visuals-output.md"` — it MUST return `True`.
+> 3. Re-read the file to confirm it contains the Visual Inventory table (one row per worksheet with its mark type).
+> 4. ONLY THEN proceed to Stage 2+ (generation).
+>
+> If you find yourself about to emit a `visual.json` and the extraction document does not yet exist, STOP and go back to Stage 1.
+> Extracting "in your head" and skipping the saved document is the #1 failure mode — it causes multi-measure
+> text tables to be wrongly generated as single-measure bar charts. The saved document is the contract.
+
 ### Stage 1: Visual Extraction (MUST parse .twb XML directly)
 
 **CRITICAL**: This stage MUST read and parse the actual `.twb` XML file — NOT just rely on the high-level analysis summary in `tableau-analysis-output.md`. The analysis file only contains metadata (datasources, columns, calculated fields). It does NOT contain mark types, field shelves, or dashboard zone positions needed to generate correct visuals.
@@ -118,6 +152,16 @@ For EACH `<worksheet>`, parse the `<table><panes><pane>` element to extract:
    - Text (single measure) → card
    - Text (rows+cols) → pivotTable
    - Automatic → INFER from encodings (see rules in tableau-visual-extraction SKILL.md)
+
+   **⚠️ MEASURE NAMES = TABLE (the most-missed rule):** If `<cols>` (or `<rows>`) contains
+   `[:Measure Names]`, the worksheet renders as a TEXT TABLE / crosstab, NOT a single-measure chart —
+   regardless of whether the mark class is `Text` or `Automatic`. Map it to:
+   - `tableEx` when there is ONE dimension on the other shelf, or
+   - `pivotTable` when there are dimensions on BOTH rows and cols.
+   The table MUST include **every** measure from the Measure Values card as a column (e.g. Style Count,
+   Order $, % of Total) — read the dashboard screenshot/Measure Values list to enumerate them.
+   **NEVER collapse a `Measure Names` worksheet into a one-measure bar chart.** A worksheet only becomes
+   a bar chart when it has a single measure and NO `Measure Names` field on its shelves.
 
 2. **Field shelves**:
    - `<rows>` → Y-axis fields (may contain hierarchy with `/` separators)

@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tableau Intermediate Representation (IR)",
+  "description": "Machine-readable contract produced by parse_twb.py from a .twb file. Canonical source of truth for all downstream deterministic generators and LLM gap-fill stages.",
+  "type": "object",
+  "required": ["irVersion", "workbook", "dataSources", "columns", "calculatedFields", "parameters", "worksheets", "dashboards", "rls"],
+  "properties": {
+    "irVersion": { "type": "string", "const": "1.0" },
+    "workbook": {
+      "type": "object",
+      "required": ["name", "pascalName"],
+      "properties": {
+        "name": { "type": "string" },
+        "pascalName": { "type": "string", "description": "PascalCase output folder + model name" },
+        "sourcePath": { "type": "string" },
+        "version": { "type": "string" },
+        "platform": { "type": "string" }
+      }
+    },
+    "dataSources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "connectionClass", "sourceType"],
+        "properties": {
+          "name": { "type": "string" },
+          "internalName": { "type": "string" },
+          "connectionClass": { "type": "string", "description": "raw Tableau class e.g. textscan, sqlserver" },
+          "sourceType": { "type": "string", "enum": ["CSV", "Excel", "SqlServer", "PostgreSQL", "MySQL", "Oracle", "Snowflake", "Databricks", "BigQuery", "Hyper", "ODBC", "Inline", "Unknown"] },
+          "files": { "type": "array", "items": { "type": "string" } },
+          "server": { "type": ["string", "null"] },
+          "database": { "type": ["string", "null"] },
+          "schema": { "type": ["string", "null"] },
+          "tables": { "type": "array", "items": { "type": "string" } },
+          "active": { "type": "boolean", "description": "referenced by at least one worksheet" }
+        }
+      }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["datasource", "name", "dataType", "role"],
+        "properties": {
+          "datasource": { "type": "string" },
+          "name": { "type": "string", "description": "physical/source column name" },
+          "caption": { "type": ["string", "null"] },
+          "dataType": { "type": "string", "enum": ["string", "integer", "real", "boolean", "date", "datetime"] },
+          "role": { "type": "string", "enum": ["dimension", "measure"] },
+          "semanticRole": { "type": ["string", "null"] },
+          "format": { "type": ["string", "null"], "description": "verbatim Tableau format string" },
+          "ordinal": { "type": ["integer", "null"] }
+        }
+      }
+    },
+    "calculatedFields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["caption", "formula", "complexity"],
+        "properties": {
+          "caption": { "type": "string" },
+          "fieldName": { "type": ["string", "null"] },
+          "dataType": { "type": ["string", "null"] },
+          "role": { "type": ["string", "null"] },
+          "formula": { "type": "string", "description": "entity-decoded Tableau formula" },
+          "isTableCalc": { "type": "boolean" },
+          "complexity": { "type": "string", "enum": ["trivial", "complex"], "description": "trivial = map_dax can translate; complex = route to LLM" },
+          "suggestedDaxKind": { "type": "string", "enum": ["measure", "column"] }
+        }
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "dataType", "domainType"],
+        "properties": {
+          "name": { "type": "string" },
+          "internalName": { "type": ["string", "null"] },
+          "dataType": { "type": "string" },
+          "domainType": { "type": "string", "enum": ["list", "range", "any"] },
+          "default": { "type": ["string", "null"] },
+          "values": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "worksheets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "markClass"],
+        "properties": {
+          "name": { "type": "string" },
+          "datasource": { "type": ["string", "null"] },
+          "markClass": { "type": "string" },
+          "rows": { "type": "array", "items": { "type": "string" } },
+          "cols": { "type": "array", "items": { "type": "string" } },
+          "encodings": {
+            "type": "object",
+            "properties": {
+              "color": { "type": ["string", "null"] },
+              "size": { "type": ["string", "null"] },
+              "text": { "type": ["string", "null"] }
+            }
+          },
+          "inferredVisualType": { "type": ["string", "null"], "description": "null => ambiguous, route to LLM" }
+        }
+      }
+    },
+    "dashboards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "size", "zones"],
+        "properties": {
+          "name": { "type": "string" },
+          "size": {
+            "type": "object",
+            "properties": { "w": { "type": "integer" }, "h": { "type": "integer" } }
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string", "enum": ["viz", "filter", "paramctrl", "text", "other"] },
+                "worksheet": { "type": ["string", "null"] },
+                "x": { "type": "integer" }, "y": { "type": "integer" },
+                "w": { "type": "integer" }, "h": { "type": "integer" }
+              }
+            }
+          },
+          "buttons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": { "type": "string", "enum": ["goto-sheet", "toggle", "other"] },
+                "target": { "type": ["string", "null"] },
+                "tooltip": { "type": ["string", "null"] },
+                "x": { "type": "integer" }, "y": { "type": "integer" },
+                "w": { "type": "integer" }, "h": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sets": { "type": "array", "items": { "type": "object" } },
+    "groups": { "type": "array", "items": { "type": "object" } },
+    "bins": { "type": "array", "items": { "type": "object" } },
+    "blending": { "type": ["object", "null"] },
+    "rls": {
+      "type": "object",
+      "required": ["detected"],
+      "properties": {
+        "detected": { "type": "boolean" },
+        "type": { "type": ["string", "null"], "enum": ["Dynamic", "Static", "Group-based", null] },
+        "securedTable": { "type": ["string", "null"] },
+        "mappingTable": { "type": ["string", "null"] },
+        "userColumn": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

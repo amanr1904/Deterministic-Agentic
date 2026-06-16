@@ -25,7 +25,7 @@ handoffs:
     prompt: "Generate the Power BI Project (PBIP) file with the semantic model, DAX measures, and star schema design."
   - label: Migrate Visuals to Power BI Report
     agent: report-visual-migration
-    prompt: "Migrate Tableau visuals to Power BI reports, applying the visual migration strategy."
+    prompt: "Run the full visual migration pipeline for the '{WorkbookName}' workbook. MANDATORY FIRST STEP: parse the actual .twb XML at Data/{subfolder}/{workbook}.twb (PowerShell [xml]) to extract every worksheet's mark class, rows/cols shelves, encodings, and every dashboard's zone positions — then WRITE the extraction to .specify/memory/{WorkbookName}/tableau-visuals-output.md and READ IT BACK before generating any visual.json. Do NOT rely on tableau-analysis-output.md (it has no visual detail). A Tableau mark of Text/Automatic with '[:Measure Names]' on cols is a TABLE (tableEx/pivotTable) with ALL its measures — NEVER collapse it to a single-measure bar chart. Semantic model TMDL is at Output/{WorkbookName}/{ModelName}.SemanticModel/definition/ (use exact table/column/measure names). Generate the report into Output/{WorkbookName}/{ModelName}.Report/ in Enhanced PBIR Folder Format. Read .specify/memory/report-constitution.md (never overwrite it) and plugins/pbip/skills/pbir-format/SKILL.md. Execute ALL stages: extraction → constitution → specify → clarify → plan → tasks → implement → validate."
   - label: Cross-Artifact Consistency Analysis
     agent: speckit.analyze
     prompt: "Cross-check spec, plan, and tasks for consistency — validate star schema design vs DAX measures vs TMDL output for column mapping gaps, relationship mismatches, and naming inconsistencies."
@@ -54,6 +54,34 @@ Before proceeding, read these skills for guidance:
 - `plugins/reports/skills/pbi-report-design/SKILL.md` — layout, spacing, visual hierarchy
 
 ## Execution — Full Pipeline (ALL stages MANDATORY)
+
+## ⚡ Hybrid Deterministic + Agentic Flow (token-saving — use first)
+
+Four token-heavy stages now have deterministic Python engines under `scripts/`. The
+agents on those stages call the scripts and only fill the reasoning gaps. The flow is:
+
+```
+prepare (deterministic)        →  agent gap-fill  →  generate (deterministic)
+parse_twb.py + map_dax.py          decisions.json     emit_tmdl.py + emit_pbir.py + validators
+```
+
+Run the two bracket phases via the orchestrator:
+
+```powershell
+# Stage 1 + 6 — writes Output/{PascalName}/analysis.json + dax-partial.json, prints gaps
+python scripts/pipeline.py prepare "Data/{Subfolder}/{workbook}.twb"
+
+# Stage 10 + 13 + 11/14 — after decisions.json exists, emits model + report + validates
+python scripts/pipeline.py generate "Output/{PascalName}/analysis.json" --decisions "Output/{PascalName}/decisions.json"
+```
+
+- Subagents still run (`runSubagent`), but their `.agent.md` files now point them at the
+  scripts first and tell them to read the slim IR (`analysis.json`) instead of raw `.twb`
+  XML, reuse template DAX from `dax-partial.json`, and author only `decisions.json`.
+- `decisions.json` (schema: `scripts/contracts/decisions_schema.json`) is the single
+  artifact the LLM produces for code generation; the emitters do all boilerplate.
+- The mandatory subagent rule below is unchanged — the scripts run *inside* the relevant
+  stages, they do not replace the agents.
 
 **⚠️ CRITICAL RULE — SUBAGENT ENFORCEMENT ⚠️**
 
@@ -284,10 +312,13 @@ This stage completes the **end-to-end pipeline** by migrating Tableau dashboard 
 ```
 runSubagent(
   agentName: "report-visual-migration",
-  prompt: "Run the full visual migration pipeline for the '{workbook_name}' workbook. CRITICAL: You MUST parse the actual .twb XML file at Data/{subfolder}/{workbook}.twb to extract mark types, field shelves (rows/cols), encodings (color/size/text/wedge-size), and dashboard zone positions. Do NOT rely solely on .specify/memory/{WorkbookName}/tableau-analysis-output.md — that file only has datasource metadata, NOT visual details. Use PowerShell [xml] parsing to read mark class, pane encodings, and dashboard zones. Save extraction to .specify/memory/{WorkbookName}/tableau-visuals-output.md BEFORE generating any visuals. Read .specify/memory/report-constitution.md for universal report layout rules (do NOT overwrite it — it is shared across all migrations). If the workbook has theme overrides, save them to .specify/memory/{WorkbookName}/theme-overrides.md. Read plugins/pbip/skills/pbir-format/SKILL.md for PBIR JSON schema rules. The semantic model TMDL files are at Output/{WorkbookName}/{ModelName}.SemanticModel/definition/ — use these for exact table/column/measure names. Generate the report in Output/{WorkbookName}/{ModelName}.Report/ using the Enhanced PBIR Folder Format. Execute ALL stages: visual extraction (parse TWB XML) → apply universal report constitution → specify → clarify → plan → tasks → implement (generate report visuals). VALIDATION: Every Tableau worksheet must have a corresponding Power BI visual with the CORRECT type (Line=lineChart, Pie=pieChart, Square+size=treemap, etc).",
+  prompt: "Run the full visual migration pipeline for the '{workbook_name}' workbook. CRITICAL: You MUST parse the actual .twb XML file at Data/{subfolder}/{workbook}.twb to extract mark types, field shelves (rows/cols), encodings (color/size/text/wedge-size), and dashboard zone positions. Do NOT rely solely on .specify/memory/{WorkbookName}/tableau-analysis-output.md — that file only has datasource metadata, NOT visual details. Use PowerShell [xml] parsing to read mark class, pane encodings, and dashboard zones. Save extraction to .specify/memory/{WorkbookName}/tableau-visuals-output.md BEFORE generating any visuals. CHART-TYPE RULE (do not skip): a Tableau worksheet whose mark is Text or Automatic and which has '[:Measure Names]' on its <cols> shelf is a TEXT TABLE — map it to tableEx (one dimension) or pivotTable (dimensions on both rows+cols) and include EVERY measure from its Measure Values as a column. Only a single-measure Automatic/Bar worksheet becomes a bar chart. NEVER collapse a multi-measure crosstab into a one-measure bar. Read .specify/memory/report-constitution.md for universal report layout rules (do NOT overwrite it — it is shared across all migrations). If the workbook has theme overrides, save them to .specify/memory/{WorkbookName}/theme-overrides.md. Read plugins/pbip/skills/pbir-format/SKILL.md for PBIR JSON schema rules. The semantic model TMDL files are at Output/{WorkbookName}/{ModelName}.SemanticModel/definition/ — use these for exact table/column/measure names. Generate the report in Output/{WorkbookName}/{ModelName}.Report/ using the Enhanced PBIR Folder Format. Execute ALL stages: visual extraction (parse TWB XML) → apply universal report constitution → specify → clarify → plan → tasks → implement (generate report visuals). VALIDATION: Every Tableau worksheet must have a corresponding Power BI visual with the CORRECT type (Line=lineChart, Pie=pieChart, Square+size=treemap, Text/Automatic+Measure Names=tableEx/pivotTable, etc).",
   description: "Migrate report visuals"
 )
 ```
+
+**POST-STAGE GATE (the orchestrator MUST verify, not the subagent):** after the report subagent returns, confirm `.specify/memory/{WorkbookName}/tableau-visuals-output.md` now EXISTS and is non-empty. If it is missing, the extraction step was skipped — RE-CALL `report-visual-migration` with the same prompt plus an explicit instruction to write that file first. Do NOT accept a generated report whose extraction document is absent.
+
 
 ### Stage 14: Final End-to-End Validation (MANDATORY — run plugin validators)
 

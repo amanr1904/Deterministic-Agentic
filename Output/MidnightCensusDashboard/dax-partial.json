@@ -1,0 +1,124 @@
+{
+  "measures": [],
+  "pending": [
+    {
+      "caption": "Filter Adults/Peds",
+      "formula": "\"(All)\"",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Date Agg Level",
+      "formula": "\"Monthly\"",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "View",
+      "formula": "\"Bar Chart\"",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Start Date",
+      "formula": "#2026-01-01#",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "End Date",
+      "formula": "#2026-06-09#",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "User Defined Census Count",
+      "formula": "CASE [Parameters].[End Date (copy)]\r\n    WHEN '(All)' THEN SUM([Census Count])\r\n    WHEN 'Adults' THEN SUM([Census Count Adults])\r\n    WHEN 'Peds' THEN SUM([Census Count Peds])\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Date Range Filter",
+      "formula": "[Census Date] >= [Parameters].[Parameter 3] AND [Census Date] <= [Parameters].[Start Date (copy)_305681891901829120]",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Start Month Contains Partial Data?",
+      "formula": "IF\r\nYEAR(MAX([Census Date])) = YEAR(MAX([Parameters].[Parameter 3]))\r\nAND MONTH(MAX([Census Date])) = MONTH(MAX([Parameters].[Parameter 3]))\r\nAND MIN([Parameters].[Parameter 3]) <> DATE(STR(YEAR(WINDOW_MIN(MIN([Census Date]))))+'-'+STR(MONTH(WINDOW_MIN(MIN([Census Date]))))+'-01')\r\nTHEN 1 ELSE 0 END",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "End Month Contains Partial Data?",
+      "formula": "IF MONTH(MAX([Parameters].[Start Date (copy)_305681891901829120])) = 12 THEN\r\n    IF YEAR(MAX([Census Date])) = YEAR(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MONTH(MAX([Census Date])) = MONTH(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MAX([Parameters].[Start Date (copy)_305681891901829120]) <> DATEADD('day', -1, DATE(STR(YEAR(WINDOW_MAX(MAX([Census Date])))+1)+'-'+STR(MONTH(DATEADD('month', 1, WINDOW_MAX(MAX([Census Date])))))+'-01'))\r\n    THEN 1 ELSE 0 END\r\nELSEIF YEAR(MAX([Census Date])) = YEAR(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MONTH(MAX([Census Date])) = MONTH(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MAX([Parameters].[Start Date (copy)_305681891901829120]) <> DATEADD('day', -1, DATE(STR(YEAR(WINDOW_MAX(MAX([Census Date]))))+'-'+STR(MONTH(DATEADD('month', 1, WINDOW_MAX(MAX([Census Date])))))+'-01'))\r\n    THEN 1 ELSE 0 \r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Default Start Date",
+      "formula": "IF MONTH(TODAY()) >= 7 OR MONTH(TODAY()) <= 9 \r\nTHEN DATE(STR(YEAR(TODAY())) + '-01-01')\r\nELSE\r\n    IF MONTH(TODAY()) < 7 THEN\r\n        DATE(STR(YEAR(TODAY())-1) + '-07-01')\r\n    ELSE DATE(STR(YEAR(TODAY())) + '-07-01')\r\n    END\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Default End Date",
+      "formula": "TODAY()-1",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Date agg_Monthly",
+      "formula": "CASE [Parameters].[Parameter 1]\r\n    WHEN 'Monthly' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Partial Months in View?",
+      "formula": "IF DAY([Parameters].[Parameter 3]) != 1\r\n    OR DAY(DATEADD('day',1,[Parameters].[Start Date (copy)_305681891901829120])) != 1\r\nTHEN \"**Partial months are displayed in GRAY**\" ELSE \"\" END",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "View_BarChart",
+      "formula": "CASE [Parameters].[Parameter 2]\r\n    WHEN 'Bar Chart' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Census Date_CY",
+      "formula": "[Census Date]",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "non-measure"
+    },
+    {
+      "caption": "Date agg_Daily",
+      "formula": "CASE [Parameters].[Parameter 1]\r\n    WHEN 'Daily' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "View_DataTable",
+      "formula": "CASE [Parameters].[Parameter 2]\r\n    WHEN 'Data Table' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    }
+  ]
+}

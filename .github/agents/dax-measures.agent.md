@@ -12,6 +12,24 @@ $ARGUMENTS
 
 Read `.github/skills/dax-measures/SKILL.md` before proceeding.
 
+## ⚡ Deterministic Fast Path (PREFERRED — saves tokens)
+
+A deterministic translator already converts the **trivial** Tableau calcs (simple
+aggregations, ratios, passthroughs) to DAX. Run it first, then translate ONLY the
+remainder yourself:
+
+```powershell
+python scripts/dax/map_dax.py "Output/{PascalName}/analysis.json" --table {FactTable}
+```
+
+This writes `Output/{PascalName}/dax-partial.json` with two lists:
+- `measures` — already-translated DAX (template source). **Reuse verbatim** — do not re-author.
+- `pending` — calcs flagged `complex` (LOD, table-calcs, multi-branch). **These are your job.**
+
+Translate every item in `pending` using the guidance below, then merge your measures with
+the template ones into the `measures` array of `decisions.json` (see
+`scripts/contracts/decisions_schema.json`). You only spend tokens on the genuinely hard calcs.
+
 ## Steps
 
 ### 1. Read Context

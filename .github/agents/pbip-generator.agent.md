@@ -25,6 +25,22 @@ Read these before proceeding. The generation guide is decomposed into focused sk
 - `plugins/pbip/skills/pbip/SKILL.md` — PBIP project structure, encoding, thick vs thin
 - `plugins/pbip/skills/pbir-format/SKILL.md` — PBIR JSON format reference (for Report/ folder)
 
+## ⚡ Deterministic Fast Path (PREFERRED — saves tokens)
+
+**Do NOT hand-write TMDL.** A deterministic emitter generates the entire
+`.SemanticModel/` folder (database.tmdl, model.tmdl, relationships.tmdl, tables/*.tmdl,
+partitions, `.platform`, `.pbip`) from the IR + your `decisions.json`:
+
+```powershell
+python scripts/emit/emit_tmdl.py "Output/{PascalName}/analysis.json" --decisions "Output/{PascalName}/decisions.json"
+```
+
+Your only job is to author **`decisions.json`** (tables, relationships, measures, calculated
+columns — see `scripts/contracts/decisions_schema.json`), reusing the template measures from
+`dax-partial.json`. The emitter handles all TMDL boilerplate, lineage tags, annotations, and
+M partitions. After emitting, validate (Step 9 below). Only fall back to manual TMDL authoring
+for constructs the emitter does not support (document why).
+
 ## Steps
 
 ### 1. Read Context

@@ -1,0 +1,201 @@
+"""emit_tmdl.py — Stage 10 deterministic TMDL semantic-model generator.
+
+Consumes analysis.json (IR) + decisions.json and writes a complete
+{Model}.SemanticModel/ folder plus the {Model}.pbip root and .platform file. All
+TMDL boilerplate is emitted here; the LLM only supplies measure DAX via decisions.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+from typing import Dict, List
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import tmdl_blocks as B  # noqa: E402
+import date_levels as D  # noqa: E402
+import field_param as FP  # noqa: E402
+
+PBISM = {
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
+    "version": "4.2", "settings": {},
+}
+PLATFORM_SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json"
+
+
+def platform_file(item_type: str, name: str, seed: str) -> str:
+    """Build a Fabric .platform file (deterministic GUID-shaped logicalId)."""
+    import hashlib
+    h = hashlib.sha1(seed.encode("utf-8")).hexdigest()
+    lid = f"{h[:8]}-{h[8:12]}-4{h[13:16]}-9{h[17:20]}-{h[20:32]}"
+    return json.dumps({
+        "$schema": PLATFORM_SCHEMA,
+        "metadata": {"type": item_type, "displayName": name},
+        "config": {"version": "2.0", "logicalId": lid},
+    }, indent=2)
+
+
+def pbip_root(model_name: str) -> str:
+    """Build the {Model}.pbip root file (report artifact only)."""
+    return json.dumps({
+        "$schema": "https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json",
+        "version": "1.0",
+        "artifacts": [{"report": {"path": f"{model_name}.Report"}}],
+        "settings": {"enableAutoRecovery": True},
+    }, indent=2)
+
+def load_json(path: str) -> Dict:
+    with open(path, encoding="utf-8-sig") as fh:
+        return json.load(fh)
+
+
+def model_dir(analysis_path: str, model_name: str) -> str:
+    base = os.path.dirname(os.path.abspath(analysis_path))
+    path = os.path.join(base, f"{model_name}.SemanticModel")
+    os.makedirs(os.path.join(path, "definition", "tables"), exist_ok=True)
+    return path
+
+
+def write(path: str, text: str) -> None:
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
+def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
+    """Assemble one table TMDL file: header, measures, columns, partition."""
+    name = table["name"]
+    lines = [f"table {B.quote(name)}", f"{B.TAB}lineageTag: {B.lineage(seq)}"]
+    if table.get("role") == "date":
+        lines.append(f"{B.TAB}dataCategory: Time")
+    lines.append("")
+    measures = [m for m in decisions.get("measures", []) if m["table"] == name]
+    cols = _columns_for(table, ir)
+    col_names = {c["name"].lower() for c in cols}
+    clash = sorted(m["name"] for m in measures if m["name"].lower() in col_names)
+    if clash:
+        raise ValueError(f"table '{name}': measure name(s) collide with columns: {clash}")
+    for i, m in enumerate(measures):
+        lines += [B.measure_block(m, seq * 100 + i + 1), ""]
+    for i, col in enumerate(cols):
+        lines += [B.column_block(col, seq * 1000 + i + 1), ""]
+    for j, part in enumerate(_date_part_columns(table, cols, ir)):
+        dax = D.part_dax(part["baseColumn"], name, part["level"])
+        lines += [B.calc_column_block(part["name"], dax, part["dataType"],
+                                      part["format"], seq * 1000 + 500 + j), ""]
+    lines.append(_partition_for(table, ir, cols))
+    return "\n".join(lines)
+
+
+def _date_part_columns(table: Dict, cols: List[Dict], ir: Dict) -> List[Dict]:
+    """Date-part derived columns this table must expose (month/year/etc.)."""
+    if table.get("role") != "fact":
+        return []
+    date_cols = {c["name"] for c in cols if c["dataType"] in ("date", "datetime")}
+    if not date_cols:
+        return []
+    return D.needed_parts(ir.get("worksheets", []), date_cols)
+
+
+def _columns_for(table: Dict, ir: Dict) -> List[Dict]:
+    if table.get("role") == "param" and table.get("datatable"):
+        return [{"name": c["name"], "dataType": c.get("dataType", "string"),
+                 "role": "dimension", "format": None}
+                for c in table["datatable"]["columns"]]
+    ds = table.get("sourceDatasource")
+    cols = [c for c in ir["columns"] if ds is None or c["datasource"] == ds]
+    return cols or ir["columns"]
+
+
+def _partition_for(table: Dict, ir: Dict, cols: List[Dict]) -> str:
+    if table.get("role") == "param" and table.get("datatable"):
+        dt = table["datatable"]
+        return B.datatable_partition(table["name"], dt["columns"], dt["rows"])
+    path = table.get("sourceFile") or _first_csv(ir)
+    return B.csv_partition(table["name"], _abs_csv(ir, path), cols)
+
+
+def _abs_csv(ir: Dict, path: str) -> str:
+    """Resolve a CSV filename to an absolute path (File.Contents needs it)."""
+    if os.path.isabs(path):
+        return path
+    data_dir = os.path.dirname(ir.get("workbook", {}).get("sourcePath", ""))
+    return os.path.abspath(os.path.join(data_dir, os.path.basename(path)))
+
+
+def _first_csv(ir: Dict) -> str:
+    for ds in ir.get("dataSources", []):
+        csvs = [f for f in ds.get("files", []) if ds.get("active") and f.lower().endswith(".csv")]
+        if csvs:
+            return csvs[0]
+    return "PATH_TO_DATA.csv"
+
+
+def build_model_file(decisions: Dict) -> str:
+    tables = [t["name"] for t in decisions.get("tables", [])]
+    tables += [fp["name"] for fp in decisions.get("fieldParameters", [])]
+    refs = "\n".join(f"ref table {B.quote(t)}" for t in tables)
+    return ("model Model\n\tculture: en-US\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n"
+        "\tdiscourageImplicitMeasures\n\tsourceQueryCulture: en-US\n\tdataAccessOptions\n"
+        "\t\tlegacyRedirects\n\t\treturnErrorValuesAsNull\n\n"
+        f"annotation PBI_QueryOrder = {json.dumps(tables)}\n\n"
+        "annotation __PBI_TimeIntelligenceEnabled = 0\n\n"
+        "annotation PBI_ProTooling = [\"DevMode\"]\n\n"
+        f"{refs}\n")
+
+
+def build_relationships_file(decisions: Dict) -> str:
+    blocks = []
+    for i, rel in enumerate(decisions.get("relationships", [])):
+        from_t, from_c = rel["fromColumn"].split(".", 1)
+        to_t, to_c = rel["toColumn"].split(".", 1)
+        block = (f"relationship {B.lineage(0xf000 + i)}\n"
+                 f"\tfromColumn: {B.quote(from_t)}.{B.quote(from_c)}\n"
+                 f"\ttoColumn: {B.quote(to_t)}.{B.quote(to_c)}\n")
+        block += "\tcrossFilteringBehavior: bothDirections\n" if rel.get("crossFilter") == "both" else ""
+        block += "\tisActive: false\n" if rel.get("active") is False else ""
+        blocks.append(block)
+    return "\n".join(blocks) + ("\n" if blocks else "")
+
+
+def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
+    model_name = decisions.get("modelName") or ir["workbook"]["pascalName"]
+    root = model_dir(analysis_path, model_name)
+    defin = os.path.join(root, "definition")
+    write(os.path.join(defin, "database.tmdl"), "database\n\tcompatibilityLevel: 1600\n")
+    write(os.path.join(defin, "model.tmdl"), build_model_file(decisions))
+    write(os.path.join(defin, "relationships.tmdl"), build_relationships_file(decisions))
+    for i, table in enumerate(decisions.get("tables", []), start=1):
+        fname = re.sub(r"[\\/:*?\"<>|]+", "_", table["name"])
+        write(os.path.join(defin, "tables", f"{fname}.tmdl"),
+              build_table_file(table, ir, decisions, i))
+    for j, fp in enumerate(decisions.get("fieldParameters", []), start=1):
+        fname = re.sub(r"[\\/:*?\"<>|]+", "_", fp["name"])
+        write(os.path.join(defin, "tables", f"{fname}.tmdl"),
+              FP.table_tmdl(fp, 0x7000 + j))
+    write(os.path.join(root, "definition.pbism"), json.dumps(PBISM, indent=2))
+    write(os.path.join(root, "diagramLayout.json"), json.dumps({"version": "1.1.0", "diagrams": []}))
+    write(os.path.join(root, ".platform"), platform_file("SemanticModel", model_name, model_name + ".sm"))
+    write(os.path.join(os.path.dirname(root), f"{model_name}.pbip"), pbip_root(model_name))
+    return root
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description="Emit TMDL semantic model from IR + decisions.")
+    parser.add_argument("analysis", help="path to analysis.json")
+    parser.add_argument("--decisions", required=True, help="path to decisions.json")
+    args = parser.parse_args(argv)
+    for p in (args.analysis, args.decisions):
+        if not os.path.isfile(p):
+            print(f"ERROR: file not found: {p}", file=sys.stderr); return 2
+    ir, decisions = load_json(args.analysis), load_json(args.decisions)
+    root = emit(ir, decisions, args.analysis)
+    print(f"Wrote semantic model: {root}\n  tables: {len(decisions.get('tables', []))}  "
+          f"measures: {len(decisions.get('measures', []))}  "
+          f"relationships: {len(decisions.get('relationships', []))}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

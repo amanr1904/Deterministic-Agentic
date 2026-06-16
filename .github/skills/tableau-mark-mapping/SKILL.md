@@ -32,6 +32,15 @@ The canonical decision table for mapping a Tableau mark type to a Power BI `visu
 
 ## Automatic Mark Inference (mark class = "Automatic")
 
+0. **`[:Measure Names]` on `<cols>` or `<rows>` ⇒ TEXT TABLE (HIGHEST PRIORITY).** This is the single
+   most reliable table signal and overrides rules 1–8 below. A `Measure Names` field means multiple
+   measures are displayed as columns — the worksheet is a crosstab, NOT a chart.
+   - ONE dimension on the other shelf → `tableEx`.
+   - Dimensions on BOTH rows and cols → `pivotTable`.
+   - Include EVERY measure from the Measure Values card as a column (enumerate from the dashboard
+     screenshot / `<datasource>` measure list — do not drop Style Count, % of Total, etc.).
+   - **NEVER** turn a `Measure Names` worksheet into a single-measure bar/column chart. This exact
+     mistake (Automatic mark + Measure Names rendered as a bar) silently loses columns.
 1. **Color + Size on SAME measure + text/label on dimension** → `treemap`
 2. **Date/time on cols + measure on rows** → `lineChart` or `areaChart`
 3. **Only dimensions on rows + measures on text** → `tableEx`
@@ -39,9 +48,11 @@ The canonical decision table for mapping a Tableau mark type to a Power BI `visu
 5. **Single measure, no dimensions** → `card`
 6. **Geographic field present** → `map`
 7. **Hierarchy on rows (multiple dims with `/`) + measure on cols** → `clusteredBarChart` with drill (or `matrix` if text encoding present)
-8. **Dimension on one axis + measure on other** → `clusteredBarChart` or `clusteredColumnChart`
+8. **Dimension on one axis + measure on other (and NO `Measure Names`)** → `clusteredBarChart` or `clusteredColumnChart`
 
-> **Priority**: Rule 1 wins — BOTH color AND size on a measure ⇒ `treemap` regardless of other factors. A Tableau size encoding almost always means treemap/packed-bubble.
+> **Priority**: Rule 0 wins over everything — `Measure Names` on a shelf ⇒ table/matrix. Then Rule 1 —
+> BOTH color AND size on a measure ⇒ `treemap`. A single measure with NO `Measure Names` is the ONLY case
+> that becomes a bar/column chart.
 
 ## Square Mark Disambiguation
 

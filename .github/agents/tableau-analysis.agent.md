@@ -22,7 +22,27 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 Read `.github/skills/tableau-analysis/SKILL.md` before proceeding.
 
-## Steps
+## ⚡ Deterministic Fast Path (PREFERRED — saves tokens)
+
+**Do NOT read raw `.twb` XML into context.** A deterministic Python parser extracts
+all structured metadata for you. Run it first:
+
+```powershell
+python scripts/twb/parse_twb.py "Data/{Subfolder}/{workbook}.twb" --output-root Output
+```
+
+This writes `Output/{PascalName}/analysis.json` — the machine-readable IR (datasources,
+columns, calculated fields with a `complexity` flag, parameters, worksheet marks with
+`inferredVisualType`, dashboard zones/buttons, RLS detection). Read **`analysis.json`**
+(small, structured) instead of the workbook XML.
+
+- If `analysis.json` covers everything you need → skip the manual XML steps below and go
+  straight to Step 5 (render the human-readable markdown summary from the IR).
+- Only fall back to the manual XML extraction (Steps 1–4) for fields the parser left
+  `null` or could not resolve (e.g. ambiguous marks `inferredVisualType == null`).
+- The IR is canonical; the markdown output is a human-readable rendering of it.
+
+## Steps (manual fallback — only for gaps the parser could not resolve)
 
 ### 1. Locate Tableau Files
 
