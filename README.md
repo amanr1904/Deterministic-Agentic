@@ -47,13 +47,9 @@ Automated agentic pipeline that converts any Tableau workbook (`.twb`) into a co
 │   ├── scripts/                 # Pipeline helper scripts
 │   └── copilot-instructions.md  # Pipeline orchestration instructions
 ├── .specify/
-│   ├── memory/
-│   │   ├── constitution.md          # Universal model migration rules (shared)
-│   │   ├── report-constitution.md   # Universal report visual rules (shared)
-│   │   ├── SalesCustomerDashboards/ # Per-workbook artifacts (analysis, DAX, schema, visuals)
-│   │   ├── NetflixAnalysis/
-│   │   ├── LoanPortfolioAnalysis/
-│   │   └── Q3DealerBuyingEvent/
+│   ├── memory/                  # Created on first run: constitution.md (shared) +
+│   │   │                        #   per-workbook artifacts ({PascalName}/...)
+│   │   └── {WorkbookName}/      # analysis, DAX, schema, visuals (workbook-scoped)
 │   ├── scripts/                 # speckit feature/branch scripts
 │   ├── templates/               # spec / plan / tasks templates
 │   ├── workflows/               # Pipeline workflow definitions
@@ -61,24 +57,23 @@ Automated agentic pipeline that converts any Tableau workbook (`.twb`) into a co
 │   └── feature.json             # Active feature path resolver
 ├── .vscode/                     # Workspace settings
 ├── Data/                        # INPUT — .twb + data files per workbook
-│   ├── Sales and Customer/      # .twb + CSVs
-│   ├── Netflix/                 # .twb + CSV
 │   ├── Loan/                    # .twb + CSVs
-│   └── Q3 Buyer/                # .twb + CSV
+│   ├── Midnight Census/         # .twb + CSV
+│   ├── Netflix/                 # .twb + CSV
+│   ├── Netflix RLS/             # .twb + CSVs
+│   ├── Q3 Buyer/                # .twb + CSV
+│   └── Sales and Customer/      # .twb + CSVs
 ├── Output/                      # OUTPUT — generated .pbip (Report + SemanticModel)
-│   ├── SalesCustomerDashboards/
-│   ├── NetflixAnalysis/
-│   ├── LoanPortfolioAnalysis/
-│   └── Q3DealerBuyingEvent/
+│   └── MidnightCensusDashboard/ # analysis.json, dax-partial.json, decisions.json
 ├── plugins/                     # Validation tools + supplementary skills
 │   ├── pbip/                    # TMDL/PBIR validators + format skills
 │   ├── reports/                 # Report design & visual skills
 │   └── semantic-models/         # DAX, Power Query, naming, review skills
 ├── specs/                       # Feature specifications per workbook
 │   ├── 001-sales-customer-pbi/
-│   ├── 004-q3-dealer-buying-event-pbi/
-│   ├── 005-loan-portfolio-pbi/
-│   └── 006-netflix-pbi/
+│   ├── 002-q3-dealer-buying-pbi/
+│   └── 003-netflix-rls-pbi/
+├── scripts/                     # Deterministic engine (parser, DAX map, emitters, pipeline)
 ├── .gitignore
 └── README.md
 ```
@@ -88,14 +83,26 @@ Automated agentic pipeline that converts any Tableau workbook (`.twb`) into a co
 After generation, validators run automatically. You can also run them manually:
 
 ```powershell
-# TMDL structural syntax validator
+# TMDL structural syntax validator (Windows; use the matching darwin/linux binary on other OSes)
 & "plugins\pbip\hooks\bin\tmdl-validate-windows-x64.exe" "Output\{WorkbookName}\{Name}.SemanticModel\definition"
 
 # Cross-cutting PBIP project validator
 python "plugins\pbip\skills\pbip\scripts\validate_pbip.py" "Output\{WorkbookName}"
 ```
 
+> The `scripts/pipeline.py generate` step runs both validators automatically and selects the
+> correct `tmdl-validate` binary for your OS (windows-x64, linux-x64, darwin-x64, darwin-arm64).
+
 Exit codes: 0 = clean, 1 = warnings, 2 = errors.
+
+### Regression tests (deterministic engine)
+
+The `scripts/` engine has a stdlib-only regression suite — including golden-file checks that the
+parser and DAX mapper still reproduce the committed `Output/` artifacts:
+
+```powershell
+python -m unittest discover -s scripts/tests -v
+```
 
 ## Post-Generation Quality Reviews (Optional)
 

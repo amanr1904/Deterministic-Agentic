@@ -1,0 +1,236 @@
+{
+  "measures": [],
+  "pending": [
+    {
+      "caption": "Select Year",
+      "formula": "2023",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "% Diff Orders",
+      "formula": "(COUNTD([CY Sales (copy)_3221481164594982929]) - COUNTD([PY Sales (copy)_3221481164594888720])) / COUNTD([PY Sales (copy)_3221481164594888720])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "% Diff Customers",
+      "formula": "(COUNTD([CY Sales (copy)_3221481164532666369]) - COUNTD([CY Customers (copy)_3221481164533411843])) / COUNTD([CY Customers (copy)_3221481164533411843])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "% Diff Quantity",
+      "formula": "(SUM([CY Sales (copy) (copy)_237846410424193025]) - SUM([PY Sales (copy) (copy)_237846410424823811])) / SUM([PY Sales (copy) (copy)_237846410424823811])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "% Diff Profit",
+      "formula": "(SUM([CY Sales (copy)_237846410424180736]) - SUM([PY Sales (copy)_237846410424815618])) / SUM([CY Sales (copy)_237846410424180736])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "% Diff Sales per Customers",
+      "formula": "([CY Profit (copy)_3221481164532895746] - [CY Sales per Customer (copy)_3221481164533485572]) / [CY Sales per Customer (copy)_3221481164533485572]",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "PY Customers",
+      "formula": "IF YEAR([Order Date])= [Parameters].[Parameter 1]-1 THEN [Customer ID] \r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "CY Sales per Customer",
+      "formula": "SUM([Calculation_721701895334993921]) / COUNTD([CY Sales (copy)_3221481164532666369])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "CY Quantity",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Quantity]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "CY Profit",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Profit]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "CY Customers",
+      "formula": "IF YEAR([Order Date])= [Parameters].[Parameter 1] THEN [Customer ID] \r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "CY Orders",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Order ID]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "PY Sales",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Sales]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "PY Sales per Customer",
+      "formula": "SUM([CY Sales (copy)_721701895335804930]) / COUNTD([CY Customers (copy)_3221481164533411843])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Current Year",
+      "formula": "[Parameters].[Parameter 1]",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Previous Year",
+      "formula": "[Parameters].[Parameter 1]-1",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "KPI CY Less PY",
+      "formula": "IF SUM([Calculation_721701895334993921]) < SUM([CY Sales (copy)_721701895335804930]) THEN '⬤'\r\nELSE ''\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "KPI Sales Avg",
+      "formula": "IF SUM([Calculation_721701895334993921]) > WINDOW_AVG(SUM([Calculation_721701895334993921]))\r\nTHEN 'Above'\r\nELSE 'Below'\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "CY Sales",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Sales]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Order Date (Year)",
+      "formula": "YEAR([Order Date])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "% Diff Sales",
+      "formula": "(SUM([Calculation_721701895334993921]) - SUM([CY Sales (copy)_721701895335804930])) / SUM([CY Sales (copy)_721701895335804930])",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Min/Max Sales",
+      "formula": "IF SUM([Calculation_721701895334993921]) = WINDOW_MAX(SUM([Calculation_721701895334993921]))\r\nTHEN SUM([Calculation_721701895334993921])\r\nELSEIF SUM([Calculation_721701895334993921]) = WINDOW_MIN(SUM([Calculation_721701895334993921]))\r\nTHEN SUM([Calculation_721701895334993921])\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "{SUM([CY Sales])}",
+      "formula": "{SUM([Calculation_721701895334993921])}",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Nr of Orders per Customers",
+      "formula": "{ FIXED [CY Sales (copy)_3221481164532666369]: COUNTD([CY Sales (copy)_3221481164594982929])}",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "KPI Profit Avg",
+      "formula": "IF SUM([CY Sales (copy)_237846410424180736]) > WINDOW_AVG(SUM([CY Sales (copy)_237846410424180736]))\r\nTHEN 'Above'\r\nELSE 'Below'\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Min/Max Sales Per Customers",
+      "formula": "IF [CY Profit (copy)_3221481164532895746] = WINDOW_MAX([CY Profit (copy)_3221481164532895746])\r\nTHEN [CY Profit (copy)_3221481164532895746] \r\nELSEIF [CY Profit (copy)_3221481164532895746] = WINDOW_MIN([CY Profit (copy)_3221481164532895746])\r\nTHEN [CY Profit (copy)_3221481164532895746]\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Min/Max Customers",
+      "formula": "IF COUNTD([CY Sales (copy)_3221481164532666369]) = WINDOW_MAX(COUNTD([CY Sales (copy)_3221481164532666369]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164532666369])\r\nELSEIF COUNTD([CY Sales (copy)_3221481164532666369]) = WINDOW_MIN(COUNTD([CY Sales (copy)_3221481164532666369]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164532666369])\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Min/Max Quantity",
+      "formula": "IF SUM([CY Sales (copy) (copy)_237846410424193025]) = WINDOW_MAX(SUM([CY Sales (copy) (copy)_237846410424193025]))\r\nTHEN SUM([CY Sales (copy) (copy)_237846410424193025])\r\nELSEIF SUM([CY Sales (copy) (copy)_237846410424193025]) = WINDOW_MIN(SUM([CY Sales (copy) (copy)_237846410424193025]))\r\nTHEN SUM([CY Sales (copy) (copy)_237846410424193025])\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Min/Max Profit",
+      "formula": "IF SUM([CY Sales (copy)_237846410424180736]) = WINDOW_MAX(SUM([CY Sales (copy)_237846410424180736]))\r\nTHEN SUM([CY Sales (copy)_237846410424180736])\r\nELSEIF SUM([CY Sales (copy)_237846410424180736]) = WINDOW_MIN(SUM([CY Sales (copy)_237846410424180736]))\r\nTHEN SUM([CY Sales (copy)_237846410424180736])\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Min/Max Orders",
+      "formula": "IF COUNTD([CY Sales (copy)_3221481164594982929]) = WINDOW_MAX(COUNTD([CY Sales (copy)_3221481164594982929]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164594982929])\r\nELSEIF COUNTD([CY Sales (copy)_3221481164594982929]) = WINDOW_MIN(COUNTD([CY Sales (copy)_3221481164594982929]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164594982929])\r\nEND",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "PY Quantity",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Quantity]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "PY Profit",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Profit]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "PY Orders",
+      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Order ID]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    }
+  ]
+}

@@ -6,6 +6,26 @@ handoffs:
     prompt: Implement the feature specification based on the updated constitution. I want to build...
 ---
 
+## ⚠️ Pipeline Boundary — Read Before Proceeding
+
+**This agent MUST NOT be called during an active migration pipeline run.**
+
+It exists ONLY for:
+1. **One-time workspace setup** — creating `constitution.md` / `report-constitution.md` for the first time.
+2. **Deliberate amendments** — updating rules outside of any workbook migration.
+
+**During a migration, the constitution is consumed as a static JSON cache
+(`Output/{PascalName}/constitution-cache.json`) written by `pipeline.py prepare`.**
+
+If you reached this agent from inside a `migration-constitution` pipeline run, **STOP**.
+Return to Stage 2 and read the cache file instead.
+
+To update the constitution AND have all future migrations use the new rules:
+1. Run this agent to amend `.specify/memory/constitution.md` or `.specify/memory/report-constitution.md`.
+2. Re-run `python scripts/pipeline.py prepare "Data/{subfolder}/{workbook}.twb"` for each workbook that should pick up the new rules (this regenerates the cache).
+
+---
+
 ## User Input
 
 ```text

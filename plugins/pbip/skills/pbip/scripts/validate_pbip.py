@@ -568,8 +568,9 @@ def run_pbir_validate(report_dir: Path, result: Result) -> None:
         return
     try:
         proc = subprocess.run(
-            ["pbir", "validate", str(report_dir), "--quiet"],
-            capture_output=True, text=True, timeout=60,
+            ["pbir", "validate", str(report_dir)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=60,
         )
     except subprocess.TimeoutExpired:
         result.add(WARN, "pbir_cli_timeout",

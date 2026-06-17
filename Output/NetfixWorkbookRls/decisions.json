@@ -1,0 +1,135 @@
+{
+  "decisionsVersion": "1.0",
+  "modelName": "NetfixWorkbookRls",
+  "tableStrategy": "single-flat",
+  "tables": [
+    {
+      "name": "netflix_titles",
+      "role": "fact",
+      "sourceType": "csv",
+      "sourceDatasource": "netflix_titles",
+      "keyColumns": ["show_id"],
+      "mExpression": "let\n    NetflixSrc = Csv.Document(File.Contents(\"C:/Users/SiddhiVermaMAQSoftwa/OneDrive - MAQ Software/Desktop/Deterministic/Deterministic-Agentic/Data/Netflix RLS/netflix_titles.csv\"), [Delimiter=\",\", Columns=12, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n    NetflixHeaders = Table.PromoteHeaders(NetflixSrc, [PromoteAllScalars=true]),\n    Netflix = Table.TransformColumnTypes(NetflixHeaders, {{\"show_id\", Int64.Type}, {\"type\", type text}, {\"title\", type text}, {\"director\", type text}, {\"cast\", type text}, {\"country\", type text}, {\"date_added\", type text}, {\"release_year\", Int64.Type}, {\"rating\", type text}, {\"duration\", type text}, {\"listed_in\", type text}, {\"description\", type text}}, \"en-US\"),\n    AccessSrc = Csv.Document(File.Contents(\"C:/Users/SiddhiVermaMAQSoftwa/OneDrive - MAQ Software/Desktop/Deterministic/Deterministic-Agentic/Data/Netflix RLS/User_Access.csv\"), [Delimiter=\",\", Columns=2, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n    AccessHeaders = Table.PromoteHeaders(AccessSrc, [PromoteAllScalars=true]),\n    Access = Table.TransformColumnTypes(AccessHeaders, {{\"Username\", type text}, {\"Country\", type text}}, \"en-US\"),\n    WithAccess = Table.AddColumn(Netflix, \"AccessMatches\", (n) => Table.SelectRows(Access, each Text.Contains(Text.Lower(if n[country] = null then \"\" else n[country]), Text.Lower([Country])))),\n    Expanded = Table.ExpandTableColumn(WithAccess, \"AccessMatches\", {\"Username\"}, {\"Username\"}),\n    WithYear = Table.AddColumn(Expanded, \"Year Added\", each try Number.FromText(Text.End(Text.Trim([date_added]), 4)) otherwise null, Int64.Type)\nin\n    WithYear"
+    }
+  ],
+  "relationships": [],
+  "measures": [
+    {
+      "table": "netflix_titles",
+      "name": "Title Count",
+      "dax": "DISTINCTCOUNT('netflix_titles'[show_id])",
+      "formatString": "#,0",
+      "displayFolder": "Counts",
+      "description": "Distinct number of Netflix titles (show_id).",
+      "source": "template"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "Movies Count",
+      "dax": "CALCULATE([Title Count], 'netflix_titles'[type] = \"Movie\")",
+      "formatString": "#,0",
+      "displayFolder": "Counts",
+      "description": "Distinct titles where type is Movie.",
+      "source": "llm"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "TV Shows Count",
+      "dax": "CALCULATE([Title Count], 'netflix_titles'[type] = \"TV Show\")",
+      "formatString": "#,0",
+      "displayFolder": "Counts",
+      "description": "Distinct titles where type is TV Show.",
+      "source": "llm"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "Genre Rank",
+      "dax": "RANKX(ALL('netflix_titles'[listed_in]), [Title Count], , DESC, Dense)",
+      "formatString": "#,0",
+      "displayFolder": "Ranking",
+      "description": "Dense rank of genres (listed_in) by Title Count for Top N genre filtering.",
+      "source": "llm"
+    }
+  ],
+  "calculatedColumns": [],
+  "theme": {
+    "pageBackground": "#141414",
+    "outspace": "#000000",
+    "visualBackground": "#1A1A1A",
+    "border": "#333333",
+    "titleColor": "#E50914",
+    "titleFont": "Segoe UI Semibold",
+    "foreground": "#FFFFFF"
+  },
+  "visualDecisions": [
+    {
+      "worksheet": "Country wise distribution",
+      "visualType": "filledMap",
+      "location": "country",
+      "value": "Title Count",
+      "gradient": ["#F8C9C9", "#E50914"],
+      "reason": "Tableau Multipolygon map shaded by distinct title count -> Power BI filled choropleth with light->red saturation."
+    },
+    {
+      "worksheet": "Ratings",
+      "visualType": "columnChart",
+      "category": "rating",
+      "value": "Title Count",
+      "color": "#E50914",
+      "sort": "valueDesc",
+      "reason": "rating on columns, distinct show_id count on rows -> vertical column chart of titles per rating."
+    },
+    {
+      "worksheet": "Top 10 Genre",
+      "visualType": "barChart",
+      "category": "listed_in",
+      "value": "Title Count",
+      "color": "#E50914",
+      "sort": "valueDesc",
+      "reason": "listed_in on rows, distinct show_id count -> horizontal bar chart sorted by title count (top genres first)."
+    },
+    {
+      "worksheet": "Movies and TV Shows distribution",
+      "visualType": "donutChart",
+      "category": "type",
+      "value": "Title Count",
+      "seriesColors": { "Movie": "#5B9BD5", "TV Show": "#ED7D31" },
+      "reason": "Tableau two-circle Movie/TV split by share -> Power BI donut of Title Count by type with brand colors."
+    },
+    {
+      "worksheet": "Total Movies and TV Shows by Years",
+      "visualType": "areaChart",
+      "category": "Year Added",
+      "series": "type",
+      "value": "Title Count",
+      "seriesColors": { "Movie": "#5B9BD5", "TV Show": "#ED7D31" },
+      "sort": "categoryAsc",
+      "reason": "Area of distinct titles added per year, stacked by Movie/TV type."
+    },
+    {
+      "worksheet": "Rating",
+      "visualType": "card",
+      "textColumn": "rating",
+      "reason": "Single text card showing the selected title's rating."
+    },
+    {
+      "worksheet": "Duration",
+      "visualType": "card",
+      "textColumn": "duration",
+      "reason": "Single text card showing the selected title's duration."
+    },
+    {
+      "worksheet": "Genre",
+      "visualType": "card",
+      "textColumn": "listed_in",
+      "reason": "Single text card showing the selected title's genres."
+    },
+    {
+      "worksheet": "Description",
+      "visualType": "card",
+      "textColumn": "description",
+      "reason": "Single text card showing the selected title's description."
+    }
+  ],
+  "fieldParameters": []
+}

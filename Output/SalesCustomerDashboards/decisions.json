@@ -1,0 +1,533 @@
+{
+  "decisionsVersion": "1.0",
+  "modelName": "SalesCustomerDashboards",
+  "tableStrategy": "star-schema",
+  "tables": [
+    {
+      "name": "Orders",
+      "role": "fact",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Sales and Customer\\Orders.csv",
+      "keyColumns": [
+        "Row ID"
+      ],
+      "dedupKey": null
+    },
+    {
+      "name": "DimCustomer",
+      "role": "dim",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Sales and Customer\\Customers.csv",
+      "keyColumns": [
+        "Customer ID"
+      ],
+      "dedupKey": "Customer ID"
+    },
+    {
+      "name": "DimProduct",
+      "role": "dim",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Sales and Customer\\Products.csv",
+      "keyColumns": [
+        "Product ID"
+      ],
+      "dedupKey": "Product ID"
+    },
+    {
+      "name": "DimLocation",
+      "role": "dim",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Sales and Customer\\Location.csv",
+      "keyColumns": [
+        "Postal Code"
+      ],
+      "dedupKey": "Postal Code"
+    },
+    {
+      "name": "DimDate",
+      "role": "date",
+      "sourceType": "calendar",
+      "sourceFile": null,
+      "keyColumns": [
+        "Date"
+      ],
+      "dedupKey": null
+    },
+    {
+      "name": "SelectYear",
+      "role": "param",
+      "sourceType": "datatable",
+      "sourceFile": null,
+      "keyColumns": [
+        "Year"
+      ],
+      "dedupKey": null,
+      "datatable": {
+        "columns": [
+          {
+            "name": "Year",
+            "type": "integer"
+          }
+        ],
+        "rows": [
+          [
+            2020
+          ],
+          [
+            2021
+          ],
+          [
+            2022
+          ],
+          [
+            2023
+          ]
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "fromColumn": "Orders.Customer ID",
+      "toColumn": "DimCustomer.Customer ID",
+      "crossFilter": "single",
+      "active": true
+    },
+    {
+      "fromColumn": "Orders.Product ID",
+      "toColumn": "DimProduct.Product ID",
+      "crossFilter": "single",
+      "active": true
+    },
+    {
+      "fromColumn": "Orders.Postal Code",
+      "toColumn": "DimLocation.Postal Code",
+      "crossFilter": "single",
+      "active": true
+    },
+    {
+      "fromColumn": "Orders.Order Date",
+      "toColumn": "DimDate.Date",
+      "crossFilter": "single",
+      "active": true
+    }
+  ],
+  "measures": [
+    {
+      "table": "Orders",
+      "name": "Total Sales",
+      "dax": "SUM(Orders[Sales])",
+      "formatString": "#,0.00",
+      "displayFolder": "Sales",
+      "description": "Total Sales amount.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "Total Profit",
+      "dax": "SUM(Orders[Profit])",
+      "formatString": "#,0.00",
+      "displayFolder": "Profit",
+      "description": "Total Profit amount.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "Total Quantity",
+      "dax": "SUM(Orders[Quantity])",
+      "formatString": "#,0",
+      "displayFolder": "Quantity",
+      "description": "Total Quantity sold.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "Total Orders",
+      "dax": "DISTINCTCOUNT(Orders[Order ID])",
+      "formatString": "#,0",
+      "displayFolder": "Orders",
+      "description": "Count of distinct orders.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "Total Customers",
+      "dax": "DISTINCTCOUNT(Orders[Customer ID])",
+      "formatString": "#,0",
+      "displayFolder": "Customers",
+      "description": "Count of distinct customers.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "Sales per Customer",
+      "dax": "DIVIDE([Total Sales], [Total Customers])",
+      "formatString": "#,0.00",
+      "displayFolder": "Sales",
+      "description": "Average Sales per distinct customer.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "CY Sales",
+      "dax": "CALCULATE([Total Sales], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023))",
+      "formatString": "#,0.00",
+      "displayFolder": "CY",
+      "description": "Current Year Sales filtered by SelectYear parameter.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Sales",
+      "dax": "CALCULATE([Total Sales], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023) - 1)",
+      "formatString": "#,0.00",
+      "displayFolder": "PY",
+      "description": "Previous Year Sales.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "CY Profit",
+      "dax": "CALCULATE([Total Profit], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023))",
+      "formatString": "#,0.00",
+      "displayFolder": "CY",
+      "description": "Current Year Profit.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Profit",
+      "dax": "CALCULATE([Total Profit], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023) - 1)",
+      "formatString": "#,0.00",
+      "displayFolder": "PY",
+      "description": "Previous Year Profit.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "CY Quantity",
+      "dax": "CALCULATE([Total Quantity], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023))",
+      "formatString": "#,0",
+      "displayFolder": "CY",
+      "description": "Current Year Quantity.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Quantity",
+      "dax": "CALCULATE([Total Quantity], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023) - 1)",
+      "formatString": "#,0",
+      "displayFolder": "PY",
+      "description": "Previous Year Quantity.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "CY Orders",
+      "dax": "CALCULATE([Total Orders], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023))",
+      "formatString": "#,0",
+      "displayFolder": "CY",
+      "description": "Current Year Orders.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Orders",
+      "dax": "CALCULATE([Total Orders], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023) - 1)",
+      "formatString": "#,0",
+      "displayFolder": "PY",
+      "description": "Previous Year Orders.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "CY Customers",
+      "dax": "CALCULATE([Total Customers], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023))",
+      "formatString": "#,0",
+      "displayFolder": "CY",
+      "description": "Current Year distinct customers.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Customers",
+      "dax": "CALCULATE([Total Customers], YEAR(Orders[Order Date]) = SELECTEDVALUE(SelectYear[Year], 2023) - 1)",
+      "formatString": "#,0",
+      "displayFolder": "PY",
+      "description": "Previous Year distinct customers.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "CY Sales per Customer",
+      "dax": "DIVIDE([CY Sales], [CY Customers])",
+      "formatString": "#,0.00",
+      "displayFolder": "CY",
+      "description": "Current Year Sales per Customer.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Sales per Customer",
+      "dax": "DIVIDE([PY Sales], [PY Customers])",
+      "formatString": "#,0.00",
+      "displayFolder": "PY",
+      "description": "Previous Year Sales per Customer.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "% Diff Sales",
+      "dax": "DIVIDE([CY Sales] - [PY Sales], [PY Sales])",
+      "formatString": "0.0%;-0.0%;0.0%",
+      "displayFolder": "Variance",
+      "description": "YoY Sales % difference.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "% Diff Profit",
+      "dax": "DIVIDE([CY Profit] - [PY Profit], [CY Profit])",
+      "formatString": "0.0%;-0.0%;0.0%",
+      "displayFolder": "Variance",
+      "description": "YoY Profit % difference.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "% Diff Quantity",
+      "dax": "DIVIDE([CY Quantity] - [PY Quantity], [PY Quantity])",
+      "formatString": "0.0%;-0.0%;0.0%",
+      "displayFolder": "Variance",
+      "description": "YoY Quantity % difference.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "% Diff Orders",
+      "dax": "DIVIDE([CY Orders] - [PY Orders], [PY Orders])",
+      "formatString": "0.0%;-0.0%;0.0%",
+      "displayFolder": "Variance",
+      "description": "YoY Orders % difference.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "% Diff Customers",
+      "dax": "DIVIDE([CY Customers] - [PY Customers], [PY Customers])",
+      "formatString": "0.0%;-0.0%;0.0%",
+      "displayFolder": "Variance",
+      "description": "YoY Customers % difference.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "% Diff Sales per Customers",
+      "dax": "DIVIDE([CY Sales per Customer] - [PY Sales per Customer], [PY Sales per Customer])",
+      "formatString": "0.0%;-0.0%;0.0%",
+      "displayFolder": "Variance",
+      "description": "YoY Sales per Customer % difference.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "KPI CY Less PY",
+      "dax": "IF([CY Sales] < [PY Sales], \"⬤\", \"\")",
+      "formatString": null,
+      "displayFolder": "KPI",
+      "description": "Red dot indicator when CY Sales < PY Sales.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "Nr of Orders per Customer",
+      "dax": "DIVIDE([Total Orders], [Total Customers])",
+      "formatString": "#,0.0",
+      "displayFolder": "Customers",
+      "description": "Average orders per customer.",
+      "source": "llm"
+    }
+  ],
+  "calculatedColumns": [],
+  "visualDecisions": [
+    {
+      "worksheet": "KPI Customers",
+      "visualType": "lineChart",
+      "category": "Order Date",
+      "value": "CY Customers",
+      "reason": "Automatic mark, month on cols, CY/Min-Max Customers on rows — monthly KPI trend line.",
+      "secondaryValue": "PY Customers",
+      "hideValueAxis": true,
+      "hideLabels": true,
+      "kpiStack": true,
+      "kpiMeasure": "CY Customers",
+      "kpiPctMeasure": "% Diff Customers",
+      "kpiTitle": "Total Customers",
+      "categoryField": "Order Month Name"
+    },
+    {
+      "worksheet": "KPI Orders",
+      "visualType": "lineChart",
+      "category": "Order Date",
+      "value": "CY Orders",
+      "reason": "Automatic mark, month on cols, CY/Min-Max Orders on rows — monthly KPI trend line.",
+      "secondaryValue": "PY Orders",
+      "hideValueAxis": true,
+      "hideLabels": true,
+      "kpiStack": true,
+      "kpiMeasure": "CY Orders",
+      "kpiPctMeasure": "% Diff Orders",
+      "kpiTitle": "Total Orders",
+      "categoryField": "Order Month Name"
+    },
+    {
+      "worksheet": "KPI Profit",
+      "visualType": "lineChart",
+      "category": "Order Date",
+      "value": "CY Profit",
+      "reason": "Automatic mark, month on cols, CY/Min-Max Profit on rows — monthly KPI trend line.",
+      "secondaryValue": "PY Profit",
+      "hideValueAxis": true,
+      "hideLabels": true,
+      "kpiStack": true,
+      "kpiMeasure": "CY Profit",
+      "kpiPctMeasure": "% Diff Profit",
+      "kpiTitle": "Total Profit",
+      "categoryField": "Order Month Name"
+    },
+    {
+      "worksheet": "KPI Quantity",
+      "visualType": "lineChart",
+      "category": "Order Date",
+      "value": "CY Quantity",
+      "reason": "Automatic mark, month on cols, CY/Min-Max Quantity on rows — monthly KPI trend line.",
+      "secondaryValue": "PY Quantity",
+      "hideValueAxis": true,
+      "hideLabels": true,
+      "kpiStack": true,
+      "kpiMeasure": "CY Quantity",
+      "kpiPctMeasure": "% Diff Quantity",
+      "kpiTitle": "Total Quantity",
+      "categoryField": "Order Month Name"
+    },
+    {
+      "worksheet": "KPI Sales",
+      "visualType": "lineChart",
+      "category": "Order Date",
+      "value": "CY Sales",
+      "reason": "Automatic mark, month on cols, CY Sales + Min/Max Sales on rows — monthly sales trend.",
+      "secondaryValue": "PY Sales",
+      "hideValueAxis": true,
+      "hideLabels": true,
+      "kpiStack": true,
+      "kpiMeasure": "CY Sales",
+      "kpiPctMeasure": "% Diff Sales",
+      "kpiTitle": "Total Sales",
+      "categoryField": "Order Month Name"
+    },
+    {
+      "worksheet": "KPI Sales Per Customers",
+      "visualType": "lineChart",
+      "category": "Order Date",
+      "value": "CY Sales per Customer",
+      "reason": "Automatic mark, month on cols, CY/Min-Max Sales per Customer on rows — KPI trend line.",
+      "secondaryValue": "PY Sales per Customer",
+      "hideValueAxis": true,
+      "hideLabels": true,
+      "kpiStack": true,
+      "kpiMeasure": "CY Sales per Customer",
+      "kpiPctMeasure": "% Diff Sales per Customers",
+      "kpiTitle": "Total Sales Per Customer",
+      "categoryField": "Order Month Name"
+    },
+    {
+      "worksheet": "Test KPI",
+      "visualType": "tableEx",
+      "reason": "Measure Names on cols + year on rows — multi-measure table view."
+    },
+    {
+      "worksheet": "Test KPI2",
+      "visualType": "tableEx",
+      "reason": "Measure Names on rows — multi-measure summary table."
+    },
+    {
+      "worksheet": "Test Max Min",
+      "visualType": "tableEx",
+      "reason": "Measure Names on cols + month on rows — multi-measure table view."
+    },
+    {
+      "worksheet": "Top Customers",
+      "visualType": "tableEx",
+      "reason": "Customer Name, Last Order, Profit, Sales, Orders columns — ranked customer table.",
+      "tableColumns": [
+        {
+          "entity": "DimCustomer",
+          "prop": "Customer Name",
+          "isMeasure": false
+        },
+        {
+          "entity": "Orders",
+          "prop": "Order Date",
+          "isMeasure": false
+        },
+        {
+          "entity": "Orders",
+          "prop": "CY Profit",
+          "isMeasure": true
+        },
+        {
+          "entity": "Orders",
+          "prop": "CY Sales",
+          "isMeasure": true
+        },
+        {
+          "entity": "Orders",
+          "prop": "CY Orders",
+          "isMeasure": true
+        }
+      ]
+    },
+    {
+      "worksheet": "Weekly Trends",
+      "visualType": "lineChart",
+      "category": "Order Date",
+      "value": "CY Sales",
+      "reason": "Automatic mark, week on cols, CY Sales + CY Profit on rows — weekly trend line.",
+      "secondaryValue": "PY Sales",
+      "additionalValues": [
+        "CY Profit",
+        "PY Profit"
+      ]
+    }
+  ],
+  "fieldParameters": [],
+  "theme": {
+    "titleColor": "#004263",
+    "visualBackground": "#FFFFFF",
+    "border": "#E0E0E0",
+    "foreground": "#555555",
+    "pageBackground": "#F5F5F5",
+    "outspace": "#EBEBEB",
+    "titleFont": "Segoe UI Semibold"
+  },
+  "calculatedTables": [
+    {
+      "name": "CustomerOrderCounts",
+      "dax": "GROUPBY(ADDCOLUMNS(SUMMARIZE(Orders, Orders[Customer ID]), \"Nr of Orders\", CALCULATE(DISTINCTCOUNT(Orders[Order ID]))), [Nr of Orders], \"Customer Count\", SUMX(CURRENTGROUP(), 1))",
+      "columns": [
+        {
+          "name": "Nr of Orders",
+          "dataType": "int64",
+          "formatString": "0",
+          "summarizeBy": "none"
+        },
+        {
+          "name": "Customer Count",
+          "dataType": "int64",
+          "formatString": "#,0",
+          "summarizeBy": "sum"
+        }
+      ]
+    }
+  ]
+}

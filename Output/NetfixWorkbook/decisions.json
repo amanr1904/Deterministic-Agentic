@@ -1,0 +1,131 @@
+{
+  "decisionsVersion": "1.0",
+  "modelName": "NetfixWorkbook",
+  "tableStrategy": "star-schema",
+  "tables": [
+    {
+      "name": "netflix_titles",
+      "role": "fact",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Netflix\\netflix_titles.csv",
+      "keyColumns": ["show_id"],
+      "dedupKey": null
+    },
+    {
+      "name": "DimDate",
+      "role": "date",
+      "sourceType": "calendar",
+      "sourceFile": null,
+      "keyColumns": ["Date"],
+      "dedupKey": null
+    },
+    {
+      "name": "DimType",
+      "role": "dim",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Netflix\\netflix_titles.csv",
+      "keyColumns": ["TypeName"],
+      "dedupKey": "TypeName"
+    },
+    {
+      "name": "DimRating",
+      "role": "dim",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Netflix\\netflix_titles.csv",
+      "keyColumns": ["RatingName"],
+      "dedupKey": "RatingName"
+    }
+  ],
+  "relationships": [
+    {
+      "fromColumn": "netflix_titles.date_added",
+      "toColumn": "DimDate.Date",
+      "crossFilter": "single",
+      "active": true
+    },
+    {
+      "fromColumn": "netflix_titles.type",
+      "toColumn": "DimType.TypeName",
+      "crossFilter": "single",
+      "active": true
+    },
+    {
+      "fromColumn": "netflix_titles.rating",
+      "toColumn": "DimRating.RatingName",
+      "crossFilter": "single",
+      "active": true
+    }
+  ],
+  "measures": [
+    {
+      "table": "netflix_titles",
+      "name": "Title Count",
+      "dax": "DISTINCTCOUNT('netflix_titles'[show_id])",
+      "formatString": "#,0",
+      "displayFolder": "Counts",
+      "description": "Distinct count of show_id — core catalog metric.",
+      "source": "llm"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "Movies Count",
+      "dax": "CALCULATE([Title Count], 'netflix_titles'[type] = \"Movie\")",
+      "formatString": "#,0",
+      "displayFolder": "Counts",
+      "description": "Title Count filtered to type = Movie.",
+      "source": "llm"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "TV Shows Count",
+      "dax": "CALCULATE([Title Count], 'netflix_titles'[type] = \"TV Show\")",
+      "formatString": "#,0",
+      "displayFolder": "Counts",
+      "description": "Title Count filtered to type = TV Show.",
+      "source": "llm"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "Genre Rank",
+      "dax": "RANKX(ALL('netflix_titles'[listed_in]), [Title Count], , DESC, Dense)",
+      "formatString": "#,0",
+      "displayFolder": "Report Helpers",
+      "description": "Ranks listed_in by Title Count; Top 10 Genre bar filters Genre Rank <= 10.",
+      "source": "llm"
+    }
+  ],
+  "calculatedColumns": [],
+  "visualDecisions": [
+    {
+      "worksheet": "Country wise distribution",
+      "visualType": "filledMap",
+      "location": "country",
+      "value": "Title Count",
+      "reason": "Multipolygon mark with country color encoding — filled choropleth map, size = Title Count."
+    },
+    {
+      "worksheet": "Ratings",
+      "visualType": "clusteredColumnChart",
+      "category": "rating",
+      "value": "Title Count",
+      "reason": "Automatic mark, rating on cols, show_id count on rows — vertical column chart by rating."
+    },
+    {
+      "worksheet": "Top 10 Genre",
+      "visualType": "clusteredBarChart",
+      "category": "listed_in",
+      "value": "Title Count",
+      "reason": "Automatic mark, listed_in on rows, show_id count on cols — horizontal bar chart, top 10 by Title Count."
+    }
+  ],
+  "fieldParameters": [],
+  "theme": {
+    "titleColor": "#E50914",
+    "visualBackground": "#221F1F",
+    "border": "#564d4d",
+    "foreground": "#FFFFFF",
+    "pageBackground": "#141414",
+    "outspace": "#000000",
+    "titleFont": "Segoe UI Semibold"
+  }
+}

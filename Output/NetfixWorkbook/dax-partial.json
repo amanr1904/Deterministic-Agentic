@@ -1,0 +1,12 @@
+{
+  "measures": [],
+  "pending": [
+    {
+      "caption": "Year",
+      "formula": "#2024-03-26#",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    }
+  ]
+}
