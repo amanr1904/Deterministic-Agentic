@@ -128,25 +128,35 @@ Read `.specify/memory/{WorkbookName}/tableau-analysis-output.md` to understand:
 
 > **Memory Scoping**: All workbook-specific artifacts are stored in `.specify/memory/{WorkbookName}/` (e.g., `.specify/memory/SalesCustomerDashboards/`). Universal constitutions remain at `.specify/memory/` root. The `{WorkbookName}` matches the Output folder name (PascalCase, no spaces).
 
-### Stage 2: Read & Validate Universal Constitutions
+### Stage 2: Load Constitution Cache (deterministic — NO generation)
 
-Two universal constitutions exist — one for the semantic model, one for the report layer. Both are shared across ALL workbook migrations and NEVER overwritten per workbook.
+The constitution is a **static snapshot** produced by `pipeline.py prepare` (Stage 0).
+Read `Output/{PascalName}/constitution-cache.json` — it was written before any parsing
+began and contains the exact bytes of both universal constitution files.
+
+```json
+{
+  "model":  "<full text of .specify/memory/constitution.md>",
+  "report": "<full text of .specify/memory/report-constitution.md>",
+  "_meta":  { "model_path": "...", "report_path": "...", ... }
+}
+```
 
 **Actions:**
-1. Read `.specify/memory/constitution.md` — universal migration principles (star schema, naming conventions, DAX standards, relationships, M query safety, PBIP structure, validation checklist)
-2. Read `.specify/memory/report-constitution.md` — universal report visual rules (layout, typography, theme defaults, slicer standards, chart type mappings, border/title standards)
-3. Validate that the current workbook's characteristics (from Stage 1) are compatible with the constitution rules:
-   - Confirm data source type is covered (CSV, SQL Server, PostgreSQL, Excel, etc.)
-   - Confirm naming convention can be applied (table/column names map cleanly)
-   - Confirm relationship strategy matches (single-source → natural keys, multi-source → surrogate keys)
-   - Confirm parameter types have mappings (integer → What-If, string → disconnected slicer, date → DimDate slicer)
-4. If a rule cannot be applied (edge case not covered), append a note to the workbook-specific spec (Stage 4) — do NOT modify either constitution
+1. Read `Output/{PascalName}/constitution-cache.json`.
+2. Extract `cache.model` → semantic model rules (star schema, naming, DAX, relationships, M query, PBIP structure).
+3. Extract `cache.report` → report visual rules (layout, typography, theme, slicers, chart mappings, borders).
+4. Apply rules to the current workbook characteristics (from Stage 1) — if an edge case is not covered, note it in the workbook-specific spec (Stage 4).
 
-**NEVER overwrite or regenerate `.specify/memory/constitution.md` or `.specify/memory/report-constitution.md`** — they are the shared authorities for all migrations in this workspace.
-
-If the constitution file does not exist yet (first-time setup), create it using the universal template from `.specify/templates/constitution-template.md` with the standard Tableau→PBI migration principles. Once created, it remains unchanged for all subsequent workbook migrations.
-
-If the report constitution does not exist yet, create it using `.github/skills/report-visual-generation/report-constitution-template.md`. Once created, it remains unchanged.
+**HARD RULES — no exceptions:**
+- ❌ NEVER read `.specify/memory/constitution.md` or `.specify/memory/report-constitution.md` directly during a migration run — use the cache only.
+- ❌ NEVER call `speckit.constitution` agent during a migration pipeline run.
+- ❌ NEVER create, overwrite, or modify either constitution file.
+- ✅ If `constitution-cache.json` is missing, **STOP** and instruct the user to run:
+  ```powershell
+  python scripts/pipeline.py prepare "Data/{subfolder}/{workbook}.twb"
+  ```
+  Do NOT proceed to Stage 3 without the cache.
 
 ### Stage 3: Create Feature Branch & Directory
 

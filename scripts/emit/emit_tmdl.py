@@ -18,6 +18,10 @@ import tmdl_blocks as B  # noqa: E402
 import date_levels as D  # noqa: E402
 import field_param as FP  # noqa: E402
 
+_TWB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "twb")
+sys.path.insert(0, os.path.normpath(_TWB_DIR))
+import csv_probe as CP  # noqa: E402
+
 PBISM = {
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
     "version": "4.2", "settings": {},
@@ -59,7 +63,8 @@ def model_dir(analysis_path: str, model_name: str) -> str:
 
 
 def write(path: str, text: str) -> None:
-    with open(path, "w", encoding="utf-8") as fh:
+    # Always write UTF-8 WITHOUT BOM — Power BI Desktop rejects BOM in TMDL/PBIR files.
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(text)
 
 
@@ -71,7 +76,7 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         lines.append(f"{B.TAB}dataCategory: Time")
     lines.append("")
     measures = [m for m in decisions.get("measures", []) if m["table"] == name]
-    cols = _columns_for(table, ir)
+    cols = _columns_for(table, ir, decisions)
     col_names = {c["name"].lower() for c in cols}
     clash = sorted(m["name"] for m in measures if m["name"].lower() in col_names)
     if clash:
@@ -80,11 +85,16 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         lines += [B.measure_block(m, seq * 100 + i + 1), ""]
     for i, col in enumerate(cols):
         lines += [B.column_block(col, seq * 1000 + i + 1), ""]
+    # Calendar date table: Date key column + date intelligence calculated columns
+    if table.get("role") == "date" and table.get("sourceType") == "calendar":
+        lines += [B.date_key_column_block(seq * 1000 + 1), ""]
+        for j, (col_name, dax, dtype, fmt) in enumerate(_CALENDAR_CALC_COLS):
+            lines += [B.calc_column_block(col_name, dax, dtype, fmt, seq * 1000 + 10 + j), ""]
     for j, part in enumerate(_date_part_columns(table, cols, ir)):
         dax = D.part_dax(part["baseColumn"], name, part["level"])
         lines += [B.calc_column_block(part["name"], dax, part["dataType"],
                                       part["format"], seq * 1000 + 500 + j), ""]
-    lines.append(_partition_for(table, ir, cols))
+    lines.append(_partition_for(table, ir, cols, decisions))
     return "\n".join(lines)
 
 
@@ -98,8 +108,52 @@ def _date_part_columns(table: Dict, cols: List[Dict], ir: Dict) -> List[Dict]:
     return D.needed_parts(ir.get("worksheets", []), date_cols)
 
 
-def _columns_for(table: Dict, ir: Dict) -> List[Dict]:
-    if table.get("role") == "param" and table.get("datatable"):
+# Calculated columns added to every CALENDAR() date dimension table.
+_CALENDAR_CALC_COLS = [
+    ("Year",         "YEAR([Date])",                        "integer", "0"),
+    ("Month Number", "MONTH([Date])",                       "integer", "0"),
+    ("Month",        'FORMAT([Date], "MMMM")',               "string",  None),
+    ("Quarter",      '"Q" & FORMAT(QUARTER([Date]), "0")',   "string",  None),
+    ("Year-Month",   'FORMAT([Date], "YYYY-MM")',            "string",  None),
+]
+
+
+def _dim_source_column(table_name: str, key_col: str, decisions: Dict) -> str:
+    """Find the fact-side column that maps to this dim's key via relationships."""
+    for rel in decisions.get("relationships", []):
+        to_t, to_c = rel["toColumn"].split(".", 1)
+        if to_t == table_name and to_c == key_col:
+            _, from_c = rel["fromColumn"].split(".", 1)
+            return from_c
+    return key_col  # fallback: same name as key
+
+
+def _date_source_column(table_name: str, decisions: Dict):
+    """Return (fact_table, date_col) for a DimDate calendar table via relationships."""
+    for rel in decisions.get("relationships", []):
+        to_t, _to_c = rel["toColumn"].split(".", 1)
+        if to_t == table_name:
+            from_t, from_c = rel["fromColumn"].split(".", 1)
+            return from_t, from_c
+    tables = decisions.get("tables", [])
+    fact = next((t["name"] for t in tables if t.get("role") == "fact"), "Table")
+    return fact, "date_added"
+
+
+def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
+    role = table.get("role")
+    # Dim with dedupKey: load ALL CSV columns so attributes are available.
+    # Fall back to key-only when CSV cannot be probed.
+    if role == "dim" and table.get("dedupKey"):
+        key = (table.get("keyColumns") or [table["dedupKey"]])[0]
+        probe = _probe_for_table(table, ir)
+        if probe and probe["columns"]:
+            return probe["columns"]
+        return [{"name": key, "dataType": "string", "role": "dimension", "format": None}]
+    # Calendar date table: no regular columns (Date key + calc columns added separately)
+    if role == "date" and table.get("sourceType") == "calendar":
+        return []
+    if role == "param" and table.get("datatable"):
         return [{"name": c["name"], "dataType": c.get("dataType", "string"),
                  "role": "dimension", "format": None}
                 for c in table["datatable"]["columns"]]
@@ -164,12 +218,43 @@ def _dedupe_columns(cols: List[Dict]) -> List[Dict]:
     return out
 
 
-def _partition_for(table: Dict, ir: Dict, cols: List[Dict]) -> str:
-    if table.get("role") == "param" and table.get("datatable"):
+def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> str:
+    role = table.get("role")
+    # Dim with dedupKey: full M partition — load all CSV columns, rename, dedup.
+    if role == "dim" and table.get("dedupKey"):
+        key = (table.get("keyColumns") or [table["dedupKey"]])[0]
+        path = _abs_csv(ir, table.get("sourceFile") or _first_csv(ir))
+        probe = _probe_for_table(table, ir)
+        if probe and probe["columns"]:
+            return B.dim_partition(table["name"], path, probe["delimiter"],
+                                   key, probe["columns"])
+        # Fallback: key-only slim partition when CSV cannot be probed
+        src_col = _dim_source_column(table["name"], key, decisions)
+        all_cols = [{"name": key, "csv_name": src_col, "dataType": "string"}]
+        return B.dim_partition(table["name"], path, ",", key, all_cols)
+    # Calendar date table: DAX CALENDAR calculated partition
+    if role == "date" and table.get("sourceType") == "calendar":
+        fact_tbl, date_col = _date_source_column(table["name"], decisions)
+        return B.calendar_partition(table["name"], fact_tbl, date_col)
+    if role == "param" and table.get("datatable"):
         dt = table["datatable"]
         return B.datatable_partition(table["name"], dt["columns"], dt["rows"])
+    if table.get("mExpression"):
+        return B.raw_partition(table["name"], table["mExpression"])
+    # Fact / other: probe CSV for delimiter; use robust parsing for European CSVs.
     path = table.get("sourceFile") or _first_csv(ir)
-    return B.csv_partition(table["name"], _abs_csv(ir, path), cols)
+    abs_path = _abs_csv(ir, path)
+    probe = _probe_for_table(table, ir)
+    delimiter = probe["delimiter"] if probe else ","
+    if probe and probe["columns"]:
+        csv_names_norm = {_normalize_name(c["csv_name"]) for c in probe["columns"]}
+        cols = [c for c in cols if _normalize_name(c["name"]) in csv_names_norm]
+    if delimiter != ",":
+        date_cs = [c["name"] for c in cols if c.get("dataType") in ("date", "datetime")]
+        decimal_cs = [c["name"] for c in cols if c.get("dataType") == "real"]
+        return B.robust_csv_partition(table["name"], abs_path, cols, delimiter,
+                                      date_cs, decimal_cs)
+    return B.csv_partition(table["name"], abs_path, cols, delimiter)
 
 
 def _abs_csv(ir: Dict, path: str) -> str:
@@ -186,6 +271,46 @@ def _first_csv(ir: Dict) -> str:
         if csvs:
             return csvs[0]
     return "PATH_TO_DATA.csv"
+
+
+def _normalize_name(s: str) -> str:
+    """Normalize a column name for fuzzy matching: underscores/slashes/hyphens/spaces
+    all collapse to a single space, then lowercase.  Handles CSV underscore headers
+    (Customer_ID) matching logical names (Customer ID) and slash variants (Country/Region).
+    """
+    return re.sub(r"[_/\-\s]+", " ", s).strip().lower()
+
+
+def _build_csv_columns(csv_headers: List[str], ir_columns: List[Dict]) -> List[Dict]:
+    """Match each CSV header to an IR logical column using normalized comparison.
+    Returns a list of {name, csv_name, dataType} dicts ordered by CSV column order.
+    Unmatched headers keep their raw name with dataType='string'.
+    """
+    ir_by_norm = {_normalize_name(c["name"]): c for c in ir_columns}
+    result = []
+    for h in csv_headers:
+        n = _normalize_name(h)
+        if n in ir_by_norm:
+            col = ir_by_norm[n]
+            result.append({"name": col["name"], "csv_name": h,
+                           "dataType": col.get("dataType", "string")})
+        else:
+            result.append({"name": h, "csv_name": h, "dataType": "string"})
+    return result
+
+
+def _probe_for_table(table: Dict, ir: Dict) -> Dict | None:
+    """Probe the CSV backing a table.  Returns {delimiter, columns} or None."""
+    raw_path = table.get("sourceFile") or _first_csv(ir)
+    path = _abs_csv(ir, raw_path)
+    result = CP.probe(path)
+    if result is None:
+        return None
+    ir_cols = ir.get("columns", [])
+    return {
+        "delimiter": result["delimiter"],
+        "columns": _build_csv_columns(result["headers"], ir_cols),
+    }
 
 
 def build_model_file(decisions: Dict) -> str:
@@ -215,6 +340,45 @@ def build_relationships_file(decisions: Dict) -> str:
     return "\n".join(blocks) + ("\n" if blocks else "")
 
 
+def _build_calculated_table_tmdl(ct: Dict, lineage_base: int) -> str:
+    """Build TMDL text for a DAX calculated table (no circular-ref risk).
+
+    ct = {"name": "...", "dax": "...", "columns": [{"name", "dataType", "formatString", "summarizeBy"}]}
+    Calculated tables are safe alternatives to calculated columns that reference
+    other tables — they don't participate in the relationship-based processing cycle.
+    """
+    t = ct["name"]
+    tag = f"a1000000-0000-4000-9000-{lineage_base:012x}"
+    lines = [f"table {t!r}" if " " in t or not t[0].isalpha() else f"table {t}",
+             f"\tlineageTag: {tag}",
+             ""]
+    for i, col in enumerate(ct.get("columns", []), start=1):
+        ctag = f"a1000000-0000-4000-9000-{lineage_base + i:012x}"
+        lines += [
+            f"\tcolumn {col['name']!r}" if (" " in col["name"] or not col["name"][0].isalpha())
+            else f"\tcolumn {col['name']}",
+            f"\t\tdataType: {col.get('dataType', 'string')}",
+        ]
+        if col.get("formatString"):
+            lines.append(f"\t\tformatString: {col['formatString']}")
+        lines += [
+            f"\t\tlineageTag: {ctag}",
+            f"\t\tsummarizeBy: {col.get('summarizeBy', 'none')}",
+            f"\t\tsourceColumn: [{col['name']}]",
+            "",
+            "\t\tannotation SummarizationSetBy = Automatic",
+            "",
+        ]
+    dax = ct["dax"].strip()
+    lines += [
+        f"\tpartition {t} = calculated",
+        "\t\tmode: import",
+        "\t\tsource =",
+        f"\t\t\t\t{dax}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
     model_name = decisions.get("modelName") or ir["workbook"]["pascalName"]
     root = model_dir(analysis_path, model_name)
@@ -230,6 +394,12 @@ def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
         fname = re.sub(r"[\\/:*?\"<>|]+", "_", fp["name"])
         write(os.path.join(defin, "tables", f"{fname}.tmdl"),
               FP.table_tmdl(fp, 0x7000 + j))
+    # Calculated tables from decisions (avoids circular-reference issues with
+    # calculated columns on dim tables that reference other tables via relationships)
+    for k, ct in enumerate(decisions.get("calculatedTables", []), start=1):
+        fname = re.sub(r"[\\/:*?\"<>|]+", "_", ct["name"])
+        write(os.path.join(defin, "tables", f"{fname}.tmdl"),
+              _build_calculated_table_tmdl(ct, 0xA000 + k))
     write(os.path.join(root, "definition.pbism"), json.dumps(PBISM, indent=2))
     write(os.path.join(root, "diagramLayout.json"), json.dumps({"version": "1.1.0", "diagrams": []}))
     write(os.path.join(root, ".platform"), platform_file("SemanticModel", model_name, model_name + ".sm"))

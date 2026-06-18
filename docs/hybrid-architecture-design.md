@@ -1,6 +1,8 @@
 # Hybrid Deterministic + Agentic Architecture — Design Plan
 
-**Status**: Proposal (for review)
+**Status**: Implemented — the deterministic engine lives in `scripts/` (`pipeline.py`,
+`twb/parse_twb.py`, `dax/map_dax.py`, `emit/emit_tmdl.py`, `emit/emit_pbir.py`) with the
+contracts in `scripts/contracts/`. This document is retained as the design rationale.
 **Goal**: Cut token consumption by moving mechanical work off the LLM, while keeping agents for genuine reasoning.
 **Date**: 2026-06-16
 
@@ -188,20 +190,26 @@ parameters. The agent receives only these flagged formulas — not the whole wor
 ## 8. Proposed directory layout
 
 ```
-scripts/                      # NEW — deterministic engine
-  ir_schema.json              # the IR contract (single source of truth)
-  decisions_schema.json       # the decisions contract
-  parse_twb.py                # .twb → analysis.json            (Stage 1)
-  render_analysis_md.py       # analysis.json → human-readable .md (review only)
-  map_dax.py                  # trivial Tableau calc → DAX       (Stage 6 partial)
-  derive_schema.py            # IR → default table strategy/keys (Stage 7 partial)
-  emit_tmdl.py                # IR + decisions → .SemanticModel  (Stage 10)
-  emit_pbir.py                # IR + decisions → .Report         (Stage 13)
-  emit_tasks.py               # template tasks.md                (Stage 9, optional)
-  pipeline.py                 # orchestrates deterministic steps, calls out for LLM gaps
+scripts/                      # deterministic engine (implemented)
+  pipeline.py                 # two-phase orchestrator (prepare / generate)
+  contracts/
+    ir_schema.json            # the IR contract (single source of truth)
+    decisions_schema.json     # the decisions contract
+  twb/
+    parse_twb.py              # .twb → analysis.json            (Stage 1)
+    twb_xml.py                # XML load + shared helpers
+    twb_datasources.py        # datasource/column/param/calc extraction
+    twb_visuals.py            # worksheet/dashboard extraction
+    twb_fields.py             # calc/param maps + complexity flag
+  dax/
+    map_dax.py                # trivial Tableau calc → DAX       (Stage 6 partial)
+  emit/
+    emit_tmdl.py              # IR + decisions → .SemanticModel  (Stage 10)
+    emit_pbir.py              # IR + decisions → .Report         (Stage 13)
+    tmdl_blocks.py / pbir_blocks.py / pbir_bind.py / field_param.py / date_levels.py
 
 plugins/pbip/skills/pbip/scripts/validate_pbip.py   # unchanged
-plugins/pbip/hooks/bin/tmdl-validate-*.exe          # unchanged
+plugins/pbip/hooks/bin/tmdl-validate-*              # unchanged (per-OS binaries)
 ```
 
 Agents keep their `.agent.md` files but their **instructions change**: from *"read the XML and
@@ -281,17 +289,16 @@ ambiguous chart inference, multi-source design.
 
 ---
 
-## 13. Open questions (for sign-off before Phase 0)
+## 13. Open questions — resolved
 
-1. **Language**: Python for all new scripts (matches `validate_pbip.py`)? Or PowerShell to match
-   the speckit scripts?
-2. **IR location**: store `analysis.json` in `.specify/memory/{WorkbookName}/` alongside the
-   current markdown, or in a new `build/` dir?
-3. **Markdown artifacts**: keep rendering human-readable `*-output.md` for review, or drop them
-   once the IR is canonical?
-4. **Regression baseline**: are the current `Output/` artifacts considered "golden" (the
-   deterministic path must reproduce them), or is some drift acceptable?
-5. **Scope of agent slimming**: rewrite all 20 `.agent.md` files, or only the 5 on the
-   token-heavy path first?
+1. **Language**: Python for all new scripts (matches `validate_pbip.py`). **Resolved: Python.**
+2. **IR location**: `analysis.json` is written to `Output/{WorkbookName}/` alongside
+   `dax-partial.json` and `decisions.json`. **Resolved: `Output/{WorkbookName}/`.**
+3. **Markdown artifacts**: the IR JSON is canonical; human-readable markdown is optional and
+   rendered, never hand-edited. **Resolved: JSON canonical.**
+4. **Regression baseline**: committed `Output/` artifacts are treated as golden; the
+   deterministic path must reproduce them and pass the validators.
+5. **Scope of agent slimming**: the token-heavy path (Stages 1, 6, 10, 13) is script-first;
+   remaining `.agent.md` files invoke the scripts rather than re-deriving their output.
 ```
 

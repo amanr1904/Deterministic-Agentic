@@ -59,13 +59,32 @@ def load_json(path: str) -> Dict:
 
 def write_json(path: str, data: Dict) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as fh:
+    # Always write UTF-8 WITHOUT BOM — Power BI Desktop rejects BOM in PBIR files.
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
 
 
 def sanitize(name: str) -> str:
     """Page names must match ^[\\w-]+$."""
     return re.sub(r"[^\w-]+", "", name.replace(" ", "")) or "Page"
+
+
+def _rmtree_robust(path: str) -> None:
+    """Remove a directory tree, clearing read-only bits (Windows/OneDrive)."""
+    import stat
+
+    def _onerror(func, p, _exc):
+        try:
+            os.chmod(p, stat.S_IWRITE)
+            func(p)
+        except OSError:
+            pass
+
+    if hasattr(shutil, "rmtree"):
+        try:
+            shutil.rmtree(path, onerror=_onerror)
+        except TypeError:  # Python 3.12+ renamed the callback
+            shutil.rmtree(path, onexc=lambda f, p, e: _onerror(f, p, e))
 
 
 def resolve_visual_type(ws_name: str, ir: Dict, decisions: Dict) -> str:
@@ -79,6 +98,28 @@ def resolve_visual_type(ws_name: str, ir: Dict, decisions: Dict) -> str:
     return "tableEx"
 
 
+def visual_decision(ws_name: str, decisions: Dict) -> Dict:
+    """Return the decisions.visualDecisions entry for a worksheet (or {})."""
+    for vd in decisions.get("visualDecisions", []):
+        if vd["worksheet"] == ws_name:
+            return vd
+    return {}
+
+
+# Tableau-friendly aliases mapped to the concrete Power BI cartesian visualType.
+CHART_TYPE_MAP = {
+    "columnChart": "clusteredColumnChart",
+    "barChart": "clusteredBarChart",
+    "stackedColumn": "stackedColumnChart",
+    "stackedBar": "stackedBarChart",
+}
+CARTESIAN = {
+    "clusteredColumnChart", "clusteredBarChart", "stackedColumnChart",
+    "stackedBarChart", "stackedAreaChart", "lineChart", "areaChart",
+    "columnChart", "barChart",
+}
+
+
 def primary_entity(decisions: Dict) -> str:
     for t in decisions.get("tables", []):
         if t.get("role") == "fact":
@@ -87,9 +128,47 @@ def primary_entity(decisions: Dict) -> str:
     return tables[0]["name"] if tables else "Table"
 
 
+def _build_kpi_stack(name: str, pos: Dict, x: int, y: int, w: int, h: int,
+                     z: int, vd: Dict, entity: str, theme) -> List[Dict]:
+    """Return [card_visual, pct_card_visual, sparkline_visual] for a KPI zone."""
+    card_h  = round(h * 0.30)
+    pct_h   = round(h * 0.15)
+    spark_h = h - card_h - pct_h
+    title_text = vd.get("kpiTitle", "KPI")
+    total_m = vd.get("kpiMeasure", "Total Sales")
+    pct_m   = vd.get("kpiPctMeasure", "% Diff Sales")
+    sec_v   = vd.get("secondaryValue")
+    # card — big CY number
+    card = P.card_visual(
+        f"card_{name}", P.position(x, y, w, card_h, z),
+        entity, total_m, title=title_text, theme=theme,
+    )
+    # % diff card
+    pct = P.card_visual(
+        f"pct_{name}", P.position(x, y + card_h, w, pct_h, z + 1),
+        entity, pct_m, title=None, theme=theme,
+    )
+    # sparkline — keep original type (lineChart)
+    spark_vd = dict(vd)
+    spark_vd.pop("kpiStack", None)
+    sec_bind = ({"entity": entity, "prop": sec_v, "isMeasure": True}) if sec_v else None
+    add_binds = [{"entity": entity, "prop": av, "isMeasure": True}
+                 for av in (vd.get("additionalValues") or [])]
+    catbind  = {"entity": entity, "prop": vd.get("categoryField", "Order Date")}
+    valbind  = {"entity": entity, "prop": total_m, "isMeasure": True}
+    spark = P.chart_visual(
+        f"spark_{name}", P.position(x, y + card_h + pct_h, w, spark_h, z + 2),
+        "lineChart", catbind, valbind, title_text, theme=theme,
+        secondary_value=sec_bind, additional_values=add_binds or None,
+        hide_value_axis=True, hide_labels=True,
+    )
+    return [card, pct, spark]
+
+
 def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Optional[Dict]:
     """Build one visual.json dict from a classified dashboard zone."""
     sx, sy = scale
+    theme = decisions.get("theme")
     x, y = round(zone["x"] * sx), round(zone["y"] * sy)
     w, h = max(round(zone["w"] * sx), 80), max(round(zone["h"] * sy), 40)
     pos = P.position(x, y, w, h, z)
@@ -104,9 +183,10 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
             default = (fp.get("fields") or [{}])[0].get("label")
             return P.slicer_visual(f"slicer_{B.slug(fp['name'])}_{z}", pos,
                                    fp["name"], fp["name"], fp["name"],
-                                   default_value=default)
+                                   default_value=default, theme=theme)
         ent, prop, title, mode = B.resolve_slicer(zone, ir, decisions)
-        return P.slicer_visual(f"slicer_{B.slug(prop)}_{z}", pos, ent, prop, title, mode=mode)
+        return P.slicer_visual(f"slicer_{B.slug(prop)}_{z}", pos, ent, prop, title,
+                               mode=mode, theme=theme)
     ws_name = zone.get("worksheet") or ""
     # A field parameter collapses several toggle worksheets into one chart; the
     # non-primary ones (e.g. the Daily duplicate) are suppressed here.
@@ -118,11 +198,19 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         return None
     ws = B.ws_by_name(ir, ws_name)
     name = f"visual_{sanitize(ws_name or 'zone')}_{z}".lower()
+    vd = visual_decision(ws_name, decisions)
     vtype = resolve_visual_type(ws_name, ir, decisions)
     mlist = B.measure_list(decisions)
     mset = set(mlist)
     cols = B.column_names(ir)
     valf = ws.get("valueField") if ws else None
+
+    def value_bind() -> Dict:
+        v = vd.get("value")
+        if v and v in mset:
+            return {"entity": entity, "prop": v, "isMeasure": True}
+        return B.value_binding(valf, entity, mset, mlist, cols, ir)
+
     # Caption-only worksheets (dynamic <caption>, no real shelves) -> textbox.
     caption = ws.get("caption") if ws else None
     if caption and not (ws.get("dimensions") or ws.get("values")):
@@ -131,23 +219,84 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     if caption and ws_name and "caption" in ws_name.lower():
         return P.textbox_visual(f"caption_{z}", pos, caption, size=10, bold=False,
                                 hex_color="#666666")
+
+    # Single-value card: measure value, else a text/dimension column value.
+    if vtype == "card":
+        m = vd.get("value") if vd.get("value") in mset else (valf if valf in mset else None)
+        if m:
+            return P.card_visual(name, pos, entity, m, title=ws_name, theme=theme)
+        col = vd.get("textColumn") or B.card_column(ws, ir, cols)
+        if col and col in cols:
+            return P.card_text_visual(name, pos, entity, col, title=ws_name, theme=theme)
+        return None
+
+    # Pie / donut: category from color encoding, value measure, branded slices.
+    if vtype in ("pieChart", "donutChart"):
+        cat = vd.get("category") or B.color_field(ws, ir, cols)
+        catbind = {"entity": entity, "prop": cat or B.first_dim_col(ir)}
+        return P.pie_visual(name, pos, catbind, value_bind(), ws_name, theme=theme,
+                            donut=(vtype == "donutChart"),
+                            series_colors=vd.get("seriesColors"))
+
+    # Filled choropleth map: location column + measure-driven saturation.
+    if vtype in ("filledMap", "map"):
+        loc = vd.get("location") or B.geo_column(ir) or B.first_dim_col(ir)
+        locbind = {"entity": entity, "prop": loc}
+        return P.map_visual(name, pos, locbind, value_bind(), ws_name, theme=theme,
+                            gradient=vd.get("gradient"))
+
     # Skip empty worksheets (no dims/values/caption) so they don't become cards.
     has_data = bool(ws and (ws.get("dimensions") or ws.get("values")))
-    if vtype == "card":
-        m = valf if valf in mset else None
-        return P.card_visual(name, pos, entity, m) if m else None
-    if not has_data:
+    if not has_data and not vd.get("category"):
         return None
-    if vtype in ("barChart", "columnChart", "lineChart", "areaChart"):
-        valbind = B.value_binding(valf, entity, mset, mlist, cols, ir)
-        fp = B.field_param_for_ws(ws_name, decisions)
-        if fp is not None:
-            catbind = {"entity": fp["name"], "prop": fp["name"]}
+
+    # KPI stack: card (big number) + pct card (% diff) + sparkline
+    if vd.get("kpiStack"):
+        return _build_kpi_stack(name, pos, x, y, w, h, z, vd, entity, theme)
+
+    if vtype in CARTESIAN:
+        mapped = CHART_TYPE_MAP.get(vtype, vtype)
+        # categoryIsMeasure: treat the category field as a Measure (for histograms)
+        if vd.get("category") and vd.get("categoryIsMeasure"):
+            catbind = {"entity": entity, "prop": vd["category"], "isMeasure": True}
+        elif vd.get("category"):
+            catbind = {"entity": entity, "prop": vd["category"]}
         else:
-            catbind = B.category_binding(ws, entity, cols, ir)
-        return P.chart_visual(name, pos, vtype, catbind, valbind, ws_name)
-    tcols = B.table_columns(ws, ir, entity, mset, cols)
-    return P.table_visual(name, pos, tcols, ws_name)
+            catbind = None  # resolved below
+        valbind = value_bind()
+        fp = B.field_param_for_ws(ws_name, decisions)
+        if catbind is None:
+            if fp is not None:
+                catbind = {"entity": fp["name"], "prop": fp["name"]}
+            else:
+                catbind = B.category_binding(ws, entity, cols, ir)
+        series = vd.get("series")
+        seriesbind = {"entity": entity, "prop": series} if series else None
+        sort = None
+        sd = vd.get("sort")
+        if sd == "valueDesc":
+            sort = P.measure_sort(entity, valbind["prop"]) if valbind.get("isMeasure") else None
+        elif sd == "categoryAsc":
+            sort = P.column_sort(catbind["entity"], catbind["prop"])
+        # Secondary / additional measures (e.g. PY lines on KPI sparklines)
+        sec_v = vd.get("secondaryValue")
+        sec_bind = {"entity": entity, "prop": sec_v, "isMeasure": True} if sec_v and sec_v in mset else None
+        add_binds = [{"entity": entity, "prop": av, "isMeasure": True}
+                     for av in (vd.get("additionalValues") or []) if av in mset]
+        return P.chart_visual(name, pos, mapped, catbind, valbind, ws_name, theme=theme,
+                              series=seriesbind, series_colors=vd.get("seriesColors"),
+                              single_color=vd.get("color"), sort=sort,
+                              secondary_value=sec_bind, additional_values=add_binds or None,
+                              hide_value_axis=bool(vd.get("hideValueAxis")),
+                              hide_labels=bool(vd.get("hideLabels")))
+    # tableColumns override from decisions.json (for Top N / custom column sets)
+    if vd.get("tableColumns"):
+        tcols = [{"entity": tc["entity"], "prop": tc["prop"],
+                  "isMeasure": tc.get("isMeasure", False)}
+                 for tc in vd["tableColumns"]]
+    else:
+        tcols = B.table_columns(ws, ir, entity, mset, cols)
+    return P.table_visual(name, pos, tcols, ws_name, theme=theme)
 
 
 def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> str:
@@ -155,8 +304,11 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
     page_name = sanitize(dashboard["name"])
     page_dir = os.path.join(pages_dir, page_name)
     pw, ph = dashboard["size"]["w"], dashboard["size"]["h"]
+    theme = decisions.get("theme") or {}
     write_json(os.path.join(page_dir, "page.json"),
-               P.page_json(page_name, dashboard["name"], pw, ph))
+               P.page_json(page_name, dashboard["name"], pw, ph,
+                           background=theme.get("pageBackground"),
+                           outspace=theme.get("outspace")))
     scale = (pw / COORD_SPACE, ph / COORD_SPACE)
 
     # Tableau show/hide toggle groups: several worksheets stacked in the same spot
@@ -173,11 +325,14 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
     for zone in dashboard.get("zones", []):
         if zone.get("type") == "viz" and zone.get("worksheet") in overlay_members:
             continue  # emitted by the overlay pass below
-        visual = build_visual(zone, ir, decisions, z, scale)
-        if visual is None:
+        result = build_visual(zone, ir, decisions, z, scale)
+        if result is None:
             continue
-        write_json(os.path.join(page_dir, "visuals", visual["name"], "visual.json"), visual)
-        z += 1
+        # kpiStack returns a list of 3 visuals: [card, pct_card, sparkline]
+        visuals = result if isinstance(result, list) else [result]
+        for visual in visuals:
+            write_json(os.path.join(page_dir, "visuals", visual["name"], "visual.json"), visual)
+            z += 1
 
     for ov in overlays:
         pos_zone = zone_by_ws.get(ov.get("positionWorksheet"))
@@ -185,12 +340,14 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
             continue
         for member in ov.get("members", []):
             synth = dict(pos_zone, worksheet=member["worksheet"], type="viz")
-            visual = build_visual(synth, ir, decisions, z, scale)
-            if visual is None:
+            result = build_visual(synth, ir, decisions, z, scale)
+            if result is None:
                 continue
-            visual["filterConfig"] = P.measure_filter_config(entity, member["filterMeasure"])
-            write_json(os.path.join(page_dir, "visuals", visual["name"], "visual.json"), visual)
-            z += 1
+            visuals = result if isinstance(result, list) else [result]
+            for visual in visuals:
+                visual["filterConfig"] = P.measure_filter_config(entity, member["filterMeasure"])
+                write_json(os.path.join(page_dir, "visuals", visual["name"], "visual.json"), visual)
+                z += 1
     return page_name
 
 
@@ -198,6 +355,9 @@ def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
     model_name = decisions.get("modelName") or ir["workbook"]["pascalName"]
     base = os.path.dirname(os.path.abspath(analysis_path))
     report_dir = os.path.join(base, f"{model_name}.Report")
+    # Wipe any prior report so stale/orphan visual folders never accumulate.
+    if os.path.isdir(report_dir):
+        _rmtree_robust(report_dir)
     defin = os.path.join(report_dir, "definition")
     pages_dir = os.path.join(defin, "pages")
     # Clear any pages from a previous run so renamed/renumbered visual folders do
