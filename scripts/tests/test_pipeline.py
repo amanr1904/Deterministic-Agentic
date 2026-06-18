@@ -66,6 +66,22 @@ class TestDaxTranslate(unittest.TestCase):
         self.assertEqual(dax, "DISTINCTCOUNT ( T[Id] )")
         self.assertEqual(fmt, "#,0")
 
+    def test_population_stats(self):
+        # longer keywords must win over their shorter prefixes
+        self.assertEqual(M.translate("STDEVP([Sales])", "T"), ("STDEV.P ( T[Sales] )", None))
+        self.assertEqual(M.translate("VARP([Sales])", "T"), ("VAR.P ( T[Sales] )", None))
+        self.assertEqual(M.translate("STDEV([Sales])", "T"), ("STDEV.S ( T[Sales] )", None))
+        self.assertEqual(M.translate("VAR([Sales])", "T"), ("VAR.S ( T[Sales] )", None))
+
+    def test_attr_selectedvalue(self):
+        cols = {"Region"}
+        self.assertEqual(
+            M.translate("ATTR([Region])", "T", cols),
+            ("SELECTEDVALUE ( T[Region] )", None),
+        )
+        # references a non-base-column token -> bail to the agent
+        self.assertIsNone(M.translate("ATTR([Calc_1])", "T", cols))
+
     def test_ratio(self):
         dax, fmt = M.translate("SUM([a]) / SUM([b])", "T")
         self.assertEqual(dax, "DIVIDE ( SUM ( T[a] ), SUM ( T[b] ) )")
@@ -79,6 +95,141 @@ class TestDaxTranslate(unittest.TestCase):
                   "RUNNING_SUM(SUM([x]))", "INDEX()", "DATEADD('day', -1, [d])",
                   "CASE [p] WHEN 'a' THEN 1 END"):
             self.assertIsNone(M.translate(f, "T"), msg=f)
+
+    def test_ratio_general_gated(self):
+        cols = {"Order ID", "Sales"}
+        # any-aggregation ratio fires only when both fields are base columns
+        dax, fmt = M.translate("COUNTD([Order ID]) / SUM([Sales])", "T", cols)
+        self.assertEqual(dax, "DIVIDE ( DISTINCTCOUNT ( T[Order ID] ), SUM ( T[Sales] ) )")
+        self.assertEqual(fmt, "#,0.00")
+        # no column set -> not safe to translate
+        self.assertIsNone(M.translate("COUNTD([Order ID]) / SUM([Sales])", "T"))
+        # referenced field is not a base column (e.g. a calc-field token) -> bail
+        self.assertIsNone(
+            M.translate("COUNTD([CY (copy)_1]) / SUM([Sales])", "T", cols))
+
+    def test_agg_arithmetic_gated(self):
+        cols = {"Sales", "Profit"}
+        self.assertEqual(
+            M.translate("SUM([Sales]) - SUM([Profit])", "T", cols),
+            ("SUM ( T[Sales] ) - SUM ( T[Profit] )", None),
+        )
+        # %-difference shape
+        self.assertEqual(
+            M.translate("(SUM([Sales]) - SUM([Profit])) / SUM([Profit])", "T", cols),
+            ("(SUM ( T[Sales] ) - SUM ( T[Profit] )) / SUM ( T[Profit] )", "#,0.00"),
+        )
+        # constant scaling of a single aggregation
+        self.assertEqual(
+            M.translate("SUM([Sales]) * 100", "T", cols),
+            ("SUM ( T[Sales] ) * 100", None),
+        )
+        # any non-base-column reference -> bail to the agent
+        self.assertIsNone(
+            M.translate("SUM([CY (copy)_1]) - SUM([Profit])", "T", cols))
+        # stray logic / identifier in the residual -> not pure arithmetic -> bail
+        self.assertIsNone(
+            M.translate("SUM([Sales]) - [Profit]", "T", cols))
+
+
+class TestDaxExpression(unittest.TestCase):
+    COLS = {"Sales", "Profit", "Region", "Name", "Order Date", "Qty"}
+
+    def t(self, formula):
+        return M.translate(formula, "T", self.COLS)
+
+    def test_if_simple(self):
+        self.assertEqual(
+            self.t("IF SUM([Sales]) > 0 THEN SUM([Profit]) ELSE 0 END"),
+            ("IF ( ( SUM ( T[Sales] ) > 0 ), SUM ( T[Profit] ), 0 )", None),
+        )
+
+    def test_if_no_else(self):
+        self.assertEqual(
+            self.t("IF SUM([Qty]) > 0 THEN SUM([Sales]) END"),
+            ("IF ( ( SUM ( T[Qty] ) > 0 ), SUM ( T[Sales] ) )", None),
+        )
+
+    def test_if_elseif_chain(self):
+        dax, _ = self.t(
+            "IF SUM([Qty]) > 10 THEN 'A' "
+            "ELSEIF SUM([Qty]) > 5 THEN 'B' ELSE 'C' END")
+        self.assertEqual(
+            dax,
+            'IF ( ( SUM ( T[Qty] ) > 10 ), "A", '
+            'IF ( ( SUM ( T[Qty] ) > 5 ), "B", "C" ) )')
+
+    def test_iif(self):
+        dax, _ = self.t("IIF(SUM([Qty]) > 0, SUM([Sales]), 0)")
+        self.assertEqual(dax, "IF ( ( SUM ( T[Qty] ) > 0 ), SUM ( T[Sales] ), 0 )")
+
+    def test_case_to_switch(self):
+        dax, _ = self.t(
+            "CASE ATTR([Region]) WHEN 'N' THEN 1 WHEN 'S' THEN 2 ELSE 0 END")
+        self.assertEqual(
+            dax, 'SWITCH ( SELECTEDVALUE ( T[Region] ), "N", 1, "S", 2, 0 )')
+
+    def test_logical_and_comparison(self):
+        dax, _ = self.t(
+            "IF SUM([Qty]) > 0 AND SUM([Sales]) > 100 THEN 1 ELSE 0 END")
+        self.assertEqual(
+            dax,
+            "IF ( ( ( SUM ( T[Qty] ) > 0 ) && ( SUM ( T[Sales] ) > 100 ) ), 1, 0 )")
+
+    def test_string_functions(self):
+        self.assertEqual(
+            self.t("LEFT(ATTR([Name]), 3)"),
+            ("LEFT ( SELECTEDVALUE ( T[Name] ), 3 )", None))
+        self.assertEqual(
+            self.t("UPPER(ATTR([Name]))"),
+            ("UPPER ( SELECTEDVALUE ( T[Name] ) )", None))
+
+    def test_date_functions(self):
+        self.assertEqual(
+            self.t("YEAR(MAX([Order Date]))"),
+            ("YEAR ( MAX ( T[Order Date] ) )", None))
+        dax, _ = self.t("DATEDIFF('day', MIN([Order Date]), MAX([Order Date]))")
+        self.assertEqual(
+            dax, "DATEDIFF ( MIN ( T[Order Date] ), MAX ( T[Order Date] ), DAY )")
+
+    def test_conversion_and_null(self):
+        self.assertEqual(self.t("INT(SUM([Sales]))"), ("INT ( SUM ( T[Sales] ) )", None))
+        self.assertEqual(
+            self.t("ZN(SUM([Profit]))"), ("COALESCE ( SUM ( T[Profit] ), 0 )", None))
+        self.assertEqual(
+            self.t("ISNULL(SUM([Profit]))"), ("ISBLANK ( SUM ( T[Profit] ) )", None))
+
+    def test_modulo(self):
+        self.assertEqual(self.t("SUM([Qty]) % 2"), ("MOD ( SUM ( T[Qty] ), 2 )", None))
+
+    def test_gating_parameter_ref_bails(self):
+        # parameter-qualified refs are never base columns -> defer to agent
+        self.assertIsNone(self.t(
+            "CASE [Parameters].[P] WHEN 'a' THEN SUM([Sales]) END"))
+
+    def test_gating_non_base_column_bails(self):
+        self.assertIsNone(self.t("IF SUM([Calc_1]) > 0 THEN SUM([Sales]) END"))
+
+    def test_gating_bare_column_bails(self):
+        # a column outside an aggregation is invalid in a measure -> bail
+        self.assertIsNone(self.t("IF [Qty] > 0 THEN [Sales] END"))
+        self.assertIsNone(self.t("UPPER([Name])"))
+
+    def test_gating_pure_constant_bails(self):
+        # no base-column reference -> not translated (protects literal calcs)
+        self.assertIsNone(M.translate('"(All)"', "T", self.COLS))
+        self.assertIsNone(M.translate("TODAY() - 1", "T", self.COLS))
+
+    def test_gating_string_concat_bails(self):
+        # Tableau '+' on strings is ambiguous concat -> defer to agent
+        self.assertIsNone(self.t("ATTR([Name]) + 'x'"))
+
+    def test_gating_unknown_function_bails(self):
+        self.assertIsNone(self.t("SPLIT(ATTR([Name]), ',', 1)"))
+
+    def test_gating_no_columns_arg_bails(self):
+        # without a column set the expression handler cannot run safely
+        self.assertIsNone(M.translate("IF SUM([Qty]) > 0 THEN 1 ELSE 0 END", "T"))
 
 
 class TestBuildMeasures(unittest.TestCase):

@@ -22,6 +22,11 @@ _TWB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "twb")
 sys.path.insert(0, os.path.normpath(_TWB_DIR))
 import csv_probe as CP  # noqa: E402
 
+# Repo root (…/scripts/emit/emit_tmdl.py -> two levels up) used to resolve CSVs
+# against the local workspace, independent of any path baked into decisions.json.
+_REPO_ROOT = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+
 PBISM = {
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
     "version": "4.2", "settings": {},
@@ -202,11 +207,38 @@ def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> 
 
 
 def _abs_csv(ir: Dict, path: str) -> str:
-    """Resolve a CSV filename to an absolute path (File.Contents needs it)."""
-    if os.path.isabs(path):
+    """Resolve a CSV filename to an absolute path that exists on THIS machine.
+
+    ``File.Contents`` needs an absolute path. A path baked into decisions.json may
+    come from another machine, so an absolute path is only trusted when it exists
+    locally; otherwise the CSV's basename is resolved against the local workspace
+    (next to the workbook, then anywhere under the repo ``Data/`` tree).
+    """
+    # 1) Trust an absolute path only if it actually exists on this machine.
+    if path and os.path.isabs(path) and os.path.isfile(path):
         return path
-    data_dir = os.path.dirname(ir.get("workbook", {}).get("sourcePath", ""))
-    return os.path.abspath(os.path.join(data_dir, os.path.basename(path)))
+
+    base = os.path.basename(path) if path else ""
+    wb = ir.get("workbook", {}).get("sourcePath", "")
+    wb_dir = os.path.dirname(wb if os.path.isabs(wb) else os.path.join(_REPO_ROOT, wb))
+
+    candidates = []
+    if base:
+        candidates.append(os.path.join(wb_dir, base))  # 2) next to the workbook
+    data_root = os.path.join(_REPO_ROOT, "Data")
+    if base and os.path.isdir(data_root):  # 3) search the workspace Data/ tree
+        for root, _dirs, files in os.walk(data_root):
+            if base in files:
+                candidates.append(os.path.join(root, base))
+                break
+    for c in candidates:
+        if os.path.isfile(c):
+            return os.path.abspath(c)
+
+    # 4) Fallbacks: keep prior behavior so a valid absolute path still works.
+    if path and os.path.isabs(path):
+        return path
+    return os.path.abspath(os.path.join(wb_dir, base))
 
 
 def _first_csv(ir: Dict) -> str:
