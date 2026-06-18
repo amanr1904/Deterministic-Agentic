@@ -1,10 +1,18 @@
-"""fix_slicers_and_pages.py — Fix slicer entity bindings, slicer backgrounds, and page backgrounds."""
-import json, os, glob
+"""fix_slicers_and_pages.py — Fix slicer entity bindings, slicer backgrounds, and page backgrounds.
 
-BASE = os.path.normpath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "Output",
-    "SalesCustomerDashboards", "SalesCustomerDashboards.Report", "definition", "pages"
-))
+Usage:
+    python fix_slicers_and_pages.py <output_dir>
+    python fix_slicers_and_pages.py Output/SalesCustomerDashboards
+"""
+import json, os, glob, argparse
+
+parser = argparse.ArgumentParser(description="Fix slicer bindings and page backgrounds in a PBIP report.")
+parser.add_argument("output_dir", help="Path to the workbook output folder, e.g. Output/SalesCustomerDashboards")
+args = parser.parse_args()
+
+output_dir = os.path.normpath(args.output_dir)
+MODEL_NAME = os.path.basename(output_dir)
+BASE = os.path.normpath(os.path.join(output_dir, f"{MODEL_NAME}.Report", "definition", "pages"))
 
 SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json"
 

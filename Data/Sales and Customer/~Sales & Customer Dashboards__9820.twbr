@@ -1433,7 +1433,7 @@
             <column-instance column='[Sub-Category]' derivation='None' name='[none:Sub-Category:nk]' pivot='key' type='nominal' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Customer Name)]'>
-            <groupfilter function='level-members' level='[Customer Name]' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Customer Name]' member='&quot;Raymond Buch&quot;' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <slices>
             <column>[federated.1kpxa041aiai2y1cl4pui1t4eju9].[none:Category:nk]</column>
@@ -1603,10 +1603,10 @@
             </groupfilter>
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Customer Name)]'>
-            <groupfilter function='level-members' level='[Customer Name]' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Customer Name]' member='&quot;Raymond Buch&quot;' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Nr of Orders per Customers)]'>
-            <groupfilter function='level-members' level='[Calculation_998110323739992064]' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Calculation_998110323739992064]' member='3' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <slices>
             <column>[federated.1kpxa041aiai2y1cl4pui1t4eju9].[:Measure Names]</column>
@@ -1899,10 +1899,10 @@
             </groupfilter>
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Customer Name)]'>
-            <groupfilter function='level-members' level='[Customer Name]' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Customer Name]' member='&quot;Raymond Buch&quot;' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Nr of Orders per Customers)]'>
-            <groupfilter function='level-members' level='[Calculation_998110323739992064]' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Calculation_998110323739992064]' member='3' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Sub-Category)]'>
             <groupfilter function='level-members' level='[Sub-Category]' user:ui-action-filter='[Action1_1C182CD4A9F54B19B0F57FD811A28E1B]' user:ui-enumeration='all' user:ui-marker='enumerate' />
@@ -3034,10 +3034,10 @@
             </groupfilter>
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Customer Name)]'>
-            <groupfilter function='level-members' level='[Customer Name]' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Customer Name]' member='&quot;Raymond Buch&quot;' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Nr of Orders per Customers)]'>
-            <groupfilter function='level-members' level='[Calculation_998110323739992064]' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Calculation_998110323739992064]' member='3' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <slices>
             <column>[federated.1kpxa041aiai2y1cl4pui1t4eju9].[:Measure Names]</column>
@@ -3278,10 +3278,10 @@
             <column-instance column='[Sub-Category]' derivation='None' name='[none:Sub-Category:nk]' pivot='key' type='nominal' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Customer Name)]'>
-            <groupfilter function='level-members' level='[Customer Name]' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Customer Name]' member='&quot;Raymond Buch&quot;' user:ui-action-filter='[Action4_E642BA3B52234606B0097D79E07A4971]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Nr of Orders per Customers)]'>
-            <groupfilter function='level-members' level='[Calculation_998110323739992064]' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Calculation_998110323739992064]' member='3' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Sub-Category)]'>
             <groupfilter function='level-members' level='[Sub-Category]' user:ui-action-filter='[Action1_1C182CD4A9F54B19B0F57FD811A28E1B]' user:ui-enumeration='all' user:ui-marker='enumerate' />
@@ -4316,7 +4316,7 @@
             </groupfilter>
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[Action (Nr of Orders per Customers)]'>
-            <groupfilter function='level-members' level='[Calculation_998110323739992064]' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[Calculation_998110323739992064]' member='3' user:ui-action-filter='[Action3_8A4316D5335547998BCD9700E662ACDD]' user:ui-domain='database' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <filter class='categorical' column='[federated.1kpxa041aiai2y1cl4pui1t4eju9].[none:Customer Name:nk]'>
             <groupfilter count='10' end='top' function='end' units='records' user:ui-marker='end' user:ui-top-by-field='true'>
@@ -6436,7 +6436,7 @@
       </cards>
       <simple-id uuid='{C9821447-657C-4292-B783-1A59E59DFFDE}' />
     </window>
-    <window class='dashboard' maximized='true' name='Sales Dashboard'>
+    <window class='dashboard' name='Sales Dashboard'>
       <viewpoints>
         <viewpoint name='KPI Profit'>
           <zoom type='entire-view' />
@@ -6463,7 +6463,7 @@
       <active id='-1' />
       <simple-id uuid='{69C92E82-EFAF-48DE-B562-0172985BFD29}' />
     </window>
-    <window class='dashboard' name='Customer Dashboard'>
+    <window class='dashboard' maximized='true' name='Customer Dashboard'>
       <viewpoints>
         <viewpoint name='Customer Distribution'>
           <zoom type='entire-view' />

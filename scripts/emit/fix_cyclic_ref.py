@@ -9,12 +9,22 @@ creates a processing cycle:
 Fix: Remove the calculated column from DimCustomer.
      Replace with a standalone CALCULATED TABLE CustomerOrderCounts
      that pre-aggregates (Nr of Orders, Customer Count) without any cycle.
-"""
-import json, os, re
 
-BASE  = "Output/SalesCustomerDashboards"
-SM    = f"{BASE}/SalesCustomerDashboards.SemanticModel/definition"
-PAGES = f"{BASE}/SalesCustomerDashboards.Report/definition/pages"
+Usage:
+    python fix_cyclic_ref.py <output_dir>
+    python fix_cyclic_ref.py Output/SalesCustomerDashboards
+"""
+import json, os, re, argparse
+
+parser = argparse.ArgumentParser(description="Fix cyclic reference in a PBIP semantic model.")
+parser.add_argument("output_dir", help="Path to the workbook output folder, e.g. Output/SalesCustomerDashboards")
+args = parser.parse_args()
+
+output_dir = os.path.normpath(args.output_dir)
+MODEL_NAME = os.path.basename(output_dir)
+BASE  = output_dir
+SM    = os.path.join(BASE, f"{MODEL_NAME}.SemanticModel", "definition")
+PAGES = os.path.join(BASE, f"{MODEL_NAME}.Report", "definition", "pages")
 
 # ── 1. Remove Nr of Orders from DimCustomer.tmdl ─────────────────────────────
 DIMCUST = f"{SM}/tables/DimCustomer.tmdl"
@@ -60,6 +70,7 @@ TMDL = (
     "\t\tformatString: 0\n"
     "\t\tlineageTag: a1000000-0000-4000-9000-a00000000002\n"
     "\t\tsummarizeBy: none\n"
+    "\t\tsourceColumn: [Nr of Orders]\n"
     "\n"
     "\t\tannotation SummarizationSetBy = Automatic\n"
     "\n"
@@ -68,11 +79,12 @@ TMDL = (
     "\t\tformatString: #,0\n"
     "\t\tlineageTag: a1000000-0000-4000-9000-a00000000003\n"
     "\t\tsummarizeBy: sum\n"
+    "\t\tsourceColumn: [Customer Count]\n"
     "\n"
     "\t\tannotation SummarizationSetBy = Automatic\n"
     "\n"
     "\tpartition CustomerOrderCounts = calculated\n"
-    "\t\tmode: calculated\n"
+    "\t\tmode: import\n"
     "\t\tsource =\n"
     "\t\t\t\tGROUPBY(\n"
     "\t\t\t\t\tADDCOLUMNS(\n"

@@ -308,6 +308,7 @@ def _build_calculated_table_tmdl(ct: Dict, lineage_base: int) -> str:
         lines += [
             f"\t\tlineageTag: {ctag}",
             f"\t\tsummarizeBy: {col.get('summarizeBy', 'none')}",
+            f"\t\tsourceColumn: [{col['name']}]",
             "",
             "\t\tannotation SummarizationSetBy = Automatic",
             "",
@@ -315,7 +316,7 @@ def _build_calculated_table_tmdl(ct: Dict, lineage_base: int) -> str:
     dax = ct["dax"].strip()
     lines += [
         f"\tpartition {t} = calculated",
-        "\t\tmode: calculated",
+        "\t\tmode: import",
         "\t\tsource =",
         f"\t\t\t\t{dax}",
     ]

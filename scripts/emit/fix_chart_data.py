@@ -1,10 +1,21 @@
-"""fix_chart_data.py — Fix line chart granularity + Customer Distribution histogram."""
-import json, os, glob
+"""fix_chart_data.py — Fix line chart granularity + Customer Distribution histogram.
 
-BASE = "Output/SalesCustomerDashboards"
-TMDL_ORDERS = f"{BASE}/SalesCustomerDashboards.SemanticModel/definition/tables/Orders.tmdl"
-TMDL_DIMCUST = f"{BASE}/SalesCustomerDashboards.SemanticModel/definition/tables/DimCustomer.tmdl"
-PAGES = f"{BASE}/SalesCustomerDashboards.Report/definition/pages"
+Usage:
+    python fix_chart_data.py <output_dir>
+    python fix_chart_data.py Output/SalesCustomerDashboards
+"""
+import json, os, glob, argparse
+
+parser = argparse.ArgumentParser(description="Fix chart data bindings in a PBIP report.")
+parser.add_argument("output_dir", help="Path to the workbook output folder, e.g. Output/SalesCustomerDashboards")
+args = parser.parse_args()
+
+output_dir = os.path.normpath(args.output_dir)
+MODEL_NAME = os.path.basename(output_dir)
+BASE = output_dir
+TMDL_ORDERS = os.path.join(BASE, f"{MODEL_NAME}.SemanticModel", "definition", "tables", "Orders.tmdl")
+TMDL_DIMCUST = os.path.join(BASE, f"{MODEL_NAME}.SemanticModel", "definition", "tables", "DimCustomer.tmdl")
+PAGES = os.path.join(BASE, f"{MODEL_NAME}.Report", "definition", "pages")
 
 # ── 1. Patch Orders.tmdl ────────────────────────────────────────────────────
 content = open(TMDL_ORDERS, encoding="utf-8").read()

@@ -1,7 +1,7 @@
 {
   "decisionsVersion": "1.0",
   "modelName": "NetfixWorkbook",
-  "tableStrategy": "star-schema",
+  "tableStrategy": "single-flat",
   "tables": [
     {
       "name": "netflix_titles",
@@ -18,22 +18,6 @@
       "sourceFile": null,
       "keyColumns": ["Date"],
       "dedupKey": null
-    },
-    {
-      "name": "DimType",
-      "role": "dim",
-      "sourceType": "csv",
-      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Netflix\\netflix_titles.csv",
-      "keyColumns": ["TypeName"],
-      "dedupKey": "TypeName"
-    },
-    {
-      "name": "DimRating",
-      "role": "dim",
-      "sourceType": "csv",
-      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Netflix\\netflix_titles.csv",
-      "keyColumns": ["RatingName"],
-      "dedupKey": "RatingName"
     }
   ],
   "relationships": [
@@ -42,55 +26,16 @@
       "toColumn": "DimDate.Date",
       "crossFilter": "single",
       "active": true
-    },
-    {
-      "fromColumn": "netflix_titles.type",
-      "toColumn": "DimType.TypeName",
-      "crossFilter": "single",
-      "active": true
-    },
-    {
-      "fromColumn": "netflix_titles.rating",
-      "toColumn": "DimRating.RatingName",
-      "crossFilter": "single",
-      "active": true
     }
   ],
   "measures": [
     {
       "table": "netflix_titles",
       "name": "Title Count",
-      "dax": "DISTINCTCOUNT('netflix_titles'[show_id])",
+      "dax": "COUNTROWS(netflix_titles)",
       "formatString": "#,0",
       "displayFolder": "Counts",
-      "description": "Distinct count of show_id — core catalog metric.",
-      "source": "llm"
-    },
-    {
-      "table": "netflix_titles",
-      "name": "Movies Count",
-      "dax": "CALCULATE([Title Count], 'netflix_titles'[type] = \"Movie\")",
-      "formatString": "#,0",
-      "displayFolder": "Counts",
-      "description": "Title Count filtered to type = Movie.",
-      "source": "llm"
-    },
-    {
-      "table": "netflix_titles",
-      "name": "TV Shows Count",
-      "dax": "CALCULATE([Title Count], 'netflix_titles'[type] = \"TV Show\")",
-      "formatString": "#,0",
-      "displayFolder": "Counts",
-      "description": "Title Count filtered to type = TV Show.",
-      "source": "llm"
-    },
-    {
-      "table": "netflix_titles",
-      "name": "Genre Rank",
-      "dax": "RANKX(ALL('netflix_titles'[listed_in]), [Title Count], , DESC, Dense)",
-      "formatString": "#,0",
-      "displayFolder": "Report Helpers",
-      "description": "Ranks listed_in by Title Count; Top 10 Genre bar filters Genre Rank <= 10.",
+      "description": "Total number of Netflix titles.",
       "source": "llm"
     }
   ],
@@ -101,31 +46,30 @@
       "visualType": "filledMap",
       "location": "country",
       "value": "Title Count",
-      "reason": "Multipolygon mark with country color encoding — filled choropleth map, size = Title Count."
+      "reason": "Mark type is Multipolygon with generated Lat/Long — a filled choropleth map by country. The 'country' column provides geographic location bindings."
     },
     {
       "worksheet": "Ratings",
-      "visualType": "clusteredColumnChart",
+      "visualType": "columnChart",
       "category": "rating",
       "value": "Title Count",
-      "reason": "Automatic mark, rating on cols, show_id count on rows — vertical column chart by rating."
+      "sort": "valueDesc",
+      "reason": "Automatic mark with 'rating' on cols (X-axis, dimension) and COUNT(show_id) on rows (Y-axis, value) — vertical column chart grouped by content rating, sorted descending."
     },
     {
       "worksheet": "Top 10 Genre",
-      "visualType": "clusteredBarChart",
+      "visualType": "barChart",
       "category": "listed_in",
       "value": "Title Count",
-      "reason": "Automatic mark, listed_in on rows, show_id count on cols — horizontal bar chart, top 10 by Title Count."
+      "sort": "valueDesc",
+      "reason": "Automatic mark with 'listed_in' on rows (Y-axis, dimension) and COUNT(show_id) on cols (X-axis, value) — horizontal bar chart of top genres by count, sorted descending."
+    },
+    {
+      "worksheet": "Movies and TV Shows distribution",
+      "visualType": "donutChart",
+      "category": "type",
+      "value": "Title Count",
+      "reason": "Circle marks with color=type and size=COUNT(show_id) but no X/Y shelf — this is a proportional breakdown (Movie vs TV Show), best rendered as a donut chart. Overrides the erroneous scatterChart IR inference."
     }
-  ],
-  "fieldParameters": [],
-  "theme": {
-    "titleColor": "#E50914",
-    "visualBackground": "#221F1F",
-    "border": "#564d4d",
-    "foreground": "#FFFFFF",
-    "pageBackground": "#141414",
-    "outspace": "#000000",
-    "titleFont": "Segoe UI Semibold"
-  }
+  ]
 }

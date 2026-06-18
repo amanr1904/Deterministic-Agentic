@@ -1,11 +1,18 @@
-"""fix_kpi_visuals.py — Fix KPI sparkline visuals: add PY line, hide y-axis, fix titles."""
-import json, os
+"""fix_kpi_visuals.py — Fix KPI sparkline visuals: add PY line, hide y-axis, fix titles.
 
-BASE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "Output",
-    "SalesCustomerDashboards", "SalesCustomerDashboards.Report",
-    "definition", "pages"
-)
+Usage:
+    python fix_kpi_visuals.py <output_dir>
+    python fix_kpi_visuals.py Output/SalesCustomerDashboards
+"""
+import json, os, argparse
+
+parser = argparse.ArgumentParser(description="Fix KPI sparkline visuals in a PBIP report.")
+parser.add_argument("output_dir", help="Path to the workbook output folder, e.g. Output/SalesCustomerDashboards")
+args = parser.parse_args()
+
+output_dir = os.path.normpath(args.output_dir)
+MODEL_NAME = os.path.basename(output_dir)
+BASE = os.path.join(output_dir, f"{MODEL_NAME}.Report", "definition", "pages")
 
 SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json"
 

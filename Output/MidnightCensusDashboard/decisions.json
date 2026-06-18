@@ -1,107 +1,187 @@
 {
+  "decisionsVersion": "1.0",
   "modelName": "MidnightCensusDashboard",
   "tableStrategy": "single-flat",
   "tables": [
     {
       "name": "Midnight_Census_Template",
       "role": "fact",
-      "sourceDatasource": "Midnight_Census_Template",
-      "sourceFile": "Midnight_Census_Template.csv"
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Midnight Census\\Midnight_Census_Template.csv",
+      "keyColumns": ["Encounter CSN"],
+      "dedupKey": null
     },
     {
-      "name": "Filter Adults Peds",
+      "name": "DimDate",
+      "role": "date",
+      "sourceType": "calendar",
+      "sourceFile": null,
+      "keyColumns": ["Date"],
+      "dedupKey": null
+    },
+    {
+      "name": "FilterAdultsPeds",
       "role": "param",
+      "sourceType": "datatable",
+      "sourceFile": null,
+      "keyColumns": ["Selection"],
+      "dedupKey": null,
       "datatable": {
-        "columns": [{ "name": "Filter Adults Peds", "dataType": "string", "type": "string" }],
-        "rows": [["(All)"], ["Adults"], ["Peds"]]
+        "columns": [
+          { "name": "Selection", "type": "string" }
+        ],
+        "rows": [
+          ["(All)"],
+          ["Adults"],
+          ["Peds"]
+        ]
       }
     },
     {
-      "name": "View",
+      "name": "DateAggLevel",
       "role": "param",
+      "sourceType": "datatable",
+      "sourceFile": null,
+      "keyColumns": ["Level"],
+      "dedupKey": null,
       "datatable": {
-        "columns": [{ "name": "View", "dataType": "string", "type": "string" }],
-        "rows": [["Bar Chart"], ["Data Table"]]
+        "columns": [
+          { "name": "Level", "type": "string" }
+        ],
+        "rows": [
+          ["Monthly"],
+          ["Daily"]
+        ]
+      }
+    },
+    {
+      "name": "ViewParam",
+      "role": "param",
+      "sourceType": "datatable",
+      "sourceFile": null,
+      "keyColumns": ["ViewType"],
+      "dedupKey": null,
+      "datatable": {
+        "columns": [
+          { "name": "ViewType", "type": "string" }
+        ],
+        "rows": [
+          ["Bar Chart"],
+          ["Data Table"]
+        ]
       }
     }
   ],
-  "relationships": [],
+  "relationships": [
+    {
+      "fromColumn": "Midnight_Census_Template.Census Date",
+      "toColumn": "DimDate.Date",
+      "crossFilter": "single",
+      "active": true
+    }
+  ],
   "measures": [
     {
-      "name": "Total Census Count",
       "table": "Midnight_Census_Template",
+      "name": "Census Count Total",
       "dax": "SUM('Midnight_Census_Template'[Census Count])",
       "formatString": "#,0",
       "displayFolder": "Census",
-      "description": "Total midnight census (patient days) across all units.",
-      "source": "base"
+      "description": "Total midnight census count across all patient classes.",
+      "source": "llm"
     },
     {
-      "name": "Adults Census Count",
       "table": "Midnight_Census_Template",
+      "name": "Census Count Adults Total",
       "dax": "SUM('Midnight_Census_Template'[Census Count Adults])",
       "formatString": "#,0",
       "displayFolder": "Census",
-      "description": "Midnight census for adult patients.",
-      "source": "base"
+      "description": "Total midnight census count for adult patients.",
+      "source": "llm"
     },
     {
-      "name": "Peds Census Count",
       "table": "Midnight_Census_Template",
+      "name": "Census Count Peds Total",
       "dax": "SUM('Midnight_Census_Template'[Census Count Peds])",
       "formatString": "#,0",
       "displayFolder": "Census",
-      "description": "Midnight census for pediatric patients.",
-      "source": "base"
+      "description": "Total midnight census count for pediatric patients.",
+      "source": "llm"
     },
     {
-      "name": "User Defined Census Count",
       "table": "Midnight_Census_Template",
-      "dax": "VAR _sel = SELECTEDVALUE('Filter Adults Peds'[Filter Adults Peds], \"(All)\")\nRETURN\n    SWITCH(\n        _sel,\n        \"Adults\", [Adults Census Count],\n        \"Peds\", [Peds Census Count],\n        [Total Census Count]\n    )",
+      "name": "User Defined Census Count",
+      "dax": "VAR _sel = SELECTEDVALUE('FilterAdultsPeds'[Selection], \"(All)\") RETURN SWITCH(_sel, \"Adults\", [Census Count Adults Total], \"Peds\", [Census Count Peds Total], [Census Count Total])",
       "formatString": "#,0",
       "displayFolder": "Census",
-      "description": "Census driven by the Filter Adults/Peds parameter selection (mirrors the Tableau CASE expression).",
-      "source": "tableau-calc"
+      "description": "Census count dynamically filtered by the Adults/Peds slicer. Defaults to All when no selection.",
+      "source": "llm"
     },
     {
-      "name": "Encounter Count",
       "table": "Midnight_Census_Template",
+      "name": "Start Month Contains Partial Data?",
+      "dax": "VAR _minDate = MINX(ALLSELECTED('Midnight_Census_Template'[Census Date]), 'Midnight_Census_Template'[Census Date]) VAR _isPartial = DAY(_minDate) <> 1 RETURN IF(ISBLANK(_minDate), 0, IF(_isPartial, 1, 0))",
+      "formatString": "#,0",
+      "displayFolder": "Partial Data",
+      "description": "Returns 1 when the earliest month in the current filter context does not start on the 1st day (partial start month). Drives gray-highlight formatting.",
+      "source": "llm"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "End Month Contains Partial Data?",
+      "dax": "VAR _maxDate = MAXX(ALLSELECTED('Midnight_Census_Template'[Census Date]), 'Midnight_Census_Template'[Census Date]) VAR _lastDayOfMonth = EOMONTH(_maxDate, 0) VAR _isPartial = _maxDate <> _lastDayOfMonth RETURN IF(ISBLANK(_maxDate), 0, IF(_isPartial, 1, 0))",
+      "formatString": "#,0",
+      "displayFolder": "Partial Data",
+      "description": "Returns 1 when the latest month in the current filter context does not end on the last day of the month (partial end month). Drives gray-highlight formatting.",
+      "source": "llm"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Partial Months in View?",
+      "dax": "VAR _startPartial = [Start Month Contains Partial Data?] VAR _endPartial = [End Month Contains Partial Data?] RETURN IF(_startPartial = 1 || _endPartial = 1, \"**Partial months are displayed in GRAY**\", \"\")",
+      "formatString": null,
+      "displayFolder": "Partial Data",
+      "description": "Returns a warning message string when any partial month appears in the current view.",
+      "source": "llm"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Last Refresh Date",
+      "dax": "\"Dashboard Refreshes Daily (08:30 AM)\"",
+      "formatString": null,
+      "displayFolder": "Info",
+      "description": "Static informational card text indicating refresh schedule.",
+      "source": "llm"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Encounter Count",
       "dax": "DISTINCTCOUNT('Midnight_Census_Template'[Encounter CSN])",
       "formatString": "#,0",
       "displayFolder": "Census",
-      "description": "Distinct count of patient encounters.",
-      "source": "base"
-    },
-    {
-      "name": "Start Month Contains Partial Data?",
-      "table": "Midnight_Census_Template",
-      "dax": "IF(DAY(MIN('Midnight_Census_Template'[Census Date])) <> 1, 1, 0)",
-      "formatString": "0",
-      "displayFolder": "Partial Data Flags",
-      "description": "Best-effort port of the Tableau WINDOW_MIN flag: 1 when the first visible month starts after the 1st (partial month).",
-      "source": "tableau-calc"
-    },
-    {
-      "name": "End Month Contains Partial Data?",
-      "table": "Midnight_Census_Template",
-      "dax": "VAR _d = MAX('Midnight_Census_Template'[Census Date])\nRETURN IF(_d <> EOMONTH(_d, 0), 1, 0)",
-      "formatString": "0",
-      "displayFolder": "Partial Data Flags",
-      "description": "Best-effort port of the Tableau WINDOW_MAX flag: 1 when the last visible month ends before month-end (partial month).",
-      "source": "tableau-calc"
+      "description": "Count of distinct patient encounters.",
+      "source": "llm"
     }
   ],
-  "calculatedColumns": [],
-  "visualDecisions": [],
-  "fieldParameters": [
+  "calculatedColumns": [
     {
-      "name": "Date Agg Level",
-      "appliesTo": ["Monthly bar", "Daily bar"],
-      "axis": "category",
-      "fields": [
-        { "label": "Monthly", "table": "Midnight_Census_Template", "column": "Census Date (Month)" },
-        { "label": "Daily", "table": "Midnight_Census_Template", "column": "Census Date" }
-      ]
+      "table": "Midnight_Census_Template",
+      "name": "Census Date_CY",
+      "dax": "'Midnight_Census_Template'[Census Date]",
+      "dataType": "DateTime",
+      "formatString": "Short Date",
+      "description": "Copy of Census Date used for prior-year or multi-axis comparison."
     }
-  ]
+  ],
+  "visualDecisions": [],
+  "fieldParameters": [],
+  "theme": {
+    "titleColor": "#005587",
+    "visualBackground": "#FFFFFF",
+    "border": "#C8D6E5",
+    "foreground": "#1A1A2E",
+    "pageBackground": "#F4F6FB",
+    "outspace": "#E2E8F0",
+    "titleFont": "Segoe UI Semibold"
+  }
 }

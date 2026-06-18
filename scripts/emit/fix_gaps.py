@@ -1,10 +1,18 @@
-"""fix_gaps.py — Fix all 4 identified gaps vs target screenshots."""
-import json, os
+"""fix_gaps.py — Fix all 4 identified gaps vs target screenshots.
 
-BASE = os.path.normpath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "Output",
-    "SalesCustomerDashboards", "SalesCustomerDashboards.Report", "definition", "pages"
-))
+Usage:
+    python fix_gaps.py <output_dir>
+    python fix_gaps.py Output/SalesCustomerDashboards
+"""
+import json, os, argparse
+
+parser = argparse.ArgumentParser(description="Fix visual gaps in a PBIP report.")
+parser.add_argument("output_dir", help="Path to the workbook output folder, e.g. Output/SalesCustomerDashboards")
+args = parser.parse_args()
+
+output_dir = os.path.normpath(args.output_dir)
+MODEL_NAME = os.path.basename(output_dir)
+BASE = os.path.normpath(os.path.join(output_dir, f"{MODEL_NAME}.Report", "definition", "pages"))
 SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json"
 
 def read(path):
