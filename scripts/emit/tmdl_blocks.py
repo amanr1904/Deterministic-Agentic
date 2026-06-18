@@ -96,10 +96,10 @@ def measure_block(m: Dict, seq: int) -> str:
     return "\n".join(lines)
 
 
-def csv_partition(table: str, path: str, columns: List[Dict]) -> str:
+def csv_partition(table: str, path: str, columns: List[Dict], delimiter: str = ",") -> str:
     """Build an Import-mode CSV partition M block."""
     typed = ",\n".join(
-        f'{TAB}{TAB}{TAB}{TAB}{{"{c["name"]}", {_m_type(c["dataType"])}}}'
+        f'{TAB}{TAB}{TAB}{TAB}{{"{ c["name"]}", {_m_type(c["dataType"])}}}'
         for c in columns
     )
     return (
@@ -108,12 +108,94 @@ def csv_partition(table: str, path: str, columns: List[Dict]) -> str:
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"
         f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
-        f"[Delimiter=\",\", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n"
+        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
         f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n"
         f"{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes(Promoted, {{\n{typed}\n"
         f'{TAB}{TAB}{TAB}{TAB}}}, "en-US")\n'
         f"{TAB}{TAB}{TAB}in\n"
         f"{TAB}{TAB}{TAB}{TAB}Typed\n"
+    )
+
+
+def robust_csv_partition(
+    table: str,
+    path: str,
+    columns: List[Dict],
+    delimiter: str,
+    date_cols: List[str],
+    decimal_cols: List[str],
+) -> str:
+    """Build a fact-table partition for European-style CSVs (semicolon delimiter,
+    dd/MM/yyyy dates, comma-decimal numbers).  Non-date/decimal columns are typed
+    normally; date columns get en-GB fallback parsing; decimal columns get a
+    comma→dot replacement before conversion."""
+    non_special = [
+        c for c in columns
+        if c["name"] not in date_cols and c["name"] not in decimal_cols
+    ]
+    typed_base = ",\n".join(
+        f'{TAB}{TAB}{TAB}{TAB}\t{{"{ c["name"]}", {_m_type(c["dataType"])}}}'
+        for c in non_special
+    )
+    date_transforms = ",\n".join(
+        f'{TAB}{TAB}{TAB}{TAB}\t{{"{ d}", '
+        f'each try Date.FromText(_, "en-GB") otherwise try Date.FromText(_, "en-US") otherwise null, type date}}'
+        for d in date_cols
+    )
+    decimal_transforms = ",\n".join(
+        f'{TAB}{TAB}{TAB}{TAB}\t{{"{ d}", '
+        f'each try Number.FromText(Text.Replace(Text.From(_), ",", ".")) otherwise null, type number}}'
+        for d in decimal_cols
+    )
+    # Build steps conditionally
+    steps = (
+        f"{TAB}{TAB}{TAB}let\n"
+        f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
+        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
+        f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true])"
+    )
+    prev = "Promoted"
+    if date_transforms:
+        steps += (
+            f",\n{TAB}{TAB}{TAB}{TAB}WithDates = Table.TransformColumns({prev}, {{\n"
+            f"{date_transforms}\n"
+            f"{TAB}{TAB}{TAB}{TAB}}})")
+        prev = "WithDates"
+    if decimal_transforms:
+        steps += (
+            f",\n{TAB}{TAB}{TAB}{TAB}WithNums = Table.TransformColumns({prev}, {{\n"
+            f"{decimal_transforms}\n"
+            f"{TAB}{TAB}{TAB}{TAB}}})")
+        prev = "WithNums"
+    if typed_base:
+        steps += (
+            f",\n{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes({prev}, {{\n"
+            f"{typed_base}\n"
+            f"{TAB}{TAB}{TAB}{TAB}}})"
+        )
+        prev = "Typed"
+    steps += f"\n{TAB}{TAB}{TAB}in\n{TAB}{TAB}{TAB}{TAB}{prev}\n"
+    return (
+        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}{TAB}mode: import\n"
+        f"{TAB}{TAB}source =\n"
+        f"{steps}"
+    )
+
+
+def raw_partition(table: str, m_body: str) -> str:
+    """Build an Import-mode partition from a hand-authored M ``let … in`` body.
+
+    Used when a single logical table is sourced from a custom Power Query (e.g.
+    a join across several CSVs) that the deterministic ``csv_partition`` cannot
+    express. The body is indented under ``source =`` exactly as TMDL expects.
+    """
+    body = "\n".join(f"{TAB}{TAB}{TAB}{ln}" for ln in m_body.strip("\n").splitlines())
+    return (
+        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}{TAB}mode: import\n"
+        f"{TAB}{TAB}source =\n"
+        f"{body}\n"
     )
 
 
@@ -145,3 +227,91 @@ def _m_type(data_type: str) -> str:
         "integer": "Int64.Type", "real": "type number", "date": "type date",
         "datetime": "type datetime", "boolean": "type logical",
     }.get(data_type, "type text")
+
+
+def dim_partition(
+    table: str,
+    path: str,
+    delimiter: str,
+    logical_key: str,
+    all_columns: List[Dict],
+) -> str:
+    """Build a full-dimension partition: load ALL CSV columns, apply any renames
+    (csv_name → logical_name), null-filter on key, deduplicate.
+
+    Each entry in ``all_columns`` must have:
+      - ``name``     – the logical (TMDL) column name
+      - ``csv_name`` – the actual CSV header (may differ due to underscores etc.)
+      - ``dataType`` – IR dataType string used by _m_type()
+    """
+    renames = [
+        (c["csv_name"], c["name"])
+        for c in all_columns
+        if c.get("csv_name") and c["csv_name"] != c["name"]
+    ]
+    rename_pairs = ", ".join(f'{{"{csv}", "{log}"}}' for csv, log in renames)
+    rename_step = (
+        f"{TAB}{TAB}{TAB}{TAB}Renamed = Table.RenameColumns(Promoted, "
+        f"{{{rename_pairs}}}, MissingField.Ignore),\n"
+        if renames
+        else ""
+    )
+    after_rename = "Renamed" if renames else "Promoted"
+    typed_pairs = ",\n".join(
+        f'{TAB}{TAB}{TAB}{TAB}\t{{"{c["name"]}", {_m_type(c.get("dataType", "string"))}}}'
+        for c in all_columns
+    )
+    kref = (
+        f'[#"{logical_key}"]'
+        if any(ch in logical_key for ch in " '\"()")
+        else f"[{logical_key}]"
+    )
+    return (
+        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}{TAB}mode: import\n"
+        f"{TAB}{TAB}source =\n"
+        f"{TAB}{TAB}{TAB}let\n"
+        f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
+        f'[Delimiter="{delimiter}", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
+        f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n"
+        f"{rename_step}"
+        f"{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes({after_rename}, {{\n"
+        f"{typed_pairs}\n"
+        f"{TAB}{TAB}{TAB}{TAB}}}),\n"
+        f"{TAB}{TAB}{TAB}{TAB}Filtered = Table.SelectRows(Typed, "
+        f'each {kref} <> null and Text.Trim(Text.From({kref})) <> ""),\n'
+        f'{TAB}{TAB}{TAB}{TAB}Distinct = Table.Distinct(Filtered, {{"{logical_key}"}})\n'
+        f"{TAB}{TAB}{TAB}in\n"
+        f"{TAB}{TAB}{TAB}{TAB}Distinct\n"
+    )
+
+
+def calendar_partition(table: str, fact_table: str, date_col: str) -> str:
+    """Build a DAX CALENDAR calculated-table partition for a date dimension.
+    Ranges from MIN to MAX of the fact table's date column."""
+    return (
+        f"{TAB}partition {quote(table)} = calculated\n"
+        f"{TAB}{TAB}mode: import\n"
+        f"{TAB}{TAB}source =\n"
+        f"{TAB}{TAB}{TAB}VAR MinDate = MIN('{fact_table}'[{date_col}])\n"
+        f"{TAB}{TAB}{TAB}VAR MaxDate = MAX('{fact_table}'[{date_col}])\n"
+        f"{TAB}{TAB}{TAB}RETURN CALENDAR(MinDate, MaxDate)\n"
+    )
+
+
+def date_key_column_block(seq: int) -> str:
+    """Build the special Date key column for a CALENDAR() calculated table.
+    Uses sourceColumn: [Date] (bracket form for calculated-table columns)."""
+    return (
+        f"{TAB}column Date\n"
+        f"{TAB}{TAB}dataType: dateTime\n"
+        f"{TAB}{TAB}isKey\n"
+        f"{TAB}{TAB}formatString: m/d/yyyy\n"
+        f"{TAB}{TAB}lineageTag: {lineage(seq)}\n"
+        f"{TAB}{TAB}summarizeBy: none\n"
+        f"{TAB}{TAB}sourceColumn: [Date]\n"
+        f"\n"
+        f"{TAB}{TAB}annotation SummarizationSetBy = Automatic\n"
+        f"\n"
+        f"{TAB}{TAB}annotation UnderlyingDateTimeDataType = Date"
+    )

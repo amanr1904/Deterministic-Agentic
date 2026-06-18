@@ -70,6 +70,56 @@ def ws_by_name(ir: Dict, name: str) -> Optional[Dict]:
     return None
 
 
+def decode_field(enc: Optional[str]) -> Optional[str]:
+    """Extract the column name from a Tableau encoding ref.
+
+    Examples: 'federated...].[none:rating:nk' -> 'rating',
+    '...].[ctd:show_id:qk' -> 'show_id', '...].[yr:Calc_123:ok' -> 'Calc_123'.
+    """
+    if not enc:
+        return None
+    m = re.search(r"\]\.\[(.+)$", enc)
+    body = m.group(1) if m else enc
+    parts = body.split(":")
+    if len(parts) >= 3:
+        return parts[1]
+    if len(parts) == 2:
+        return parts[0]
+    return parts[0] if parts and parts[0] else None
+
+
+def card_column(ws: Optional[Dict], ir: Dict, cols: Set[str]) -> Optional[str]:
+    """Resolve the text/dimension column a single-value card displays."""
+    if not ws:
+        return None
+    enc = ws.get("encodings") or {}
+    for key in ("text", "color"):
+        c = decode_field(enc.get(key))
+        if c and c in cols:
+            return c
+    for d in ws.get("dimensions") or []:
+        if d in cols:
+            return d
+    return None
+
+
+def geo_column(ir: Dict) -> Optional[str]:
+    """First column whose name reads as a geographic location."""
+    for c in ir.get("columns", []):
+        if re.search(r"\b(country|state|province|city|region)\b", c["name"], re.I):
+            return c["name"]
+    return None
+
+
+def color_field(ws: Optional[Dict], ir: Dict, cols: Set[str]) -> Optional[str]:
+    """The category a pie/series split should use (Tableau color/text encoding)."""
+    enc = (ws.get("encodings") or {}) if ws else {}
+    c = decode_field(enc.get("color")) or decode_field(enc.get("text"))
+    if c and c in cols:
+        return c
+    return first_dim_col(ir)
+
+
 def slug(text: str) -> str:
     return (re.sub(r"[^\w]+", "", (text or "").replace(" ", "")) or "f").lower()
 
@@ -96,13 +146,37 @@ def suppressed_worksheets(decisions: Dict) -> set:
     return FP.suppressed_worksheets(decisions.get("fieldParameters", []))
 
 
+def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
+    """Return the correct entity (table name) for a slicer field.
+
+    Looks up the field in dim tables first; falls back to the fact entity.
+    This ensures Category/Sub-Category → DimProduct, Region/State/City → DimLocation, etc.
+    """
+    if not field:
+        return fact_entity(decisions)
+    # Check each dim/date table's columns in the IR
+    for table in decisions.get("tables", []):
+        if table.get("role") in ("dim", "date"):
+            tname = table["name"]
+            # Check IR columns scoped to this table's sourceFile / sourceDatasource
+            src = table.get("sourceDatasource")
+            t_cols = {c["name"] for c in ir.get("columns", [])
+                      if src is None or c.get("datasource") == src}
+            if field in t_cols:
+                return tname
+    # Check param tables
+    for t in decisions.get("tables", []):
+        if t.get("role") == "param" and t["name"] == field:
+            return field
+    return fact_entity(decisions)
+
+
 def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
     """Return (entity, prop, title, mode) for a filter / parameter-control zone.
 
     mode is 'Between' for date-range parameters (Start/End Date) so each acts as
     an independent bound on the date column, else 'Dropdown' for list slicers.
     """
-    entity = fact_entity(decisions)
     field = zone.get("field")
     cols = column_names(ir)
     ptables = param_tables(decisions)
@@ -110,6 +184,7 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
     # Date-range parameter (e.g. 'Start Date' / 'End Date') -> Between slicer on
     # the fact date column, so Start and End are independent bounds.
     if zone.get("type") == "paramctrl" and _is_date_param(field, decisions):
+        entity = fact_entity(decisions)
         dcol = first_date_col(ir)
         if dcol:
             return entity, dcol, title, "Between"
@@ -118,6 +193,8 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
     if field and slug(field) in pmap:
         tbl = pmap[slug(field)]
         return tbl, tbl, title, "Dropdown"
+    # Resolve the correct entity (dim table or fact) for this field
+    entity = _field_entity(field, decisions, ir)
     if field and field in cols:
         return entity, field, title, "Dropdown"
     if zone.get("type") == "paramctrl":

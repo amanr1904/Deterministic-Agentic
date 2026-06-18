@@ -21,18 +21,41 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+LOAD_CONST = os.path.join(HERE, "load_constitution.py")
 PARSE = os.path.join(HERE, "twb", "parse_twb.py")
 MAPDAX = os.path.join(HERE, "dax", "map_dax.py")
 EMIT_TMDL = os.path.join(HERE, "emit", "emit_tmdl.py")
 EMIT_PBIR = os.path.join(HERE, "emit", "emit_pbir.py")
 VALIDATE = os.path.join(
     HERE, "..", "plugins", "pbip", "skills", "pbip", "scripts", "validate_pbip.py")
-TMDL_VALIDATE = os.path.join(
-    HERE, "..", "plugins", "pbip", "hooks", "bin", "tmdl-validate-windows-x64.exe")
+BIN_DIR = os.path.join(HERE, "..", "plugins", "pbip", "hooks", "bin")
+
+
+def _tmdl_validate_binary() -> str:
+    """Resolve the tmdl-validate binary for the current OS/architecture.
+
+    The hooks/bin folder ships native binaries for windows-x64, linux-x64,
+    darwin-x64 and darwin-arm64; pick the right one so the pipeline is not
+    Windows-only.
+    """
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    is_arm = machine in ("arm64", "aarch64")
+    if system == "windows":
+        name = "tmdl-validate-windows-x64.exe"
+    elif system == "darwin":
+        name = "tmdl-validate-darwin-arm64" if is_arm else "tmdl-validate-darwin-x64"
+    else:  # linux and other POSIX systems
+        name = "tmdl-validate-linux-x64"
+    return os.path.join(BIN_DIR, name)
+
+
+TMDL_VALIDATE = _tmdl_validate_binary()
 
 
 def run(cmd: list) -> int:
@@ -49,8 +72,23 @@ def analysis_path_for(output_root: str, twb: str) -> str:
     return os.path.join(output_root, pascal, "analysis.json")
 
 
+def _output_dir_for(output_root: str, twb: str) -> str:
+    """Return Output/{PascalName}/ for the given workbook path."""
+    import re
+    name = os.path.splitext(os.path.basename(twb))[0]
+    pascal = "".join(w[:1].upper() + w[1:]
+                     for w in re.split(r"[^0-9A-Za-z]+", name) if w)
+    return os.path.join(output_root, pascal)
+
+
 def prepare(args) -> int:
-    """Stage 1 + 6: parse the workbook and pre-translate trivial DAX."""
+    """Stage 0 + 1 + 6: load constitution cache, parse workbook, pre-translate DAX."""
+    # Stage 0 — deterministic constitution snapshot (hard-stop if files missing).
+    out_dir = _output_dir_for(args.output_root, args.twb)
+    rc = run([sys.executable, LOAD_CONST, out_dir])
+    if rc != 0:
+        return rc
+    # Stage 1 — parse .twb -> analysis.json
     rc = run([sys.executable, PARSE, args.twb, "--output-root", args.output_root])
     if rc != 0:
         return rc

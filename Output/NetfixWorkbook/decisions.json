@@ -1,0 +1,75 @@
+{
+  "decisionsVersion": "1.0",
+  "modelName": "NetfixWorkbook",
+  "tableStrategy": "single-flat",
+  "tables": [
+    {
+      "name": "netflix_titles",
+      "role": "fact",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\SiddhiVermaMAQSoftwa\\OneDrive - MAQ Software\\Desktop\\Deterministic\\Deterministic-Agentic\\Data\\Netflix\\netflix_titles.csv",
+      "keyColumns": ["show_id"],
+      "dedupKey": null
+    },
+    {
+      "name": "DimDate",
+      "role": "date",
+      "sourceType": "calendar",
+      "sourceFile": null,
+      "keyColumns": ["Date"],
+      "dedupKey": null
+    }
+  ],
+  "relationships": [
+    {
+      "fromColumn": "netflix_titles.date_added",
+      "toColumn": "DimDate.Date",
+      "crossFilter": "single",
+      "active": true
+    }
+  ],
+  "measures": [
+    {
+      "table": "netflix_titles",
+      "name": "Title Count",
+      "dax": "COUNTROWS(netflix_titles)",
+      "formatString": "#,0",
+      "displayFolder": "Counts",
+      "description": "Total number of Netflix titles.",
+      "source": "llm"
+    }
+  ],
+  "calculatedColumns": [],
+  "visualDecisions": [
+    {
+      "worksheet": "Country wise distribution",
+      "visualType": "filledMap",
+      "location": "country",
+      "value": "Title Count",
+      "reason": "Mark type is Multipolygon with generated Lat/Long — a filled choropleth map by country. The 'country' column provides geographic location bindings."
+    },
+    {
+      "worksheet": "Ratings",
+      "visualType": "columnChart",
+      "category": "rating",
+      "value": "Title Count",
+      "sort": "valueDesc",
+      "reason": "Automatic mark with 'rating' on cols (X-axis, dimension) and COUNT(show_id) on rows (Y-axis, value) — vertical column chart grouped by content rating, sorted descending."
+    },
+    {
+      "worksheet": "Top 10 Genre",
+      "visualType": "barChart",
+      "category": "listed_in",
+      "value": "Title Count",
+      "sort": "valueDesc",
+      "reason": "Automatic mark with 'listed_in' on rows (Y-axis, dimension) and COUNT(show_id) on cols (X-axis, value) — horizontal bar chart of top genres by count, sorted descending."
+    },
+    {
+      "worksheet": "Movies and TV Shows distribution",
+      "visualType": "donutChart",
+      "category": "type",
+      "value": "Title Count",
+      "reason": "Circle marks with color=type and size=COUNT(show_id) but no X/Y shelf — this is a proportional breakdown (Movie vs TV Show), best rendered as a donut chart. Overrides the erroneous scatterChart IR inference."
+    }
+  ]
+}
