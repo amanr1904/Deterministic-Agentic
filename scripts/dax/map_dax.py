@@ -91,7 +91,7 @@ ANY_RATIO_RE = re.compile(
 _ARITH_RESIDUAL_RE = re.compile(r"^[\s0-9.+\-*/()]*$")
 
 
-def _h_single_agg(formula, table, columns):
+def _h_single_agg(formula, table, columns, measures):
     """SUM([x]) -> SUM ( T[x] ). Ungated (back-compat)."""
     m = SINGLE_AGG_RE.match(formula)
     if not m:
@@ -100,7 +100,7 @@ def _h_single_agg(formula, table, columns):
     return f"{func} ( {table}[{m.group(2)}] )", FORMAT_BY_AGG.get(func)
 
 
-def _h_ratio_sum(formula, table, columns):
+def _h_ratio_sum(formula, table, columns, measures):
     """SUM([a]) / SUM([b]) -> DIVIDE(...). Ungated (back-compat)."""
     m = RATIO_RE.match(formula)
     if not m:
@@ -109,7 +109,7 @@ def _h_ratio_sum(formula, table, columns):
     return dax, "#,0.00"
 
 
-def _h_ratio_general(formula, table, columns):
+def _h_ratio_general(formula, table, columns, measures):
     """AGG([a]) / AGG([b]) (any aggregations) -> DIVIDE(...).
 
     Column-gated: only fires when both fields are real base columns, so it never
@@ -129,7 +129,7 @@ def _h_ratio_general(formula, table, columns):
     return dax, "#,0.00"
 
 
-def _h_agg_arithmetic(formula, table, columns):
+def _h_agg_arithmetic(formula, table, columns, measures):
     """Linear arithmetic over base-column aggregations, e.g.
     (SUM([a]) - SUM([b])) / SUM([b]) -> ( SUM ( T[a] ) - SUM ( T[b] ) ) / SUM ( T[b] ).
 
@@ -162,7 +162,7 @@ def _h_agg_arithmetic(formula, table, columns):
     return dax, fmt
 
 
-def _h_attr(formula, table, columns):
+def _h_attr(formula, table, columns, measures):
     """ATTR([Field]) -> SELECTEDVALUE ( T[Field] ).
 
     Column-gated when a column set is supplied so it never references a Tableau
@@ -177,7 +177,7 @@ def _h_attr(formula, table, columns):
     return f"SELECTEDVALUE ( {table}[{field}] )", None
 
 
-def _h_passthrough(formula, table, columns):
+def _h_passthrough(formula, table, columns, measures):
     """[Field] -> T[Field]. Ungated (back-compat)."""
     m = PASSTHROUGH_RE.match(formula)
     if not m:
@@ -185,18 +185,19 @@ def _h_passthrough(formula, table, columns):
     return f"{table}[{m.group(1)}]", None
 
 
-def _h_expression(formula, table, columns):
+def _h_expression(formula, table, columns, measures):
     """Safe IF/IIF/CASE + operators + whitelisted-function expressions -> DAX.
 
     Delegated to the fail-closed recursive translator in dax_expr. It only fires
-    when every ``[field]`` is a real base column (and at least one is), so it never
-    references a parameter, calc-field token, or non-existent column; anything
-    outside the safe subset raises Untranslatable and defers to the agent.
+    when every ``[field]`` is a real base column or a sibling measure (and at least
+    one reference appears), so it never references a parameter, column-kind
+    calc-field token, or non-existent column; anything outside the safe subset
+    raises Untranslatable and defers to the agent.
     """
-    if not columns:
+    if not columns and not measures:
         return None
     try:
-        return E.translate_expression(formula, table, columns), None
+        return E.translate_expression(formula, table, columns, measures), None
     except E.Untranslatable:
         return None
 
@@ -221,17 +222,21 @@ def translate(
     formula: str,
     table: str,
     columns: Optional[set] = None,
+    measures: Optional[Dict[str, str]] = None,
 ) -> Optional[Tuple[str, Optional[str]]]:
     """Return (dax, formatString) if deterministically translatable, else None.
 
     ``columns`` is the set of real base-column names; column-gated handlers use it
     to avoid emitting DAX that references Tableau calc-field tokens or parameters.
+    ``measures`` maps a sibling calc field's internal Tableau name to the DAX
+    measure name it becomes, so the expression translator can reference other
+    measures (e.g. ``([CY Sales] - [PY Sales]) / [PY Sales]``).
     """
     if COMPLEX_TOKENS.search(formula):
         return None
     formula = formula.strip()
     for handler in PATTERN_REGISTRY:
-        result = handler(formula, table, columns)
+        result = handler(formula, table, columns, measures)
         if result is not None:
             return result
     return None
@@ -247,14 +252,38 @@ def _base_columns(ir: Dict) -> set:
     return {c["name"] for c in ir.get("columns", []) if c.get("name")}
 
 
+def _measure_refs(ir: Dict) -> Dict[str, str]:
+    """Map a measure-kind calc field's internal Tableau name -> DAX measure name.
+
+    Keyed by the field's ``fieldName`` with surrounding brackets stripped (the form
+    in which sibling formulas reference it), so the expression translator can emit a
+    bare ``[Measure Name]`` reference. Only measure-kind calc fields are included so
+    we never reference a column-kind calc as if it were already aggregated.
+    """
+    refs: Dict[str, str] = {}
+    for field in ir.get("calculatedFields", []):
+        if field.get("suggestedDaxKind") != "measure":
+            continue
+        internal = field.get("fieldName")
+        caption = field.get("caption")
+        if not internal or not caption:
+            continue
+        refs[internal.strip("[]")] = measure_name(caption)
+    return refs
+
+
 def build_measures(ir: Dict, host_table: str) -> Dict[str, List[Dict]]:
     """Split calc fields into deterministically-translated vs LLM-pending."""
     translated: List[Dict] = []
     pending: List[Dict] = []
     columns = _base_columns(ir)
+    ref_all = _measure_refs(ir)
     for field in ir.get("calculatedFields", []):
         formula = field["formula"]
-        result = translate(formula, host_table, columns)
+        # exclude the field's own name so a measure can never reference itself.
+        self_internal = (field.get("fieldName") or "").strip("[]")
+        refs = {k: v for k, v in ref_all.items() if k != self_internal}
+        result = translate(formula, host_table, columns, refs)
         if result and field.get("suggestedDaxKind", "measure") == "measure":
             dax, fmt = result
             translated.append({

@@ -234,6 +234,40 @@ class TestDaxExpression(unittest.TestCase):
         self.assertIsNone(M.translate("IF SUM([Qty]) > 0 THEN 1 ELSE 0 END", "T"))
 
 
+class TestDaxMeasureRefs(unittest.TestCase):
+    """References to sibling calc fields that become measures -> [Measure] refs."""
+
+    COLS = {"Sales", "Profit", "Qty"}
+    # internal Tableau name (no brackets) -> DAX measure name it becomes
+    MEAS = {"CY Sales (copy)_1": "CY Sales", "PY Sales (copy)_2": "PY Sales"}
+
+    def t(self, formula):
+        return M.translate(formula, "T", self.COLS, self.MEAS)
+
+    def test_measure_minus_measure_ratio(self):
+        # the dominant KPI pattern: arithmetic over other measures
+        dax, _ = self.t(
+            "([CY Sales (copy)_1] - [PY Sales (copy)_2]) / [PY Sales (copy)_2]")
+        self.assertEqual(dax, "( ( [CY Sales] - [PY Sales] ) / [PY Sales] )")
+
+    def test_measure_ref_in_condition(self):
+        dax, _ = self.t(
+            "IF [CY Sales (copy)_1] > [PY Sales (copy)_2] THEN 1 ELSE 0 END")
+        self.assertEqual(dax, "IF ( ( [CY Sales] > [PY Sales] ), 1, 0 )")
+
+    def test_measure_mixed_with_base_aggregation(self):
+        dax, _ = self.t("[CY Sales (copy)_1] - SUM([Profit])")
+        self.assertEqual(dax, "( [CY Sales] - SUM ( T[Profit] ) )")
+
+    def test_aggregating_a_measure_bails(self):
+        # SUM([measure]) is invalid DAX -> defer to the agent
+        self.assertIsNone(self.t("SUM([CY Sales (copy)_1]) - SUM([Profit])"))
+
+    def test_unknown_calc_ref_still_bails(self):
+        # a calc-field token that is NOT a known measure is still rejected
+        self.assertIsNone(self.t("[CY Sales (copy)_1] - [Unknown_99]"))
+
+
 class TestBuildMeasures(unittest.TestCase):
     def test_split_translated_vs_pending(self):
         ir = {
@@ -252,6 +286,29 @@ class TestBuildMeasures(unittest.TestCase):
         self.assertEqual(out["measures"][0]["source"], "template")
         self.assertEqual(len(out["pending"]), 1)
         self.assertEqual(out["pending"][0]["caption"], "LOD")
+
+    def test_measure_reference_resolved_via_fieldname(self):
+        # a calc field that references sibling measures by their (scrambled)
+        # internal Tableau name translates to bare [Measure] references.
+        ir = {
+            "workbook": {"pascalName": "T"},
+            "dataSources": [{"active": True}],
+            "calculatedFields": [
+                {"caption": "CY Sales", "fieldName": "[Calc_aaa]",
+                 "formula": "SUM([Sales])", "complexity": "trivial",
+                 "suggestedDaxKind": "measure"},
+                {"caption": "PY Sales", "fieldName": "[Calc_bbb]",
+                 "formula": "SUM([Sales])", "complexity": "trivial",
+                 "suggestedDaxKind": "measure"},
+                {"caption": "% Diff", "fieldName": "[Calc_ccc]",
+                 "formula": "([Calc_aaa] - [Calc_bbb]) / [Calc_bbb]",
+                 "complexity": "trivial", "suggestedDaxKind": "measure"},
+            ],
+        }
+        out = M.build_measures(ir, "T")
+        by_name = {m["name"]: m["dax"] for m in out["measures"]}
+        self.assertEqual(
+            by_name["% Diff"], "( ( [CY Sales] - [PY Sales] ) / [PY Sales] )")
 
 
 class TestReconcile(unittest.TestCase):

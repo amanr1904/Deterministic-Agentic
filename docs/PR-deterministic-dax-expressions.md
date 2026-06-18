@@ -26,9 +26,9 @@ translate deterministically, so they were a good candidate for automation.
 
 | File | Type | Description |
 |------|------|-------------|
-| `scripts/dax/dax_expr.py` | **new** | Fail-closed recursive-descent translator converting a safe subset of Tableau expression syntax to DAX. Raises `Untranslatable` for anything outside the subset. |
-| `scripts/dax/map_dax.py` | modified | Wires the new translator in as a column-gated `_h_expression` pattern handler; removes `CASE`/`ELSEIF` from the hard `COMPLEX_TOKENS` block so they reach the gated handler. (+194 / −22) |
-| `scripts/tests/test_pipeline.py` | modified | Adds `TestDaxExpression` (18 cases) covering positive translations and every safety gate. (+151) |
+| `scripts/dax/dax_expr.py` | **new** | Fail-closed recursive-descent translator converting a safe subset of Tableau expression syntax to DAX. Raises `Untranslatable` for anything outside the subset. Resolves references to sibling **measure-kind** calc fields into bare `[Measure]` references. |
+| `scripts/dax/map_dax.py` | modified | Wires the new translator in as a gated `_h_expression` pattern handler; removes `CASE`/`ELSEIF` from the hard `COMPLEX_TOKENS` block; builds a sibling-measure reference map (`_measure_refs`) keyed by Tableau internal `fieldName`. |
+| `scripts/tests/test_pipeline.py` | modified | Adds `TestDaxExpression`, `TestDaxMeasureRefs`, and a `build_measures` resolution test covering positive translations and every safety gate. |
 | `scripts/emit/emit_tmdl.py` | modified | CSV path portability fix — resolves data sources against the repo root rather than an absolute path baked into `decisions.json`. (+36 / −4) |
 
 ### Measure-loss guard (pipeline robustness)
@@ -46,6 +46,30 @@ author was dropped from the model with no error. This PR closes that gap:
 Validated against the `SalesCustomerDashboards` sample: the guard correctly flagged 10
 dropped measures (the `WINDOW_*` table-calc KPI/Min-Max family and an LOD) that were
 previously missing from the generated report.
+
+### Measure-to-measure references (KPI ratios / diffs)
+
+Real workbooks rarely express a KPI purely over base columns — they build it from
+*other measures*, e.g. `(% Diff) = ([CY Sales] - [PY Sales]) / [PY Sales]`. The
+translator now resolves a `[token]` that names a sibling **measure-kind** calc field
+into a bare DAX measure reference `[CY Sales]`, so these chained KPIs translate
+deterministically instead of being deferred wholesale to the agent.
+
+Tableau references siblings by a (often scrambled) internal `fieldName`, so `map_dax`
+builds the map from each measure-kind field's `fieldName` → its DAX measure name
+(caption); a field is excluded from its own map to make self-reference impossible.
+Because a measure reference is already scalar, it is **rejected inside an
+aggregation** (`SUM([measure])` is invalid DAX → deferred) and accepted everywhere a
+scalar is valid.
+
+```text
+([CY Sales (copy)_1] - [PY Sales (copy)_2]) / [PY Sales (copy)_2]
+  -> ( ( [CY Sales] - [PY Sales] ) / [PY Sales] )
+```
+
+On the committed `SalesCustomerDashboards` sample this unlocks `% Diff Sales per
+Customers` (previously `pending`); chained calcs that wrap siblings in `SUM(...)` or
+rely on parameters / window functions remain `pending` by design.
 
 ### What is now auto-translated (measure-grain)
 
@@ -103,13 +127,15 @@ The translator is **fail-closed**: any construct it does not explicitly understa
 raises `Untranslatable`, and `map_dax` then leaves the field `pending` for the
 agent. Three gates guarantee only valid DAX is emitted:
 
-1. **Base-column only** — every `[token]` must resolve to a real source column.
-   Parameter references (`[Parameters].[X]`), datasource-qualified refs (`[a].[b]`),
-   and unknown calc-field tokens all bail.
-2. **At least one column** — pure constant/literal formulas (e.g. `"(All)"`,
+1. **Known reference only** — every `[token]` must resolve to a real source column
+   *or* a sibling measure-kind calc field. Parameter references
+   (`[Parameters].[X]`), datasource-qualified refs (`[a].[b]`), and unknown / column-
+   kind calc-field tokens all bail.
+2. **At least one reference** — pure constant/literal formulas (e.g. `"(All)"`,
    `TODAY() - 1`) bail, protecting literal/parameter-style calcs.
-3. **Measure-grain** — a column referenced outside an aggregation bails, because a
-   bare column is invalid DAX inside a measure (e.g. `SUM([Sales]) - [Profit]`).
+3. **Measure-grain** — a base column referenced outside an aggregation bails (a bare
+   column is invalid DAX inside a measure); a measure reference *inside* an
+   aggregation also bails (`SUM([measure])` is invalid).
 
 Additional guards: unknown functions, ambiguous string-concatenation `+`, mismatched
 arity, and trailing tokens all raise `Untranslatable`.
@@ -123,7 +149,9 @@ These require context that does not exist in the prepare phase and remain
 - LOD `FIXED` / `INCLUDE` / `EXCLUDE` (needs grain + relationships)
 - Table calcs: `RUNNING_*` / `WINDOW_*` / `RANK` / `INDEX` / `LOOKUP` (need visual order/partition)
 - Parameter references (need param-table names from `decisions.json`)
-- Nested calculated-field references (need topological ordering)
+- Nested references to **column-kind** calc fields (need topological ordering and a
+  calculated-column definition); references to sibling **measure-kind** fields are
+  now handled (see above)
 - Row-level (column-kind) string/date/conversion calcs — surfaced as
   `pending: non-measure` since `map_dax` emits **measures** only; calculated
   columns are authored via the decisions/agent path.
@@ -134,11 +162,14 @@ These require context that does not exist in the prepare phase and remain
 python -m unittest discover -s scripts/tests -v
 ```
 
-- **39 tests pass.**
+- **45 tests pass.**
 - New `TestDaxExpression` covers each translation pattern plus all gating paths
   (parameter ref, non-base column, bare column, pure constant, string concat,
   unknown function, missing column set).
-- New `TestReconcile` + `TestMergePartialMeasures` cover the measure-loss guard
+- New `TestDaxMeasureRefs` covers sibling-measure references (KPI ratio/diff,
+  measure-in-condition, mixed measure + base aggregation) and their gates
+  (aggregating a measure bails, unknown calc-ref bails).
+- `TestReconcile` + `TestMergePartialMeasures` cover the measure-loss guard
   (missing-measure detection, normalized name matching, cross-channel accounting,
   fact-table remap, agent-wins-on-clash).
 - The golden regression `TestGoldenMidnightCensus.test_map_dax_matches_committed_partial`
@@ -158,7 +189,7 @@ python -m unittest discover -s scripts/tests -v
 ## PR checklist
 
 - [x] New code is UTF-8, no BOM
-- [x] Full test suite green (39/39)
+- [x] Full test suite green (45/45)
 - [x] Golden byte-match preserved (Midnight Census)
 - [x] No public schema/contract changes
 - [ ] Unrelated `Output/NetfixWorkbook/*` and `__pycache__` artifacts excluded from the commit

@@ -9,11 +9,19 @@ the agent instead of emitting risky DAX.
 Two hard safety gates make it impossible to emit DAX that references something that
 does not exist in the model at this (pre-decisions) stage:
 
-  * every ``[token]`` must be a real base column (``columns``); a parameter ref,
-    a calc-field token, or a datasource-qualified ``[a].[b]`` ref aborts the parse;
-  * at least one base-column reference must appear, so pure-constant / parameter-only
-    formulas (string literals, ``TODAY()-1``, ``CASE [Parameters]...``) are never
-    translated here.
+  * every ``[token]`` must resolve to either a real base column (``columns``) or a
+    sibling calc field that itself becomes a measure (``measures``); a parameter ref,
+    a column-kind calc-field token, or a datasource-qualified ``[a].[b]`` ref aborts
+    the parse;
+  * at least one column or measure reference must appear, so pure-constant /
+    parameter-only formulas (string literals, ``TODAY()-1``, ``CASE [Parameters]...``)
+    are never translated here.
+
+A ``[token]`` that resolves to a sibling measure is emitted as a bare DAX measure
+reference ``[Measure Name]`` (already scalar/aggregated), so it is rejected inside an
+aggregation (``SUM([measure])`` is invalid DAX) and accepted everywhere a scalar is
+valid. This unlocks the common KPI pattern of arithmetic over other measures, e.g.
+``([CY Sales] - [PY Sales]) / [PY Sales]``.
 
 Only well-known 1:1 mappings are included; arg-order / semantic-risk functions
 (SPLIT, DATEADD, DATETRUNC, FLOAT, 2-arg MIN/MAX, ...) are deliberately omitted so
@@ -86,11 +94,12 @@ Node = Tuple[str, bool]
 
 
 class _Parser:
-    def __init__(self, toks: List[_Tok], table: str, columns: set):
+    def __init__(self, toks: List[_Tok], table: str, columns: set, measures: dict):
         self.toks = toks
         self.i = 0
         self.table = table
         self.columns = columns
+        self.measures = measures  # internal calc-field name -> DAX measure name
         self.col_refs = 0
         self.in_agg = 0  # >0 while parsing an aggregation's argument
 
@@ -120,7 +129,7 @@ class _Parser:
         if self.i != len(self.toks):
             raise Untranslatable("trailing tokens")
         if self.col_refs == 0:
-            raise Untranslatable("no base-column reference")
+            raise Untranslatable("no column or measure reference")
         return node[0]
 
     def _expr(self) -> Node:
@@ -287,14 +296,23 @@ class _Parser:
         if self._peek() and self._peek().kind == "DOT":
             raise Untranslatable("qualified reference")
         name = tok.value[1:-1]
-        if name not in self.columns:
-            raise Untranslatable(f"non-base-column [{name}]")
-        # A measure expression must aggregate every column; a column referenced
-        # outside an aggregation would be invalid DAX in a measure.
-        if self.in_agg == 0:
-            raise Untranslatable(f"bare column reference [{name}] (needs aggregation)")
-        self.col_refs += 1
-        return f"{self.table}[{name}]", None  # column type unknown
+        if name in self.columns:
+            # A measure expression must aggregate every column; a column referenced
+            # outside an aggregation would be invalid DAX in a measure.
+            if self.in_agg == 0:
+                raise Untranslatable(f"bare column reference [{name}] (needs aggregation)")
+            self.col_refs += 1
+            return f"{self.table}[{name}]", None  # column type unknown
+        # reference to a sibling calc field that itself becomes a measure: emit a
+        # bare DAX measure reference (already scalar/aggregated).
+        measure = self.measures.get(name)
+        if measure is not None:
+            # aggregating a measure (e.g. SUM([measure])) is invalid DAX -> defer.
+            if self.in_agg > 0:
+                raise Untranslatable(f"aggregation over measure reference [{name}]")
+            self.col_refs += 1
+            return f"[{measure}]", False  # numeric scalar
+        raise Untranslatable(f"non-base-column [{name}]")
 
     def _name(self) -> Node:
         tok = self._next()
@@ -388,11 +406,21 @@ class _Parser:
         raise Untranslatable(f"unsupported function {name}/{n}")
 
 
-def translate_expression(formula: str, table: str, columns: set) -> str:
-    """Return DAX for a safe Tableau expression, else raise ``Untranslatable``."""
-    if not columns:
+def translate_expression(
+    formula: str,
+    table: str,
+    columns: set,
+    measures: Optional[dict] = None,
+) -> str:
+    """Return DAX for a safe Tableau expression, else raise ``Untranslatable``.
+
+    ``measures`` maps a sibling calc field's internal Tableau name (without the
+    surrounding brackets) to the DAX measure name it becomes, enabling references
+    to other measures (e.g. ``[CY Sales]``) inside a translated expression.
+    """
+    if not columns and not measures:
         raise Untranslatable("no column context")
     toks = _tokenize(formula)
     if not toks:
         raise Untranslatable("empty formula")
-    return _Parser(toks, table, columns).parse()
+    return _Parser(toks, table, columns or set(), measures or {}).parse()
