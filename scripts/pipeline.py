@@ -29,6 +29,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LOAD_CONST = os.path.join(HERE, "load_constitution.py")
 PARSE = os.path.join(HERE, "twb", "parse_twb.py")
 MAPDAX = os.path.join(HERE, "dax", "map_dax.py")
+RECONCILE = os.path.join(HERE, "dax", "reconcile.py")
 EMIT_TMDL = os.path.join(HERE, "emit", "emit_tmdl.py")
 EMIT_PBIR = os.path.join(HERE, "emit", "emit_pbir.py")
 VALIDATE = os.path.join(
@@ -119,6 +120,11 @@ def _print_gaps(analysis: str) -> None:
 
 def generate(args) -> int:
     """Stage 10 + 13 + validation: emit model and report, then validate."""
+    # Guard: no pending measure may be silently dropped. If the agent omitted any,
+    # this fails (exit 4) and writes measures-todo.json so the agent re-authors them.
+    rc = run([sys.executable, RECONCILE, args.analysis, "--decisions", args.decisions])
+    if rc != 0:
+        return rc
     rc = run([sys.executable, EMIT_TMDL, args.analysis, "--decisions", args.decisions])
     if rc != 0:
         return rc

@@ -60,6 +60,55 @@ def load_json(path: str) -> Dict:
         return json.load(fh)
 
 
+def _norm_name(name: str) -> str:
+    """Case/punctuation-insensitive measure-name key for de-duplication."""
+    return re.sub(r"[^0-9a-z]", "", (name or "").lower())
+
+
+def merge_partial_measures(decisions: Dict, analysis_path: str) -> Dict:
+    """Defense-in-depth: fold deterministically-translated measures from
+    dax-partial.json into ``decisions['measures']`` so they are emitted even if
+    the agent omitted them. Agent-authored measures always win on a name clash.
+    """
+    partial_path = os.path.join(
+        os.path.dirname(os.path.abspath(analysis_path)), "dax-partial.json")
+    if not os.path.isfile(partial_path):
+        return decisions
+    try:
+        det = load_json(partial_path).get("measures", [])
+    except (OSError, json.JSONDecodeError):
+        return decisions
+    if not det:
+        return decisions
+    measures = decisions.setdefault("measures", [])
+    existing = {_norm_name(m.get("name", "")) for m in measures}
+    table_names = {t.get("name") for t in decisions.get("tables", [])}
+    fact = next((t["name"] for t in decisions.get("tables", [])
+                 if t.get("role") == "fact"), None)
+    added = 0
+    for m in det:
+        key = _norm_name(m.get("name", ""))
+        if not key or key in existing:
+            continue  # agent already authored this measure -> keep theirs
+        home = m.get("table") if m.get("table") in table_names else (fact or m.get("table"))
+        if home not in table_names:
+            continue  # no valid host table -> let reconciliation flag it instead
+        measures.append({
+            "table": home,
+            "name": m["name"],
+            "dax": m["dax"],
+            "formatString": m.get("formatString"),
+            "displayFolder": m.get("displayFolder", "Base Measures"),
+            "description": m.get("description"),
+            "source": "deterministic",
+        })
+        existing.add(key)
+        added += 1
+    if added:
+        print(f"  merged {added} deterministic measure(s) from dax-partial.json")
+    return decisions
+
+
 def model_dir(analysis_path: str, model_name: str) -> str:
     base = os.path.dirname(os.path.abspath(analysis_path))
     path = os.path.join(base, f"{model_name}.SemanticModel")
@@ -164,7 +213,27 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
                 for c in table["datatable"]["columns"]]
     ds = table.get("sourceDatasource")
     cols = [c for c in ir["columns"] if ds is None or c["datasource"] == ds]
-    return cols or ir["columns"]
+    cols = cols or ir["columns"]
+    # A workbook can expose several datasources that share column names (e.g. a
+    # secondary "... NEW" extract alongside the CSV). Without a pinned
+    # sourceDatasource every matching column is collected, so the same column is
+    # emitted twice -> Power BI rejects the model ("TMDL objects cannot be merged
+    # because both declare the same property: dataType"). Prefer the datasource
+    # whose name matches this table, then deduplicate by normalized name.
+    if ds is None:
+        preferred = table.get("name")
+        if any(c.get("datasource") == preferred for c in cols):
+            cols = ([c for c in cols if c.get("datasource") == preferred]
+                    + [c for c in cols if c.get("datasource") != preferred])
+    seen = set()
+    deduped = []
+    for c in cols:
+        key = _normalize_name(c["name"])
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(c)
+    return deduped
 
 
 def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> str:
@@ -392,6 +461,7 @@ def main(argv=None) -> int:
         if not os.path.isfile(p):
             print(f"ERROR: file not found: {p}", file=sys.stderr); return 2
     ir, decisions = load_json(args.analysis), load_json(args.decisions)
+    decisions = merge_partial_measures(decisions, args.analysis)
     root = emit(ir, decisions, args.analysis)
     print(f"Wrote semantic model: {root}\n  tables: {len(decisions.get('tables', []))}  "
           f"measures: {len(decisions.get('measures', []))}  "

@@ -24,6 +24,8 @@ for sub in ("twb", "dax", "emit"):
 
 import twb_xml as X  # noqa: E402
 import map_dax as M  # noqa: E402
+import reconcile as R  # noqa: E402
+import emit_tmdl as ET  # noqa: E402
 import parse_twb as P  # noqa: E402
 
 MIDNIGHT_TWB = os.path.join(ROOT, "Data", "Midnight Census", "Midnight Census Dashboard.twb")
@@ -250,6 +252,80 @@ class TestBuildMeasures(unittest.TestCase):
         self.assertEqual(out["measures"][0]["source"], "template")
         self.assertEqual(len(out["pending"]), 1)
         self.assertEqual(out["pending"][0]["caption"], "LOD")
+
+
+class TestReconcile(unittest.TestCase):
+    PARTIAL = {
+        "measures": [{"table": "T", "name": "Total Sales", "dax": "SUM(T[Sales])"}],
+        "pending": [
+            {"caption": "KPI Avg", "formula": "WINDOW_AVG(SUM([x]))",
+             "complexity": "complex", "suggestedDaxKind": "measure"},
+            {"caption": "Current Year", "formula": "YEAR(TODAY())",
+             "complexity": "trivial", "suggestedDaxKind": "column"},
+            {"caption": "PY Sales", "formula": "...",
+             "complexity": "trivial", "suggestedDaxKind": "measure"},
+        ],
+    }
+
+    def test_missing_measure_flagged(self):
+        # 'PY Sales' authored, 'KPI Avg' not; column-kind 'Current Year' ignored.
+        decisions = {"measures": [{"name": "PY Sales"}], "tables": []}
+        missing = R.find_missing(self.PARTIAL, decisions)
+        self.assertEqual([m["caption"] for m in missing], ["KPI Avg"])
+
+    def test_name_match_is_normalized(self):
+        # 'KPI Avg' present as 'kpi avg' (punctuation/case differ) -> accounted.
+        decisions = {"measures": [{"name": "kpi avg"}, {"name": "PY Sales"}],
+                     "tables": []}
+        self.assertEqual(R.find_missing(self.PARTIAL, decisions), [])
+
+    def test_deterministic_measure_not_flagged(self):
+        # the dax-partial deterministic measure is folded in by emit -> never missing
+        partial = {"measures": [{"name": "Total Sales"}],
+                   "pending": [{"caption": "Total Sales", "formula": "SUM([x])",
+                                "complexity": "trivial", "suggestedDaxKind": "measure"}]}
+        self.assertEqual(R.find_missing(partial, {"measures": [], "tables": []}), [])
+
+    def test_accounted_across_channels(self):
+        decisions = {
+            "measures": [], "tables": [{"name": "P", "role": "param"}],
+            "calculatedColumns": [{"name": "Current Year"}],
+            "fieldParameters": [{"name": "KPI Avg"}],
+        }
+        # KPI Avg via fieldParameters, PY Sales still missing
+        missing = R.find_missing(self.PARTIAL, decisions)
+        self.assertEqual([m["caption"] for m in missing], ["PY Sales"])
+
+
+class TestMergePartialMeasures(unittest.TestCase):
+    def _run(self, decisions, partial):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            analysis = os.path.join(d, "analysis.json")
+            with open(analysis, "w", encoding="utf-8") as fh:
+                json.dump({}, fh)
+            with open(os.path.join(d, "dax-partial.json"), "w", encoding="utf-8") as fh:
+                json.dump(partial, fh)
+            return ET.merge_partial_measures(decisions, analysis)
+
+    def test_deterministic_measure_merged_onto_fact(self):
+        decisions = {"measures": [], "tables": [{"name": "Orders", "role": "fact"}]}
+        partial = {"measures": [{"table": "Wb", "name": "Avg X",
+                                 "dax": "AVERAGE(Orders[X])", "formatString": None}]}
+        out = self._run(decisions, partial)
+        self.assertEqual(len(out["measures"]), 1)
+        self.assertEqual(out["measures"][0]["table"], "Orders")
+        self.assertEqual(out["measures"][0]["source"], "deterministic")
+
+    def test_agent_measure_wins_on_clash(self):
+        decisions = {"measures": [{"table": "Orders", "name": "Avg X",
+                                   "dax": "AGENT", "source": "llm"}],
+                     "tables": [{"name": "Orders", "role": "fact"}]}
+        partial = {"measures": [{"table": "Orders", "name": "avg x",
+                                 "dax": "DET", "formatString": None}]}
+        out = self._run(decisions, partial)
+        self.assertEqual(len(out["measures"]), 1)
+        self.assertEqual(out["measures"][0]["dax"], "AGENT")
 
 
 @unittest.skipUnless(os.path.isfile(MIDNIGHT_TWB), "Midnight Census workbook not present")

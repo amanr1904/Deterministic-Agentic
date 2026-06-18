@@ -31,6 +31,22 @@ translate deterministically, so they were a good candidate for automation.
 | `scripts/tests/test_pipeline.py` | modified | Adds `TestDaxExpression` (18 cases) covering positive translations and every safety gate. (+151) |
 | `scripts/emit/emit_tmdl.py` | modified | CSV path portability fix — resolves data sources against the repo root rather than an absolute path baked into `decisions.json`. (+36 / −4) |
 
+### Measure-loss guard (pipeline robustness)
+
+Independently of translation, measures could previously **vanish silently**: `emit_tmdl`
+emits measures only from `decisions.json`, so any `pending` measure the agent forgot to
+author was dropped from the model with no error. This PR closes that gap:
+
+| File | Type | Description |
+|------|------|-------------|
+| `scripts/dax/reconcile.py` | **new** | Cross-checks `dax-partial.json` `pending` against `decisions.json`. Every measure-kind pending calc must be accounted for (as a measure, calculated column, field parameter, or param table). Unaccounted calcs are written to `measures-todo.json` and reported as an **AGENT ACTION REQUIRED** (exit 4), so the agent re-authors their DAX before generation proceeds. Name matching is punctuation/case-insensitive. |
+| `scripts/emit/emit_tmdl.py` | modified | Adds `merge_partial_measures()` — folds the deterministically-translated `dax-partial.json` measures into the model as defense-in-depth (remapped onto the fact table; agent-authored measures win on a name clash) so they can never be lost even if the agent omits them. |
+| `scripts/pipeline.py` | modified | Runs `reconcile.py` as a **blocking pre-emit guard** in the `generate` phase; if any measure is unaccounted, generation stops and the gap is routed back to the agent. |
+
+Validated against the `SalesCustomerDashboards` sample: the guard correctly flagged 10
+dropped measures (the `WINDOW_*` table-calc KPI/Min-Max family and an LOD) that were
+previously missing from the generated report.
+
 ### What is now auto-translated (measure-grain)
 
 - `IF` / nested `IF` / `ELSEIF` conditionals → `IF(...)`
@@ -118,10 +134,13 @@ These require context that does not exist in the prepare phase and remain
 python -m unittest discover -s scripts/tests -v
 ```
 
-- **33 tests pass.**
+- **39 tests pass.**
 - New `TestDaxExpression` covers each translation pattern plus all gating paths
   (parameter ref, non-base column, bare column, pure constant, string concat,
   unknown function, missing column set).
+- New `TestReconcile` + `TestMergePartialMeasures` cover the measure-loss guard
+  (missing-measure detection, normalized name matching, cross-channel accounting,
+  fact-table remap, agent-wins-on-clash).
 - The golden regression `TestGoldenMidnightCensus.test_map_dax_matches_committed_partial`
   still **byte-matches** the committed `Output/MidnightCensusDashboard/dax-partial.json`,
   confirming no existing pending field changed its translation or `reason`.
@@ -139,7 +158,7 @@ python -m unittest discover -s scripts/tests -v
 ## PR checklist
 
 - [x] New code is UTF-8, no BOM
-- [x] Full test suite green (33/33)
+- [x] Full test suite green (39/39)
 - [x] Golden byte-match preserved (Midnight Census)
 - [x] No public schema/contract changes
 - [ ] Unrelated `Output/NetfixWorkbook/*` and `__pycache__` artifacts excluded from the commit
