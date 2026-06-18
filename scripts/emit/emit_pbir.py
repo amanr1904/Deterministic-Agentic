@@ -2,8 +2,9 @@
 
 Consumes analysis.json (IR) + decisions.json and writes a complete
 {Model}.Report/ folder in enhanced PBIR folder format. Tableau zone coordinates
-are scaled to Power BI pixels; field bindings come from pbir_bind. Every
-visual.json root carries ONLY $schema/name/position/visual.
+are scaled to Power BI pixels; field bindings come from pbir_bind. Each
+visual.json root carries $schema/name/position/visual, plus an optional
+filterConfig when the visual is part of a Tableau show/hide toggle group.
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import sys
 from typing import Dict, List, Optional
 
@@ -156,13 +158,39 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
     write_json(os.path.join(page_dir, "page.json"),
                P.page_json(page_name, dashboard["name"], pw, ph))
     scale = (pw / COORD_SPACE, ph / COORD_SPACE)
+
+    # Tableau show/hide toggle groups: several worksheets stacked in the same spot
+    # whose visibility is driven by a parameter. In Power BI we overlay all members
+    # at the active member's rect and filter each by a flag measure so the slicer
+    # selection reveals exactly one. Member worksheets are emitted here, not in the
+    # normal zone loop (skipped below) and never suppressed as collapsed slivers.
+    overlays = decisions.get("visualOverlays", [])
+    overlay_members = {m["worksheet"] for ov in overlays for m in ov.get("members", [])}
+    zone_by_ws = {zn.get("worksheet"): zn for zn in dashboard.get("zones", [])}
+    entity = primary_entity(decisions)
+
     z = 100
     for zone in dashboard.get("zones", []):
+        if zone.get("type") == "viz" and zone.get("worksheet") in overlay_members:
+            continue  # emitted by the overlay pass below
         visual = build_visual(zone, ir, decisions, z, scale)
         if visual is None:
             continue
         write_json(os.path.join(page_dir, "visuals", visual["name"], "visual.json"), visual)
         z += 1
+
+    for ov in overlays:
+        pos_zone = zone_by_ws.get(ov.get("positionWorksheet"))
+        if pos_zone is None:
+            continue
+        for member in ov.get("members", []):
+            synth = dict(pos_zone, worksheet=member["worksheet"], type="viz")
+            visual = build_visual(synth, ir, decisions, z, scale)
+            if visual is None:
+                continue
+            visual["filterConfig"] = P.measure_filter_config(entity, member["filterMeasure"])
+            write_json(os.path.join(page_dir, "visuals", visual["name"], "visual.json"), visual)
+            z += 1
     return page_name
 
 
@@ -172,6 +200,11 @@ def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
     report_dir = os.path.join(base, f"{model_name}.Report")
     defin = os.path.join(report_dir, "definition")
     pages_dir = os.path.join(defin, "pages")
+    # Clear any pages from a previous run so renamed/renumbered visual folders do
+    # not linger as orphans (e.g. an unfiltered toggle visual left after enabling
+    # an overlay group). Regeneration must be deterministic.
+    if os.path.isdir(pages_dir):
+        shutil.rmtree(pages_dir)
     os.makedirs(pages_dir, exist_ok=True)
 
     pbir = dict(PBIR, datasetReference={"byPath": {"path": f"../{model_name}.SemanticModel"}})

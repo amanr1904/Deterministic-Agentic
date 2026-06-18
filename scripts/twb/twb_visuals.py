@@ -59,30 +59,120 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
             "categoryDateLevel": fields["categoryDateLevel"],
             "dimensions": fields["dimensions"], "values": fields["values"],
             "caption": _worksheet_caption(ws, calc_map, param_map),
+            "title": _worksheet_title(ws, calc_map, param_map),
+            "filters": _worksheet_filters(ws, calc_map),
+            "sort": _worksheet_sort(ws, calc_map),
+            "formatting": _worksheet_formatting(ws),
             "inferredVisualType": _infer_type(mark_class, rows, cols, encodings),
         })
     return sheets
 
 
-def _worksheet_caption(ws: ET.Element, calc_map: Dict, param_map: Dict) -> Optional[str]:
-    """Resolve a worksheet's dynamic <caption> to a static label skeleton.
+def _formatted_text_skeleton(node: Optional[ET.Element], calc_map: Dict,
+                             param_map: Dict) -> Optional[str]:
+    """Resolve a Tableau <formatted-text> block to a static label skeleton.
 
-    Tableau captions embed live field/parameter tokens (<[Parameters].[..]>,
-    <[ds].[none:Field:nk]>). PBIR textboxes cannot bind data, so we substitute
-    each token with '{Resolved Field}' to preserve the label structure.
+    Tableau title/caption runs embed live field/parameter tokens
+    (<[Parameters].[..]>, <[ds].[none:Field:nk]>). PBIR textboxes cannot bind
+    data, so each token becomes '{Resolved Field}' to preserve the label shape.
+    'Æ' is Tableau's soft line-break glyph in titles — collapse it to a space.
     """
-    cap = ws.find(".//layout-options/caption/formatted-text")
-    if cap is None:
+    if node is None:
         return None
     parts: List[str] = []
-    for run in cap.findall("run"):
+    for run in node.findall("run"):
         text = run.text or ""
         for tok in re.findall(r"<([^>]+)>", text):
             resolved = (F.resolve_param(tok, param_map)
                         if "Parameters" in tok else F.resolve_ref(tok, calc_map))
+            # Auto-generated calcs with no friendly caption resolve to their
+            # internal 'Calculation_<id>' name -> show a neutral '{value}' token.
+            if resolved and re.fullmatch(r"Calculation_\d+", resolved):
+                resolved = None
             text = text.replace(f"<{tok}>", f"{{{resolved or 'value'}}}")
         parts.append(text)
-    return X.clean_text("".join(parts)) or None
+    return X.clean_text("".join(parts).replace("\u00c6", " ")) or None
+
+
+def _worksheet_caption(ws: ET.Element, calc_map: Dict, param_map: Dict) -> Optional[str]:
+    """Resolve a worksheet's dynamic <caption> to a static label skeleton."""
+    return _formatted_text_skeleton(
+        ws.find(".//layout-options/caption/formatted-text"), calc_map, param_map)
+
+
+def _worksheet_title(ws: ET.Element, calc_map: Dict, param_map: Dict) -> Optional[str]:
+    """Resolve a worksheet's <title> (shown above the viz) to a label skeleton."""
+    return _formatted_text_skeleton(
+        ws.find(".//layout-options/title/formatted-text"), calc_map, param_map)
+
+
+def _worksheet_filters(ws: ET.Element, calc_map: Dict) -> List[str]:
+    """Return the fields that filter this worksheet (from <slices>).
+
+    Tableau lists every column applied as a filter to a sheet under <slices>.
+    Action-generated filters (cross-viz interactions) are captured separately in
+    actions[] and skipped here so this list reflects real user/data filters.
+    """
+    out: List[str] = []
+    seen = set()
+    for col in ws.findall(".//slices/column"):
+        ref = (col.text or "").strip()
+        if not ref or "Action (" in ref:
+            continue
+        field = F.resolve_ref(ref, calc_map)
+        # Skip Tableau internal pseudo-fields (':Measure Names', ':Measure
+        # Values') -- they are not real data filters in Power BI.
+        if field and not field.startswith(":") and field not in seen:
+            seen.add(field)
+            out.append(field)
+    return out
+
+
+def _worksheet_sort(ws: ET.Element, calc_map: Dict) -> Optional[Dict]:
+    """Return {field, direction} for an explicit field sort, else None."""
+    s = ws.find(".//sort")
+    if s is None:
+        return None
+    field = F.resolve_ref(X.attr(s, "column"), calc_map)
+    direction = (X.attr(s, "direction") or "").upper() or None
+    if not field:
+        return None
+    return {"field": field, "direction": direction}
+
+
+def _worksheet_formatting(ws: ET.Element) -> Optional[Dict]:
+    """Extract a compact formatting summary for the worksheet's visual.
+
+    Pulls the colour palette, gridline visibility, field-label visibility, and
+    mark stroke/label flags from Tableau <style-rule>/<format> blocks. Returns
+    None when the sheet carries no explicit formatting (honest empty, no guess).
+    """
+    fmt: Dict[str, object] = {
+        "colorPalette": None, "gridlines": None, "showFieldLabels": None,
+        "markStroke": None, "showMarkLabels": None,
+    }
+    palette = [c.text for c in ws.findall(".//table/style//color-palette/color") if c.text]
+    if palette:
+        fmt["colorPalette"] = palette
+    style = ws.find(".//table/style")
+    if style is not None:
+        for rule in style.findall("style-rule"):
+            elem = X.attr(rule, "element")
+            for f in rule.findall("format"):
+                attr, val = X.attr(f, "attr"), X.attr(f, "value")
+                if elem == "gridline" and attr == "line-visibility":
+                    fmt["gridlines"] = (val == "on")
+                elif elem == "worksheet" and attr == "display-field-labels":
+                    fmt["showFieldLabels"] = (val == "true")
+    for f in ws.findall(".//panes/pane/style//format"):
+        attr, val = X.attr(f, "attr"), X.attr(f, "value")
+        if attr == "stroke-color":
+            fmt["markStroke"] = val
+        elif attr == "mark-labels-show":
+            fmt["showMarkLabels"] = (val == "true")
+    if all(v is None for v in fmt.values()):
+        return None
+    return fmt
 
 
 def _primary_ds(ws: ET.Element) -> Optional[str]:
@@ -99,12 +189,22 @@ def _shelf_fields(ws: ET.Element, shelf: str) -> List[str]:
 
 
 def _encodings(pane: Optional[ET.Element]) -> Dict[str, Optional[str]]:
-    enc = {"color": None, "size": None, "text": None}
+    enc: Dict[str, Optional[str]] = {
+        "color": None, "size": None, "text": None,
+        "shape": None, "detail": None, "label": None,
+        "tooltip": None, "wedgeSize": None, "path": None,
+    }
     node = pane.find("encodings") if pane is not None else None
     if node is None:
         return enc
-    for key in ("color", "size", "text"):
-        child = node.find(key)
+    # Tableau tags map to IR encoding channels (wedge-size -> pie angle, lod -> detail)
+    tag_to_key = {
+        "color": "color", "size": "size", "text": "text",
+        "shape": "shape", "lod": "detail", "label": "label",
+        "tooltip": "tooltip", "wedge-size": "wedgeSize", "path": "path",
+    }
+    for tag, key in tag_to_key.items():
+        child = node.find(tag)
         if child is not None:
             enc[key] = X.strip_brackets(X.attr(child, "column"))
     return enc
@@ -139,9 +239,62 @@ def extract_dashboards(root: ET.Element, calc_map: Optional[Dict] = None,
             "name": X.attr(db, "name", ""),
             "size": {"w": X.int_attr(size, "maxwidth", 1366),
                      "h": X.int_attr(size, "maxheight", 768)},
+            "title": _formatted_text_skeleton(
+                db.find(".//layout-options/title/formatted-text"), calc_map, param_map),
+            "background": _dashboard_background(db),
             "zones": zones, "buttons": buttons,
         })
     return dashboards
+
+
+def _dashboard_background(db: ET.Element) -> Optional[str]:
+    """Return the dashboard background colour (#hex) if explicitly set."""
+    for f in db.findall(".//style//format"):
+        if X.attr(f, "attr") == "background-color":
+            val = X.attr(f, "value")
+            if val and val.startswith("#"):
+                return val
+    return None
+
+
+def extract_actions(root: ET.Element, calc_map: Optional[Dict] = None) -> List[Dict]:
+    """Return dashboard actions (filter / highlight / url) -> PBI interactions.
+
+    Tableau <action> elements drive cross-viz behaviour: filter actions become
+    Power BI cross-filtering, highlight actions become cross-highlighting, URL
+    actions become drillthrough/links. Each record names the source sheet and
+    target so the report layer can wire interactions deterministically.
+    """
+    calc_map = calc_map or {}
+    out: List[Dict] = []
+    seen = set()
+    for actions in root.iter("actions"):
+        for act in actions.findall("action"):
+            name = X.strip_brackets(X.attr(act, "caption") or X.attr(act, "name") or "")
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            cmd = act.find(".//command")
+            cmd_name = (X.attr(cmd, "command", "") or "").lower()
+            atype = ("filter" if "filter" in cmd_name else
+                     "highlight" if "highlight" in cmd_name else
+                     "url" if "url" in cmd_name else "other")
+            src = act.find("source")
+            target = None
+            if cmd is not None:
+                for p in cmd.findall("param"):
+                    if X.attr(p, "name") == "target":
+                        target = X.attr(p, "value")
+            activation = act.find("activation")
+            out.append({
+                "name": name,
+                "type": atype,
+                "sourceSheet": X.attr(src, "worksheet") if src is not None else None,
+                "sourceDashboard": X.attr(src, "dashboard") if src is not None else None,
+                "target": target,
+                "activation": X.attr(activation, "type") if activation is not None else None,
+            })
+    return out
 
 
 def _zones_and_buttons(db: ET.Element, ws_names: set, calc_map: Dict, param_map: Dict):

@@ -1,48 +1,105 @@
 {
-  "measures": [],
+  "measures": [
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Filter Adults/Peds",
+      "dax": "\"(All)\"",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Date Agg Level",
+      "dax": "\"Monthly\"",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "View",
+      "dax": "\"Bar Chart\"",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Start Date",
+      "dax": "DATE ( 2026, 1, 1 )",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "End Date",
+      "dax": "DATE ( 2026, 6, 9 )",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "User Defined Census Count",
+      "dax": "SWITCH (\n        SELECTEDVALUE ( 'Filter Adults/Peds'[Filter Adults/Peds], \"(All)\" ),\n        \"(All)\", SUM ( 'Midnight_Census_Template'[Census Count] ),\n        \"Adults\", SUM ( 'Midnight_Census_Template'[Census Count Adults] ),\n        \"Peds\", SUM ( 'Midnight_Census_Template'[Census Count Peds] )\n    )",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    }
+  ],
+  "calculatedColumns": [
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Default End Date",
+      "dax": "TODAY () - 1",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Date agg_Monthly",
+      "dax": "SWITCH (\n        SELECTEDVALUE ( 'Date Agg Level'[Date Agg Level], \"Monthly\" ),\n        \"Monthly\", \"Include\",\n        \"Exclude\"\n    )",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "View_BarChart",
+      "dax": "SWITCH (\n        SELECTEDVALUE ( 'View'[View], \"Bar Chart\" ),\n        \"Bar Chart\", \"Include\",\n        \"Exclude\"\n    )",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Census Date_CY",
+      "dax": "'Midnight_Census_Template'[Census Date]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "Date agg_Daily",
+      "dax": "SWITCH (\n        SELECTEDVALUE ( 'Date Agg Level'[Date Agg Level], \"Monthly\" ),\n        \"Daily\", \"Include\",\n        \"Exclude\"\n    )",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Midnight_Census_Template",
+      "name": "View_DataTable",
+      "dax": "SWITCH (\n        SELECTEDVALUE ( 'View'[View], \"Bar Chart\" ),\n        \"Data Table\", \"Include\",\n        \"Exclude\"\n    )",
+      "formatString": null,
+      "source": "template"
+    }
+  ],
   "pending": [
-    {
-      "caption": "Filter Adults/Peds",
-      "formula": "\"(All)\"",
-      "complexity": "trivial",
-      "suggestedDaxKind": "measure",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "Date Agg Level",
-      "formula": "\"Monthly\"",
-      "complexity": "trivial",
-      "suggestedDaxKind": "measure",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "View",
-      "formula": "\"Bar Chart\"",
-      "complexity": "trivial",
-      "suggestedDaxKind": "measure",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "Start Date",
-      "formula": "#2026-01-01#",
-      "complexity": "trivial",
-      "suggestedDaxKind": "measure",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "End Date",
-      "formula": "#2026-06-09#",
-      "complexity": "trivial",
-      "suggestedDaxKind": "measure",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "User Defined Census Count",
-      "formula": "CASE [Parameters].[End Date (copy)]\r\n    WHEN '(All)' THEN SUM([Census Count])\r\n    WHEN 'Adults' THEN SUM([Census Count Adults])\r\n    WHEN 'Peds' THEN SUM([Census Count Peds])\r\nEND",
-      "complexity": "trivial",
-      "suggestedDaxKind": "measure",
-      "reason": "complex-token"
-    },
     {
       "caption": "Date Range Filter",
       "formula": "[Census Date] >= [Parameters].[Parameter 3] AND [Census Date] <= [Parameters].[Start Date (copy)_305681891901829120]",
@@ -72,50 +129,8 @@
       "reason": "complex-token"
     },
     {
-      "caption": "Default End Date",
-      "formula": "TODAY()-1",
-      "complexity": "trivial",
-      "suggestedDaxKind": "column",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "Date agg_Monthly",
-      "formula": "CASE [Parameters].[Parameter 1]\r\n    WHEN 'Monthly' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
-      "complexity": "trivial",
-      "suggestedDaxKind": "column",
-      "reason": "complex-token"
-    },
-    {
       "caption": "Partial Months in View?",
       "formula": "IF DAY([Parameters].[Parameter 3]) != 1\r\n    OR DAY(DATEADD('day',1,[Parameters].[Start Date (copy)_305681891901829120])) != 1\r\nTHEN \"**Partial months are displayed in GRAY**\" ELSE \"\" END",
-      "complexity": "trivial",
-      "suggestedDaxKind": "column",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "View_BarChart",
-      "formula": "CASE [Parameters].[Parameter 2]\r\n    WHEN 'Bar Chart' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
-      "complexity": "trivial",
-      "suggestedDaxKind": "column",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "Census Date_CY",
-      "formula": "[Census Date]",
-      "complexity": "trivial",
-      "suggestedDaxKind": "column",
-      "reason": "non-measure"
-    },
-    {
-      "caption": "Date agg_Daily",
-      "formula": "CASE [Parameters].[Parameter 1]\r\n    WHEN 'Daily' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
-      "complexity": "trivial",
-      "suggestedDaxKind": "column",
-      "reason": "complex-token"
-    },
-    {
-      "caption": "View_DataTable",
-      "formula": "CASE [Parameters].[Parameter 2]\r\n    WHEN 'Data Table' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
       "complexity": "trivial",
       "suggestedDaxKind": "column",
       "reason": "complex-token"

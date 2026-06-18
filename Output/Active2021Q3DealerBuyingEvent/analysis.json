@@ -1,0 +1,3929 @@
+{
+  "irVersion": "1.0",
+  "workbook": {
+    "name": "(Active) 2021 Q3 Dealer Buying Event",
+    "pascalName": "Active2021Q3DealerBuyingEvent",
+    "sourcePath": "Data/Q3 Buyer/(Active) 2021 Q3 Dealer Buying Event.twb",
+    "version": "18.1",
+    "platform": ""
+  },
+  "dataSources": [
+    {
+      "name": "Sheet1 (Launch Data)",
+      "internalName": "federated.117jb1u1i0ngbn1ed54pj0xj96lf",
+      "connectionClass": "excel-direct",
+      "sourceType": "Excel",
+      "files": [
+        "C:/Users/jagerb/Desktop/Q3 Launch Data.xlsx"
+      ],
+      "server": "",
+      "database": null,
+      "schema": null,
+      "tables": [
+        "Sheet1$",
+        "Extract].[Extract"
+      ],
+      "active": true
+    }
+  ],
+  "columns": [
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Item Code",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 0
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Delivery Month",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 1
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Base Part Number",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 2
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Macro Area",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 3
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Sales Area",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 4
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Micro Area",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 5
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Year",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 6
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Month",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 7
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Date",
+      "caption": null,
+      "dataType": "date",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 8
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Sum of Quantity (Units)",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 9
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Sum of Extra Quantity (Units)",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 10
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Order Quantity",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 11
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Cost",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 12
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Dnet",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 13
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "MSRP",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 14
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Product Cost $",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 15
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Order $",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 16
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Order $ (MSRP)",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 17
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Margin $",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 18
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Style",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 19
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Style Code",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 20
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Style Description",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 21
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Reorder Type",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 22
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Garment Type",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 23
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Product Gender",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 24
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Product Category",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 25
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Product Family",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 26
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Product Sub-Family",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 27
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Collection",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 28
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Delivery Season",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 29
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Delivery Date",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 30
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Gender/Stature/Type",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 31
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Base Style",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 32
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": "Color",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 33
+    },
+    {
+      "datasource": "Sheet1 (Launch Data)",
+      "name": ":Measure Names",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": null
+    }
+  ],
+  "calculatedFields": [
+    {
+      "caption": "Rows Displayed",
+      "fieldName": "[Rank Sort Measure (copy)]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "10",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Rank Sort Measure",
+      "fieldName": "[Total Orders Parameter]",
+      "dataType": "string",
+      "role": "measure",
+      "formula": "\"Order $ (Decending)\"",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Base Part",
+      "fieldName": "[Base Part Number (copy)_1441996317229887488]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Base Part Number]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Rank",
+      "fieldName": "[Calculation1]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "RANK( SUM([Calculation_1141381037533011970]))",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Order $ (Percent of Total)",
+      "fieldName": "[Calculation2]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "SUM([Order $]) / TOTAL(SUM([Order $]))",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Calculation3",
+      "fieldName": "[Calculation3]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "SUM([Order $]) / TOTAL(SUM([Order $]))",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Master Style",
+      "fieldName": "[Calculation_107241981451685888]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "LEFT([Style Code],8)",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Style Count",
+      "fieldName": "[Calculation_1130403519024861186]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "CountD([Calculation_107241981451685888])",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Region",
+      "fieldName": "[Calculation_1141381037522870273]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "IF [Sales Area] = \"Canada\" THEN \"Canada\" ELSEIF \r\n[Sales Area] = \"United States of America\" THEN \"USA\" ELSE [Macro Area] END",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Measure for Rank",
+      "fieldName": "[Calculation_1141381037533011970]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "Case [Parameters].[Total Orders Parameter]\r\nWHEN \"Order $ (Accending)\" THEN -[Order $]\r\nWHEN \"Order Units (Accending)\" THEN -[Order Quantity]\r\nWHEN \"Order $ (Decending)\" THEN [Order $]\r\nWHEN \"Order Units (Decending)\" THEN [Order Quantity]\r\nEND",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Base Style Name",
+      "fieldName": "[Calculation_1163617556994338816]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Base Style]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Global",
+      "fieldName": "[Calculation_1216534858663731200]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "\"Global\"",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Delivery Season ",
+      "fieldName": "[Calculation_1441996317233557505]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Delivery Season]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Delivery Month ",
+      "fieldName": "[Calculation_1441996317233729538]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Delivery Month]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Rank Filter",
+      "fieldName": "[Calculation_154248294240215040]",
+      "dataType": "string",
+      "role": "measure",
+      "formula": "IF [Calculation1] <= [Parameters].[Rank Sort Measure (copy)] THEN \"Yes\" ELSE \"No\" END",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Order $ (U.S. Dealer Net)",
+      "fieldName": "[Order $ (At U.S. Dealer Net) (copy)_1441996317248622595]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "[Order $]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Category",
+      "fieldName": "[Product Category (copy)_717479722672918531]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Product Category]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Family",
+      "fieldName": "[Product Family (copy)_717479722672955396]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Product Family]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Gender",
+      "fieldName": "[Product Gender (copy)_717479722672988165]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Product Gender]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Sub-Family",
+      "fieldName": "[Product Sub-Family (copy)_717479722673156102]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Product Sub-Family]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Rank (Order $)",
+      "fieldName": "[Rank (copy)_717479722655850496]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "RANK( SUM([Order $]))",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure"
+    },
+    {
+      "caption": "Region ",
+      "fieldName": "[Region (copy)_717479722672566273]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "IF [Sales Area] = \"Canada\" THEN \"Canada\" ELSEIF \r\n[Sales Area] = \"United States of America\" THEN \"USA\" ELSE [Macro Area] END",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Sales Area ",
+      "fieldName": "[Sales Area (copy)_717479722672656386]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Sales Area]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Style Code ",
+      "fieldName": "[Style Code (copy)_717479722673266695]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Style Code]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    },
+    {
+      "caption": "Style Description ",
+      "fieldName": "[Style Description (copy)_717479722673373192]",
+      "dataType": "string",
+      "role": "dimension",
+      "formula": "[Style Description]",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "column"
+    }
+  ],
+  "parameters": [
+    {
+      "name": "Rows Displayed",
+      "internalName": "[Rank Sort Measure (copy)]",
+      "dataType": "integer",
+      "domainType": "list",
+      "default": "10",
+      "values": [
+        "5",
+        "10",
+        "20",
+        "50",
+        "10000"
+      ],
+      "range": null,
+      "format": null
+    },
+    {
+      "name": "Rank Sort Measure",
+      "internalName": "[Total Orders Parameter]",
+      "dataType": "string",
+      "domainType": "list",
+      "default": "\"Order $ (Decending)\"",
+      "values": [
+        "\"Order $ (Decending)\"",
+        "\"Order Units (Decending)\"",
+        "\"Order $ (Accending)\"",
+        "\"Order Units (Accending)\""
+      ],
+      "range": null,
+      "format": null
+    }
+  ],
+  "worksheets": [
+    {
+      "name": "Data",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Delivery Season:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1216534858663731200:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Garment Type:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender (copy)_717479722672988165:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category (copy)_717479722672918531:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Family (copy)_717479722672955396:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Sub-Family (copy)_717479722673156102:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1163617556994338816:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code (copy)_717479722673266695:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description (copy)_717479722673373192:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Color:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Collection:nk])))))))))))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Delivery Season",
+        "Global",
+        "Garment Type",
+        "Gender",
+        "Category",
+        "Family",
+        "Sub-Family",
+        "Base Style Name",
+        "Style Code ",
+        "Style Description ",
+        "Color",
+        "Collection"
+      ],
+      "values": [],
+      "caption": null,
+      "title": null,
+      "filters": [
+        "Delivery Season",
+        "Region ",
+        "Sales Area ",
+        "Garment Type",
+        "Gender",
+        "Category",
+        "Family",
+        "Sub-Family",
+        "Delivery Month",
+        "Style Description",
+        "Base Part",
+        "Base Style Name"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary ",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[sum:Order $:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": null,
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [],
+      "values": [],
+      "caption": null,
+      "title": "Order $ (USD)",
+      "filters": [],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": "card"
+    },
+    {
+      "name": "Launch Summary (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[sum:Order $:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": null,
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [],
+      "values": [],
+      "caption": null,
+      "title": "Order $ (USD)",
+      "filters": [
+        "Category",
+        "Garment Type",
+        "Gender"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": "card"
+    },
+    {
+      "name": "Launch Summary - Category",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Category"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Category",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Category  - 3",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Category"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Category (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Category"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Category",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Category - 1",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Category"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Category - 2",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Category"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Category - 4",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Category"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Color",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Color:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Color"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Category",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Delivery Season",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1441996317233557505:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Delivery Season "
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Delivery Season",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Delivery Season (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1441996317233557505:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Delivery Season "
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Delivery Season",
+      "filters": [
+        "Macro Area",
+        "Category",
+        "Garment Type",
+        "Gender"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Family",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Family:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Family"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Family",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Family (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Family:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Family"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Family",
+      "filters": [
+        "Macro Area",
+        "Category",
+        "Gender",
+        "Garment Type"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Garment Type",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Garment Type:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Garment Type"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Garment Type",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Garment Type - 1",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Garment Type:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Garment Type"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Garment Type - 2",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Garment Type:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Garment Type"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Garment Type - 3",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Garment Type:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Garment Type"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Garment Type - 4",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Garment Type:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Garment Type"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Garment Type Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Garment Type:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Garment Type"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Garment Type",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Gender",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Gender"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Gender",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Gender  - 3",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Gender"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Gender (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Gender"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Gender",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Gender - 1",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Gender"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Gender - 2",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Gender"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Gender - 4",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Product Gender"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - MacroArea",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1141381037522870273:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Region"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - MacroArea (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1141381037522870273:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Region"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Category",
+        "Garment Type",
+        "Gender"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - MacroArea - 1",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1141381037522870273:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Region"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - MacroArea - 2",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1141381037522870273:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Region"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - MacroArea - 3",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1141381037522870273:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Region"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - MacroArea - 4",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Calculation_1141381037522870273:nk"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Region"
+      ],
+      "values": [],
+      "caption": null,
+      "title": "Region",
+      "filters": [
+        "Macro Area",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Calculation1:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Delivery Season:nk]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Gender:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Product Category:nk])))))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description",
+        "Delivery Season",
+        "Product Gender",
+        "Product Category"
+      ],
+      "values": [
+        "Rank"
+      ],
+      "caption": null,
+      "title": "Styles",
+      "filters": [
+        "Macro Area",
+        "Rank Filter"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- All - 1",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "July 2021 Core - Top Styles - Global",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- All - 2",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Spring 2022 - Top Styles - Global",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- All - 3",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Summer 2022 - Top Styles - Global",
+      "filters": [
+        "Rank",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- All - 4",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Fall/Winter Chase - Top Styles - Global",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- Int - 1",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "July 2021 Core  - Top Styles - INT",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Delivery Season",
+        "Region"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- Int - 2",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Spring 2022 - Top Styles - INT",
+      "filters": [
+        "Rank",
+        "Region",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- Int - 3",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Summer 2022 - Top Styles - INT",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Region",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- Int - 4",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Fall/Winter Chase - Top Styles - INT",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Delivery Season",
+        "Region"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- US- 1",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "July 2021 Core  - Top Styles - US",
+      "filters": [
+        "Rank",
+        "Region",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- US- 2",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Spring 2022 - Top Styles - US",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Region",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- US- 3",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Summer 2022 - Top Styles - US",
+      "filters": [
+        "Macro Area",
+        "Rank",
+        "Region",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Launch Summary - Top Parts- US- 4",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Rank (copy)_717479722655850496:ok]",
+        "([federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Code:nk]",
+        "[federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Style Description:nk]))"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": "Rank (Order $)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Style Code",
+        "Style Description"
+      ],
+      "values": [
+        "Rank (Order $)"
+      ],
+      "caption": null,
+      "title": "Fall/Winter Chase  - Top Styles - US",
+      "filters": [
+        "Rank",
+        "Region",
+        "Delivery Season"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Sales by Date",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Area",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[cum:sum:Order $ (At U.S. Dealer Net) (copy)_1441996317248622595:qk:1"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[tdy:Date:qk"
+      ],
+      "encodings": {
+        "color": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Reorder Type:nk",
+        "size": null,
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "Date",
+      "valueField": "Order $ (U.S. Dealer Net)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "Date"
+      ],
+      "values": [
+        "Order $ (U.S. Dealer Net)"
+      ],
+      "caption": null,
+      "title": "Order $ by Date",
+      "filters": [
+        "Date"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": true,
+        "showFieldLabels": null,
+        "markStroke": "#666666",
+        "showMarkLabels": null
+      },
+      "inferredVisualType": "areaChart"
+    },
+    {
+      "name": "Sales by Date (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Area",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[cum:sum:Order $ (At U.S. Dealer Net) (copy)_1441996317248622595:qk:1"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[tdy:Date:qk"
+      ],
+      "encodings": {
+        "color": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[none:Reorder Type:nk",
+        "size": null,
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "Date",
+      "valueField": "Order $ (U.S. Dealer Net)",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "Date"
+      ],
+      "values": [
+        "Order $ (U.S. Dealer Net)"
+      ],
+      "caption": null,
+      "title": "Order $ by Date",
+      "filters": [
+        "Category",
+        "Garment Type",
+        "Gender"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": true,
+        "showFieldLabels": null,
+        "markStroke": "#666666",
+        "showMarkLabels": null
+      },
+      "inferredVisualType": "areaChart"
+    },
+    {
+      "name": "Sheet 48",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[tdy:Date:ok"
+      ],
+      "cols": [
+        "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[:Measure Names"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[Multiple Values",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": ":Measure Names",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        ":Measure Names",
+        "Date"
+      ],
+      "values": [],
+      "caption": null,
+      "title": null,
+      "filters": [],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": null
+    },
+    {
+      "name": "Style Count (Slide)",
+      "datasource": "Sheet1 (Launch Data)",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.117jb1u1i0ngbn1ed54pj0xj96lf].[usr:Calculation_1130403519024861186:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": null,
+      "valueField": "Style Count",
+      "categoryDateLevel": null,
+      "dimensions": [],
+      "values": [
+        "Style Count"
+      ],
+      "caption": null,
+      "title": "Style Count",
+      "filters": [
+        "Category",
+        "Garment Type",
+        "Gender"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
+      "inferredVisualType": "card"
+    }
+  ],
+  "dashboards": [
+    {
+      "name": "Data Detail",
+      "size": {
+        "w": 1500,
+        "h": 1100
+      },
+      "title": null,
+      "background": null,
+      "zones": [
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "*Data in this report was pulled out of SO99 on 9/14/2021 and represents Dealer Orders  through 9/11/2021. This data does not include DSS orders that have not been uploaded to SAP.\n*This report includes all styles from \"2021 July Core\", \"2022 Spring\", \"2022 Summer,  \"2021 Winter Chase\", and \"2021 Fall Chase\"  with Introduction Status  \"New\" in Flex PLM.\n* Order Quantity   represents orders placed by dealers at the regional DCs. This data does not account for Back Orders or Cancelations, thus they will still be included in the data.\n*Order $ (USD)  represents Order Quantity out of SO99 priced at U.S. Dealer Net pulled from SAP.",
+          "x": 37800,
+          "y": 727,
+          "w": 61667,
+          "h": 19091
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "Data Detail\nQ3 Event  2021 Launch Results\nUpdated Through 9/11/2021\nUtilize filters to narrow down data in table below.\nTo expand hierarchies click the plus sign in the headers.\nTo export data click a data cell in the table and then select, download, crosstab .",
+          "x": 533,
+          "y": 727,
+          "w": 37267,
+          "h": 19091
+        },
+        {
+          "type": "viz",
+          "worksheet": "Data",
+          "field": null,
+          "x": 533,
+          "y": 19818,
+          "w": 89334,
+          "h": 79455
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Region ",
+          "x": 89867,
+          "y": 19818,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Sales Area ",
+          "x": 89867,
+          "y": 25272,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Delivery Season",
+          "x": 89867,
+          "y": 30726,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Delivery Month",
+          "x": 89867,
+          "y": 36180,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Garment Type",
+          "x": 89867,
+          "y": 41634,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Gender",
+          "x": 89867,
+          "y": 47088,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Category",
+          "x": 89867,
+          "y": 52542,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Family",
+          "x": 89867,
+          "y": 57996,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Sub-Family",
+          "x": 89867,
+          "y": 63450,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Base Style Name",
+          "x": 89867,
+          "y": 68904,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Style Code ",
+          "x": 89867,
+          "y": 74358,
+          "w": 9600,
+          "h": 5454
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Base Part",
+          "x": 89867,
+          "y": 79812,
+          "w": 9600,
+          "h": 6727
+        },
+        {
+          "type": "filter",
+          "worksheet": "Data",
+          "field": "Style Description",
+          "x": 89867,
+          "y": 86539,
+          "w": 9600,
+          "h": 9000
+        }
+      ],
+      "buttons": []
+    },
+    {
+      "name": "Delivery Season Summary",
+      "size": {
+        "w": 2000,
+        "h": 1600
+      },
+      "title": null,
+      "background": null,
+      "zones": [
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - MacroArea - 1",
+          "field": null,
+          "x": 400,
+          "y": 13811,
+          "w": 24600,
+          "h": 8875
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - MacroArea - 3",
+          "field": null,
+          "x": 50000,
+          "y": 13811,
+          "w": 25000,
+          "h": 8875
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - MacroArea - 2",
+          "field": null,
+          "x": 25000,
+          "y": 13811,
+          "w": 25000,
+          "h": 8875
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Category - 1",
+          "field": null,
+          "x": 400,
+          "y": 34186,
+          "w": 24600,
+          "h": 10687
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Category - 2",
+          "field": null,
+          "x": 25000,
+          "y": 34186,
+          "w": 25000,
+          "h": 10687
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Category  - 3",
+          "field": null,
+          "x": 50000,
+          "y": 34186,
+          "w": 25000,
+          "h": 10687
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Garment Type - 1",
+          "field": null,
+          "x": 400,
+          "y": 22686,
+          "w": 24600,
+          "h": 5127
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Garment Type - 2",
+          "field": null,
+          "x": 25000,
+          "y": 22686,
+          "w": 25000,
+          "h": 5127
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Garment Type - 3",
+          "field": null,
+          "x": 50000,
+          "y": 22686,
+          "w": 25000,
+          "h": 5127
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Gender - 1",
+          "field": null,
+          "x": 400,
+          "y": 27813,
+          "w": 24600,
+          "h": 6373
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Gender - 2",
+          "field": null,
+          "x": 25000,
+          "y": 27813,
+          "w": 25000,
+          "h": 6373
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Gender  - 3",
+          "field": null,
+          "x": 50000,
+          "y": 27813,
+          "w": 25000,
+          "h": 6373
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "July Core 2021",
+          "x": 400,
+          "y": 10375,
+          "w": 24600,
+          "h": 3436
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "Spring 2022",
+          "x": 25000,
+          "y": 10375,
+          "w": 25000,
+          "h": 3436
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "Summer 2022",
+          "x": 50000,
+          "y": 10375,
+          "w": 25000,
+          "h": 3436
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "Delivery Season Summary\nQ3 Event  2021 Launch Results\nUpdated Through 9/11/2021",
+          "x": 400,
+          "y": 500,
+          "w": 32900,
+          "h": 9875
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- US- 1",
+          "field": null,
+          "x": 400,
+          "y": 44873,
+          "w": 24600,
+          "h": 18190
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- US- 2",
+          "field": null,
+          "x": 25000,
+          "y": 44873,
+          "w": 25000,
+          "h": 18190
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- US- 3",
+          "field": null,
+          "x": 50000,
+          "y": 44873,
+          "w": 25000,
+          "h": 18190
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- Int - 1",
+          "field": null,
+          "x": 400,
+          "y": 63063,
+          "w": 24600,
+          "h": 18248
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- Int - 2",
+          "field": null,
+          "x": 25000,
+          "y": 63063,
+          "w": 25000,
+          "h": 18248
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- Int - 3",
+          "field": null,
+          "x": 50000,
+          "y": 63063,
+          "w": 25000,
+          "h": 18248
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- All - 1",
+          "field": null,
+          "x": 400,
+          "y": 81311,
+          "w": 24600,
+          "h": 18189
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- All - 2",
+          "field": null,
+          "x": 25000,
+          "y": 81311,
+          "w": 25000,
+          "h": 18189
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- All - 3",
+          "field": null,
+          "x": 50000,
+          "y": 81311,
+          "w": 25000,
+          "h": 18189
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "*Data in this report was pulled out of SO99 on 9/14/2021 and represents Dealer Orders  through 9/11/2021. This data does not include DSS orders that have not been uploaded to SAP.\n*This report includes all styles from \"2021 July Core\", \"2022 Spring\", \"2022 Summer,  \"2021 Winter Chase\", and \"2021 Fall Chase\"  with Introduction Status  \"New\" in Flex PLM.\n* Order Quantity   represents orders placed by dealers at the regional DCs. This data does not account for Back Orders or Cancelations, thus they will still be included in the data.\n*Order $ (USD)  represents Order Quantity out of SO99 priced at U.S. Dealer Net pulled from SAP.",
+          "x": 33300,
+          "y": 500,
+          "w": 66300,
+          "h": 9875
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - MacroArea - 4",
+          "field": null,
+          "x": 75000,
+          "y": 13811,
+          "w": 24600,
+          "h": 8875
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Garment Type - 4",
+          "field": null,
+          "x": 75000,
+          "y": 22686,
+          "w": 24600,
+          "h": 5127
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Gender - 4",
+          "field": null,
+          "x": 75000,
+          "y": 27813,
+          "w": 24600,
+          "h": 6373
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Category - 4",
+          "field": null,
+          "x": 75000,
+          "y": 34186,
+          "w": 24600,
+          "h": 10687
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- US- 4",
+          "field": null,
+          "x": 75000,
+          "y": 44873,
+          "w": 24600,
+          "h": 18190
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- Int - 4",
+          "field": null,
+          "x": 75000,
+          "y": 63063,
+          "w": 24600,
+          "h": 18248
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts- All - 4",
+          "field": null,
+          "x": 75000,
+          "y": 81311,
+          "w": 24600,
+          "h": 18189
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "Fall/Winter Chase",
+          "x": 75000,
+          "y": 10375,
+          "w": 24600,
+          "h": 3436
+        }
+      ],
+      "buttons": []
+    },
+    {
+      "name": "Launch Report Dashboard",
+      "size": {
+        "w": 1500,
+        "h": 1100
+      },
+      "title": null,
+      "background": null,
+      "zones": [
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - MacroArea",
+          "field": null,
+          "x": 533,
+          "y": 54718,
+          "w": 34734,
+          "h": 17072
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Top Parts",
+          "field": null,
+          "x": 533,
+          "y": 71790,
+          "w": 85395,
+          "h": 27483
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Gender",
+          "field": null,
+          "x": 35267,
+          "y": 43727,
+          "w": 31466,
+          "h": 12091
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Category",
+          "field": null,
+          "x": 35267,
+          "y": 55818,
+          "w": 31466,
+          "h": 15972
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Family",
+          "field": null,
+          "x": 66733,
+          "y": 17818,
+          "w": 32734,
+          "h": 53972
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Delivery Season",
+          "field": null,
+          "x": 35267,
+          "y": 17818,
+          "w": 31466,
+          "h": 15113
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Garment Type",
+          "field": null,
+          "x": 35267,
+          "y": 32931,
+          "w": 31466,
+          "h": 10796
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary ",
+          "field": null,
+          "x": 12000,
+          "y": 17818,
+          "w": 10667,
+          "h": 7556
+        },
+        {
+          "type": "paramctrl",
+          "worksheet": null,
+          "field": "Rank Sort Measure",
+          "x": 85928,
+          "y": 82497,
+          "w": 13539,
+          "h": 5897
+        },
+        {
+          "type": "paramctrl",
+          "worksheet": null,
+          "field": "Rows Displayed",
+          "x": 85928,
+          "y": 75586,
+          "w": 13539,
+          "h": 6911
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "Order $ (USD)",
+          "x": 533,
+          "y": 17818,
+          "w": 11467,
+          "h": 7556
+        },
+        {
+          "type": "viz",
+          "worksheet": "Sales by Date",
+          "field": null,
+          "x": 533,
+          "y": 25374,
+          "w": 34734,
+          "h": 25614
+        },
+        {
+          "type": "viz",
+          "worksheet": "Sales by Date",
+          "field": null,
+          "x": 19267,
+          "y": 50988,
+          "w": 16000,
+          "h": 3730
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "*Data in this report was pulled out of SO99 on 9/14/2021 and represents Dealer Orders  through 9/11/2021. This data does not include DSS orders that have not been uploaded to SAP.\n*This report includes all styles from \"2021 July Core\", \"2022 Spring\", \"2022 Summer,  \"2021 Winter Chase\", and \"2021 Fall Chase\"  with Introduction Status  \"New\" in Flex PLM.\n* Order Quantity   represents orders placed by dealers at the regional DCs. This data does not account for Back Orders or Cancelations, thus they will still be included in the data.\n*Order $ (USD)  represents Order Quantity out of SO99 priced at U.S. Dealer Net pulled from SAP.",
+          "x": 37600,
+          "y": 727,
+          "w": 61867,
+          "h": 17091
+        },
+        {
+          "type": "text",
+          "worksheet": null,
+          "field": null,
+          "text": "Launch Dashboard\nQ3 Event  2021 Launch Results\nUpdated Through 9/11/2021\nTables work as filters. Clicking on cells or headers within the tables will cause the other tables to filter and update accordingly.\nUtilze the filters in the bottom right to filter and sort the style list.",
+          "x": 533,
+          "y": 727,
+          "w": 37067,
+          "h": 17091
+        }
+      ],
+      "buttons": []
+    },
+    {
+      "name": "Slide View 1",
+      "size": {
+        "w": 1400,
+        "h": 800
+      },
+      "title": null,
+      "background": null,
+      "zones": [
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - MacroArea (Slide)",
+          "field": null,
+          "x": 67713,
+          "y": 16500,
+          "w": 31145,
+          "h": 23375
+        },
+        {
+          "type": "viz",
+          "worksheet": "Sales by Date (Slide)",
+          "field": null,
+          "x": 1142,
+          "y": 2000,
+          "w": 66571,
+          "h": 86875
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary (Slide)",
+          "field": null,
+          "x": 67713,
+          "y": 2000,
+          "w": 11644,
+          "h": 10500
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Category (Slide)",
+          "field": null,
+          "x": 67713,
+          "y": 58125,
+          "w": 31145,
+          "h": 30750
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Delivery Season (Slide)",
+          "field": null,
+          "x": 67713,
+          "y": 39875,
+          "w": 31145,
+          "h": 18250
+        },
+        {
+          "type": "viz",
+          "worksheet": "Style Count (Slide)",
+          "field": null,
+          "x": 79357,
+          "y": 2000,
+          "w": 9120,
+          "h": 10500
+        }
+      ],
+      "buttons": []
+    },
+    {
+      "name": "Slide View 2",
+      "size": {
+        "w": 1400,
+        "h": 800
+      },
+      "title": null,
+      "background": null,
+      "zones": [
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - MacroArea (Slide)",
+          "field": null,
+          "x": 67711,
+          "y": 22873,
+          "w": 31147,
+          "h": 22251
+        },
+        {
+          "type": "viz",
+          "worksheet": "Sales by Date (Slide)",
+          "field": null,
+          "x": 1142,
+          "y": 11374,
+          "w": 66569,
+          "h": 86626
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Delivery Season (Slide)",
+          "field": null,
+          "x": 67711,
+          "y": 45124,
+          "w": 31147,
+          "h": 19501
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary (Slide)",
+          "field": null,
+          "x": 67711,
+          "y": 11374,
+          "w": 10860,
+          "h": 11499
+        },
+        {
+          "type": "viz",
+          "worksheet": "Launch Summary - Family (Slide)",
+          "field": null,
+          "x": 67711,
+          "y": 64625,
+          "w": 31147,
+          "h": 33375
+        },
+        {
+          "type": "filter",
+          "worksheet": "Launch Summary - Family (Slide)",
+          "field": "Category",
+          "x": 1142,
+          "y": 2000,
+          "w": 11143,
+          "h": 9374
+        },
+        {
+          "type": "filter",
+          "worksheet": "Launch Summary - Family (Slide)",
+          "field": "Gender",
+          "x": 23142,
+          "y": 2000,
+          "w": 13143,
+          "h": 9374
+        },
+        {
+          "type": "filter",
+          "worksheet": "Launch Summary - Family (Slide)",
+          "field": "Garment Type",
+          "x": 12285,
+          "y": 2000,
+          "w": 10857,
+          "h": 9374
+        },
+        {
+          "type": "viz",
+          "worksheet": "Style Count (Slide)",
+          "field": null,
+          "x": 78571,
+          "y": 11374,
+          "w": 8929,
+          "h": 11499
+        },
+        {
+          "type": "viz",
+          "worksheet": "Sales by Date (Slide)",
+          "field": null,
+          "x": 35714,
+          "y": 13125,
+          "w": 17286,
+          "h": 3500
+        }
+      ],
+      "buttons": []
+    }
+  ],
+  "actions": [
+    {
+      "name": "Delivery Season",
+      "type": "filter",
+      "sourceSheet": "Launch Summary - Delivery Season",
+      "sourceDashboard": "Launch Report Dashboard",
+      "target": "Launch Report Dashboard",
+      "activation": "on-select"
+    },
+    {
+      "name": "Region",
+      "type": "filter",
+      "sourceSheet": "Launch Summary - MacroArea",
+      "sourceDashboard": "Launch Report Dashboard",
+      "target": "Launch Report Dashboard",
+      "activation": "on-select"
+    },
+    {
+      "name": "Gender",
+      "type": "filter",
+      "sourceSheet": "Launch Summary - Gender",
+      "sourceDashboard": "Launch Report Dashboard",
+      "target": "Launch Report Dashboard",
+      "activation": "on-select"
+    },
+    {
+      "name": "Garment Type",
+      "type": "filter",
+      "sourceSheet": "Launch Summary - Garment Type",
+      "sourceDashboard": "Launch Report Dashboard",
+      "target": "Launch Report Dashboard",
+      "activation": "on-select"
+    },
+    {
+      "name": "Category",
+      "type": "filter",
+      "sourceSheet": "Launch Summary - Category",
+      "sourceDashboard": "Launch Report Dashboard",
+      "target": "Launch Report Dashboard",
+      "activation": "on-select"
+    },
+    {
+      "name": "Family",
+      "type": "filter",
+      "sourceSheet": "Launch Summary - Family",
+      "sourceDashboard": "Launch Report Dashboard",
+      "target": "Launch Report Dashboard",
+      "activation": "on-select"
+    },
+    {
+      "name": "Filter1",
+      "type": "filter",
+      "sourceSheet": "Sales by Date",
+      "sourceDashboard": "Launch Report Dashboard",
+      "target": "Launch Report Dashboard",
+      "activation": "on-select"
+    }
+  ],
+  "physicalTables": [
+    {
+      "name": "Sheet1",
+      "columns": [
+        "Item Code",
+        "Delivery Month",
+        "Base Part Number",
+        "Macro Area",
+        "Sales Area",
+        "Micro Area",
+        "Year",
+        "Month",
+        "Date",
+        "Sum of Quantity (Units)",
+        "Sum of Extra Quantity (Units)",
+        "Order Quantity",
+        "Cost",
+        "Dnet",
+        "MSRP",
+        "Product Cost $",
+        "Order $",
+        "Order $ (MSRP)",
+        "Margin $",
+        "Style",
+        "Style Code",
+        "Style Description",
+        "Reorder Type",
+        "Garment Type",
+        "Product Gender",
+        "Product Category",
+        "Product Family",
+        "Product Sub-Family",
+        "Collection",
+        "Delivery Season",
+        "Delivery Date",
+        "Gender/Stature/Type",
+        "Base Style",
+        "Color"
+      ]
+    }
+  ],
+  "columnTableMap": {},
+  "relationships": [],
+  "hierarchies": [
+    {
+      "name": "Delivery",
+      "datasource": "Sheet1 (Launch Data)",
+      "levels": [
+        "Delivery Season",
+        "Delivery Month"
+      ]
+    },
+    {
+      "name": "Geo",
+      "datasource": "Sheet1 (Launch Data)",
+      "levels": [
+        "Calculation_1216534858663731200",
+        "Region (copy)_717479722672566273",
+        "Sales Area (copy)_717479722672656386"
+      ]
+    },
+    {
+      "name": "Product",
+      "datasource": "Sheet1 (Launch Data)",
+      "levels": [
+        "Product Gender (copy)_717479722672988165",
+        "Product Category (copy)_717479722672918531",
+        "Product Family (copy)_717479722672955396",
+        "Product Sub-Family (copy)_717479722673156102",
+        "Calculation_1163617556994338816",
+        "Style Code (copy)_717479722673266695",
+        "Style Description (copy)_717479722673373192"
+      ]
+    }
+  ],
+  "sets": [],
+  "groups": [],
+  "bins": [],
+  "theme": {
+    "fontFamily": null,
+    "titleFontSize": null,
+    "worksheetFontSize": null,
+    "formatRules": null,
+    "markColors": [
+      "#4e79a7",
+      "#f28e2b"
+    ]
+  },
+  "blending": {
+    "blended": false,
+    "datasources": [
+      "Sheet1 (Launch Data)"
+    ]
+  },
+  "rls": {
+    "detected": false,
+    "type": null,
+    "securedTable": null,
+    "mappingTable": null,
+    "userColumn": null,
+    "signalField": null
+  }
+}

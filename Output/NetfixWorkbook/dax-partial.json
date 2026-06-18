@@ -1,0 +1,15 @@
+{
+  "measures": [
+    {
+      "table": "netflix_titles",
+      "name": "Year",
+      "dax": "DATE ( 2024, 3, 26 )",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    }
+  ],
+  "calculatedColumns": [],
+  "pending": []
+}

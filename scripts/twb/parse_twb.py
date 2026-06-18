@@ -21,6 +21,7 @@ import twb_xml as X  # noqa: E402
 import twb_datasources as DS  # noqa: E402
 import twb_visuals as V  # noqa: E402
 import twb_fields as F  # noqa: E402
+import twb_meta as M  # noqa: E402
 
 IR_VERSION = "1.0"
 
@@ -53,24 +54,42 @@ def build_ir(twb_path: str) -> Dict:
         "parameters": parameters,
         "worksheets": V.extract_worksheets(root, calc_map, measures, param_map),
         "dashboards": V.extract_dashboards(root, calc_map, param_map),
+        "actions": V.extract_actions(root, calc_map),
+        "physicalTables": M.extract_physical_tables(root),
+        "columnTableMap": M.extract_column_table_map(root),
+        "relationships": M.extract_relationships(root),
+        "hierarchies": M.extract_hierarchies(root),
         "sets": _extract_sets(root),
-        "groups": [],
-        "bins": [],
+        "groups": M.extract_groups(root),
+        "bins": M.extract_bins(root),
+        "theme": M.extract_theme(root),
         "blending": _detect_blending(root),
         "rls": _detect_rls(root),
     }
 
 
 def _extract_sets(root) -> list:
-    """Lightweight set extraction (name + source field)."""
+    """Lightweight set extraction (name + source field + members)."""
     sets = []
+    seen = set()
     for grp in root.iter("group"):
         name = X.attr(grp, "name", "")
-        if name.endswith(" Set]") or "Set]" in name:
-            sets.append({
-                "name": X.strip_brackets(name),
-                "sourceField": X.strip_brackets(X.attr(grp, "name-style")),
-            })
+        if X.attr(grp, "hidden") == "true" or grp.get("user:auto-column"):
+            continue
+        if "Set]" not in name:
+            continue
+        clean = X.strip_brackets(name)
+        if clean in seen:
+            continue
+        seen.add(clean)
+        members = [X.strip_brackets(X.attr(m, "member"))
+                   for m in grp.iter("groupfilter")
+                   if X.attr(m, "function") == "member"]
+        sets.append({
+            "name": clean,
+            "sourceField": clean.split("(")[0].strip() or None,
+            "members": [m for m in members if m] or None,
+        })
     return sets
 
 
@@ -94,9 +113,10 @@ def _detect_rls(root) -> Dict:
             return {
                 "detected": True, "type": rtype,
                 "securedTable": None, "mappingTable": None, "userColumn": None,
+                "signalField": field["caption"],
             }
     return {"detected": False, "type": None, "securedTable": None,
-            "mappingTable": None, "userColumn": None}
+            "mappingTable": None, "userColumn": None, "signalField": None}
 
 
 def resolve_output_dir(ir: Dict, output_root: str) -> str:
@@ -125,6 +145,10 @@ def _summary(ir: Dict) -> str:
         f"  worksheets     : {len(ir['worksheets'])} "
         f"({sum(1 for w in ir['worksheets'] if w['inferredVisualType'] is None)} ambiguous)\n"
         f"  dashboards     : {len(ir['dashboards'])}\n"
+        f"  physTables     : {len(ir['physicalTables'])}\n"
+        f"  relationships  : {len(ir['relationships'])}\n"
+        f"  hierarchies    : {len(ir['hierarchies'])}\n"
+        f"  groups/bins    : {len(ir['groups'])}/{len(ir['bins'])}\n"
         f"  RLS detected   : {ir['rls']['detected']}"
     )
 

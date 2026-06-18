@@ -7,6 +7,7 @@ boolean values use the Literal expression wrapper Power BI Desktop requires.
 """
 from __future__ import annotations
 
+import hashlib
 from typing import Dict, List, Optional
 
 VC_SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json"
@@ -31,6 +32,36 @@ def color(hex_value: str) -> Dict:
 def position(x: int, y: int, w: int, h: int, z: int) -> Dict:
     """Standard visual position block."""
     return {"x": x, "y": y, "z": z, "height": h, "width": w, "tabOrder": z}
+
+
+def measure_filter_config(entity: str, measure: str, value: int = 1) -> Dict:
+    """visual.json filterConfig that shows the visual only when measure == value.
+
+    Reproduces a Tableau show/hide toggle: each overlapping visual is filtered by
+    a flag measure that returns 1 only for its parameter combination, so exactly
+    one of the stacked visuals renders for the current slicer selection.
+    """
+    fid = "Filter" + hashlib.sha1(f"{entity}|{measure}".encode("utf-8")).hexdigest()[:20]
+    return {"filters": [{
+        "name": fid,
+        "field": {"Measure": {
+            "Expression": {"SourceRef": {"Entity": entity}}, "Property": measure}},
+        "type": "Advanced",
+        "filter": {
+            "Version": 2,
+            "From": [{"Name": "m", "Entity": entity, "Type": 0}],
+            "Where": [{"Condition": {"Comparison": {
+                "ComparisonKind": 0,
+                "Left": {"Measure": {
+                    "Expression": {"SourceRef": {"Source": "m"}}, "Property": measure}},
+                "Right": {"Literal": {"Value": f"{value}L"}},
+            }}}],
+        },
+        "howCreated": "User",
+        "objects": {},
+        "isHiddenInViewMode": True,
+        "isLockedInViewMode": True,
+    }]}
 
 
 def projection(entity: str, prop: str, active: bool = True) -> Dict:

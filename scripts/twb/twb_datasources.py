@@ -176,5 +176,19 @@ def extract_parameters(root: ET.Element) -> List[Dict]:
                 "domainType": X.attr(col, "param-domain-type", "any"),
                 "default": X.attr(col, "value"),
                 "values": [v for v in members if v],
+                "range": _param_range(col),
+                "format": X.attr(col, "default-format") or _format_string(col),
             })
     return params
+
+
+def _param_range(col: ET.Element) -> Optional[Dict]:
+    """Return {min,max,granularity} for range parameters (What-If in Power BI)."""
+    rng = col.find("range")
+    if rng is None:
+        return None
+    return {
+        "min": X.attr(rng, "min"),
+        "max": X.attr(rng, "max"),
+        "granularity": X.attr(rng, "granularity"),
+    }

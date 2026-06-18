@@ -81,7 +81,17 @@
           "dataType": { "type": "string" },
           "domainType": { "type": "string", "enum": ["list", "range", "any"] },
           "default": { "type": ["string", "null"] },
-          "values": { "type": "array", "items": { "type": "string" } }
+          "values": { "type": "array", "items": { "type": "string" } },
+          "range": {
+            "type": ["object", "null"],
+            "description": "min/max/granularity for range params (Power BI What-If)",
+            "properties": {
+              "min": { "type": ["string", "null"] },
+              "max": { "type": ["string", "null"] },
+              "granularity": { "type": ["string", "null"] }
+            }
+          },
+          "format": { "type": ["string", "null"], "description": "verbatim Tableau default-format string" }
         }
       }
     },
@@ -98,13 +108,42 @@
           "cols": { "type": "array", "items": { "type": "string" } },
           "encodings": {
             "type": "object",
+            "description": "Tableau mark encoding channels mapped to fields (null when unused)",
             "properties": {
               "color": { "type": ["string", "null"] },
               "size": { "type": ["string", "null"] },
-              "text": { "type": ["string", "null"] }
+              "text": { "type": ["string", "null"] },
+              "shape": { "type": ["string", "null"] },
+              "detail": { "type": ["string", "null"], "description": "Tableau LOD/detail channel" },
+              "label": { "type": ["string", "null"] },
+              "tooltip": { "type": ["string", "null"] },
+              "wedgeSize": { "type": ["string", "null"], "description": "pie angle channel" },
+              "path": { "type": ["string", "null"] }
             }
           },
-          "inferredVisualType": { "type": ["string", "null"], "description": "null => ambiguous, route to LLM" }
+          "inferredVisualType": { "type": ["string", "null"], "description": "null => ambiguous, route to LLM" },
+          "caption": { "type": ["string", "null"], "description": "Sheet caption label skeleton; field/param tokens shown as {Resolved Field}" },
+          "title": { "type": ["string", "null"], "description": "Sheet title (above the viz) label skeleton; dynamic value tokens shown as {value}" },
+          "filters": { "type": "array", "items": { "type": "string" }, "description": "Fields filtering this sheet (from <slices>); action-generated and internal :pseudo fields excluded" },
+          "sort": {
+            "type": ["object", "null"],
+            "description": "Explicit field sort applied to the sheet, else null",
+            "properties": {
+              "field": { "type": "string" },
+              "direction": { "type": ["string", "null"], "description": "ASC | DESC" }
+            }
+          },
+          "formatting": {
+            "type": ["object", "null"],
+            "description": "Compact visual formatting summary; null when the sheet carries no explicit formatting",
+            "properties": {
+              "colorPalette": { "type": ["array", "null"], "items": { "type": "string" }, "description": "Ordered #hex mark colours" },
+              "gridlines": { "type": ["boolean", "null"] },
+              "showFieldLabels": { "type": ["boolean", "null"] },
+              "markStroke": { "type": ["string", "null"], "description": "#hex mark border colour" },
+              "showMarkLabels": { "type": ["boolean", "null"] }
+            }
+          }
         }
       }
     },
@@ -119,6 +158,8 @@
             "type": "object",
             "properties": { "w": { "type": "integer" }, "h": { "type": "integer" } }
           },
+          "title": { "type": ["string", "null"], "description": "Dashboard title label skeleton, else null" },
+          "background": { "type": ["string", "null"], "description": "Dashboard background #hex colour, else null" },
           "zones": {
             "type": "array",
             "items": {
@@ -147,9 +188,79 @@
         }
       }
     },
+    "actions": {
+      "type": "array",
+      "description": "Tableau dashboard actions -> Power BI interactions (filter/highlight/url)",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["filter", "highlight", "url", "other"] },
+          "sourceSheet": { "type": ["string", "null"] },
+          "sourceDashboard": { "type": ["string", "null"] },
+          "target": { "type": ["string", "null"] },
+          "activation": { "type": ["string", "null"], "description": "on-select | on-hover | on-menu" }
+        }
+      }
+    },
+    "physicalTables": {
+      "type": "array",
+      "description": "Distinct physical source tables/relations with their column lists (drives fact/dimension assignment)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "columns": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "columnTableMap": {
+      "type": "object",
+      "description": "Logical column name -> owning physical table (from <cols><map>)",
+      "additionalProperties": { "type": "string" }
+    },
+    "relationships": {
+      "type": "array",
+      "description": "Tableau object-graph physical joins; primary input for Power BI star-schema relationships",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fromTable": { "type": "string" },
+          "toTable": { "type": "string" },
+          "fromColumn": { "type": "string" },
+          "toColumn": { "type": "string" },
+          "operator": { "type": "string" },
+          "toSideUnique": { "type": "boolean", "description": "true => toTable is the 'one' (dimension) side" }
+        }
+      }
+    },
+    "hierarchies": {
+      "type": "array",
+      "description": "Tableau drill paths -> Power BI hierarchies",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "datasource": { "type": ["string", "null"] },
+          "levels": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
     "sets": { "type": "array", "items": { "type": "object" } },
     "groups": { "type": "array", "items": { "type": "object" } },
     "bins": { "type": "array", "items": { "type": "object" } },
+    "theme": {
+      "type": ["object", "null"],
+      "description": "Workbook fonts + mark colour palette for the report theme",
+      "properties": {
+        "fontFamily": { "type": ["string", "null"] },
+        "titleFontSize": { "type": ["string", "null"] },
+        "worksheetFontSize": { "type": ["string", "null"] },
+        "formatRules": { "type": ["object", "null"] },
+        "markColors": { "type": ["array", "null"], "items": { "type": "string" } }
+      }
+    },
     "blending": { "type": ["object", "null"] },
     "rls": {
       "type": "object",
@@ -159,7 +270,8 @@
         "type": { "type": ["string", "null"], "enum": ["Dynamic", "Static", "Group-based", null] },
         "securedTable": { "type": ["string", "null"] },
         "mappingTable": { "type": ["string", "null"] },
-        "userColumn": { "type": ["string", "null"] }
+        "userColumn": { "type": ["string", "null"] },
+        "signalField": { "type": ["string", "null"], "description": "calc field whose formula triggered RLS detection" }
       }
     }
   }

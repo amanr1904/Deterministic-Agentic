@@ -336,7 +336,9 @@
         "\"(All)\"",
         "\"Adults\"",
         "\"Peds\""
-      ]
+      ],
+      "range": null,
+      "format": null
     },
     {
       "name": "Date Agg Level",
@@ -347,7 +349,9 @@
       "values": [
         "\"Monthly\"",
         "\"Daily\""
-      ]
+      ],
+      "range": null,
+      "format": null
     },
     {
       "name": "View",
@@ -358,7 +362,9 @@
       "values": [
         "\"Bar Chart\"",
         "\"Data Table\""
-      ]
+      ],
+      "range": null,
+      "format": null
     },
     {
       "name": "Start Date",
@@ -366,7 +372,13 @@
       "dataType": "date",
       "domainType": "range",
       "default": "#2026-01-01#",
-      "values": []
+      "values": [],
+      "range": {
+        "min": "#2021-01-01#",
+        "max": null,
+        "granularity": null
+      },
+      "format": "*m/d/yyyy"
     },
     {
       "name": "End Date",
@@ -374,7 +386,9 @@
       "dataType": "date",
       "domainType": "range",
       "default": "#2026-06-09#",
-      "values": []
+      "values": [],
+      "range": null,
+      "format": "*m/d/yyyy"
     }
   ],
   "worksheets": [
@@ -393,7 +407,13 @@
       "encodings": {
         "color": null,
         "size": null,
-        "text": null
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": "Census Date",
       "valueField": "User Defined Census Count",
@@ -405,6 +425,24 @@
         "User Defined Census Count"
       ],
       "caption": null,
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "Date agg_Daily",
+        "View_BarChart"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
       "inferredVisualType": "barChart"
     },
     {
@@ -422,7 +460,13 @@
       "encodings": {
         "color": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952300421124:ok",
         "size": null,
-        "text": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952297496576:qk"
+        "text": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952297496576:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": "Census Date",
       "valueField": "Start Month Contains Partial Data?",
@@ -437,6 +481,24 @@
         "User Defined Census Count"
       ],
       "caption": null,
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "Date agg_Daily",
+        "View_DataTable"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
       "inferredVisualType": "tableEx"
     },
     {
@@ -448,7 +510,13 @@
       "encodings": {
         "color": null,
         "size": null,
-        "text": null
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": null,
       "valueField": null,
@@ -456,6 +524,16 @@
       "dimensions": [],
       "values": [],
       "caption": null,
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
+      "sort": null,
+      "formatting": null,
       "inferredVisualType": "card"
     },
     {
@@ -470,7 +548,13 @@
       "encodings": {
         "color": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952300421124:ok",
         "size": null,
-        "text": null
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": "Census Date",
       "valueField": "Start Month Contains Partial Data?",
@@ -482,6 +566,23 @@
         "Start Month Contains Partial Data?"
       ],
       "caption": "Filter(s) Applied: Date Range: {Start Date}-{End Date}; Parent Hospital(s): {Parent Hospital}; Hospital(s): {Hospital}; Unit(s): {Unit}; Patient Class: {Patient Class}; Filter Adults/Peds: {Filter Adults/Peds}",
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "View_BarChart"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
       "inferredVisualType": "barChart"
     },
     {
@@ -493,7 +594,13 @@
       "encodings": {
         "color": null,
         "size": null,
-        "text": null
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": null,
       "valueField": null,
@@ -501,6 +608,16 @@
       "dimensions": [],
       "values": [],
       "caption": null,
+      "title": "{Sheet Name}\n{Data Update Time}\nRefreshes Daily (2:00 AM)",
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
+      "sort": null,
+      "formatting": null,
       "inferredVisualType": "card"
     },
     {
@@ -517,7 +634,13 @@
       "encodings": {
         "color": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952300421124:ok",
         "size": null,
-        "text": null
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": "Census Date",
       "valueField": "User Defined Census Count",
@@ -530,6 +653,24 @@
         "Start Month Contains Partial Data?"
       ],
       "caption": null,
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "Date agg_Monthly",
+        "View_BarChart"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
       "inferredVisualType": "barChart"
     },
     {
@@ -548,7 +689,13 @@
       "encodings": {
         "color": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952300421124:ok",
         "size": null,
-        "text": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952297496576:qk"
+        "text": "federated.09go31s1b3pn2k1ezewf3027s71v].[usr:Calculation_2234066952297496576:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": "Census Date",
       "valueField": "Start Month Contains Partial Data?",
@@ -564,6 +711,24 @@
         "User Defined Census Count"
       ],
       "caption": null,
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "Date agg_Monthly",
+        "View_DataTable"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": false,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
       "inferredVisualType": "tableEx"
     },
     {
@@ -575,7 +740,13 @@
       "encodings": {
         "color": null,
         "size": null,
-        "text": "federated.09go31s1b3pn2k1ezewf3027s71v].[none:Calculation_2234066952314589212:nk"
+        "text": "federated.09go31s1b3pn2k1ezewf3027s71v].[none:Calculation_2234066952314589212:nk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": null,
       "valueField": null,
@@ -583,6 +754,22 @@
       "dimensions": [],
       "values": [],
       "caption": null,
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
       "inferredVisualType": "card"
     },
     {
@@ -594,7 +781,13 @@
       "encodings": {
         "color": null,
         "size": null,
-        "text": null
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
       },
       "categoryField": null,
       "valueField": null,
@@ -602,6 +795,22 @@
       "dimensions": [],
       "values": [],
       "caption": null,
+      "title": null,
+      "filters": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true
+      },
       "inferredVisualType": "card"
     }
   ],
@@ -612,6 +821,8 @@
         "w": 1366,
         "h": 860
       },
+      "title": null,
+      "background": null,
       "zones": [
         {
           "type": "text",
@@ -722,6 +933,8 @@
         "w": 1366,
         "h": 860
       },
+      "title": null,
+      "background": null,
       "zones": [
         {
           "type": "text",
@@ -881,9 +1094,48 @@
       "buttons": []
     }
   ],
+  "actions": [],
+  "physicalTables": [
+    {
+      "name": "Midnight_Census_Template.csv",
+      "columns": [
+        "DEPARTMENT_KEY",
+        "Encounter CSN",
+        "Parent Hospital",
+        "Hospital",
+        "Unit",
+        "Patient Class",
+        "Census Date",
+        "Census Count",
+        "Census Count Adults",
+        "Census Count Peds"
+      ]
+    }
+  ],
+  "columnTableMap": {},
+  "relationships": [],
+  "hierarchies": [],
   "sets": [],
   "groups": [],
   "bins": [],
+  "theme": {
+    "fontFamily": "Arial",
+    "titleFontSize": "18",
+    "worksheetFontSize": "14",
+    "formatRules": {
+      "axis.line-visibility": "off",
+      "worksheet.font-size": "14",
+      "gridline.line-visibility": "off",
+      "zeroline.line-visibility": "off",
+      "title.font-size": "18",
+      "title.font-weight": "bold",
+      "all.font-family": "Arial"
+    },
+    "markColors": [
+      "#004263",
+      "#999999"
+    ]
+  },
   "blending": {
     "blended": false,
     "datasources": [
@@ -895,6 +1147,7 @@
     "type": null,
     "securedTable": null,
     "mappingTable": null,
-    "userColumn": null
+    "userColumn": null,
+    "signalField": null
   }
 }

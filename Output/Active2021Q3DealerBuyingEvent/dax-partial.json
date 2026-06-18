@@ -1,0 +1,191 @@
+{
+  "measures": [
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Rows Displayed",
+      "dax": "10",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Rank Sort Measure",
+      "dax": "\"Order $ (Decending)\"",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Style Count",
+      "dax": "DISTINCTCOUNT ( 'Sheet1 (Launch Data)'[Calculation_107241981451685888] )",
+      "formatString": "#,0",
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Order $ (U.S. Dealer Net)",
+      "dax": "'Sheet1 (Launch Data)'[Order $]",
+      "formatString": null,
+      "displayFolder": "Base Measures",
+      "description": null,
+      "source": "template"
+    }
+  ],
+  "calculatedColumns": [
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Base Part",
+      "dax": "'Sheet1 (Launch Data)'[Base Part Number]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Base Style Name",
+      "dax": "'Sheet1 (Launch Data)'[Base Style]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Global",
+      "dax": "\"Global\"",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Delivery Season",
+      "dax": "'Sheet1 (Launch Data)'[Delivery Season]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Delivery Month",
+      "dax": "'Sheet1 (Launch Data)'[Delivery Month]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Category",
+      "dax": "'Sheet1 (Launch Data)'[Product Category]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Family",
+      "dax": "'Sheet1 (Launch Data)'[Product Family]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Gender",
+      "dax": "'Sheet1 (Launch Data)'[Product Gender]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Sub-Family",
+      "dax": "'Sheet1 (Launch Data)'[Product Sub-Family]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Sales Area",
+      "dax": "'Sheet1 (Launch Data)'[Sales Area]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Style Code",
+      "dax": "'Sheet1 (Launch Data)'[Style Code]",
+      "formatString": null,
+      "source": "template"
+    },
+    {
+      "table": "Sheet1 (Launch Data)",
+      "name": "Style Description",
+      "dax": "'Sheet1 (Launch Data)'[Style Description]",
+      "formatString": null,
+      "source": "template"
+    }
+  ],
+  "pending": [
+    {
+      "caption": "Rank",
+      "formula": "RANK( SUM([Calculation_1141381037533011970]))",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Order $ (Percent of Total)",
+      "formula": "SUM([Order $]) / TOTAL(SUM([Order $]))",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Calculation3",
+      "formula": "SUM([Order $]) / TOTAL(SUM([Order $]))",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Master Style",
+      "formula": "LEFT([Style Code],8)",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Region",
+      "formula": "IF [Sales Area] = \"Canada\" THEN \"Canada\" ELSEIF \r\n[Sales Area] = \"United States of America\" THEN \"USA\" ELSE [Macro Area] END",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Measure for Rank",
+      "formula": "Case [Parameters].[Total Orders Parameter]\r\nWHEN \"Order $ (Accending)\" THEN -[Order $]\r\nWHEN \"Order Units (Accending)\" THEN -[Order Quantity]\r\nWHEN \"Order $ (Decending)\" THEN [Order $]\r\nWHEN \"Order Units (Decending)\" THEN [Order Quantity]\r\nEND",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Rank Filter",
+      "formula": "IF [Calculation1] <= [Parameters].[Rank Sort Measure (copy)] THEN \"Yes\" ELSE \"No\" END",
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Rank (Order $)",
+      "formula": "RANK( SUM([Order $]))",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Region ",
+      "formula": "IF [Sales Area] = \"Canada\" THEN \"Canada\" ELSEIF \r\n[Sales Area] = \"United States of America\" THEN \"USA\" ELSE [Macro Area] END",
+      "complexity": "trivial",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    }
+  ]
+}

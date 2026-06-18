@@ -6,7 +6,8 @@ pure string formatting consumed by emit_tmdl.py — no parsing, no LLM.
 """
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+import csv as _csv
+from typing import Dict, List, Optional, Tuple
 
 TAB = "\t"
 
@@ -97,10 +98,20 @@ def measure_block(m: Dict, seq: int) -> str:
 
 
 def csv_partition(table: str, path: str, columns: List[Dict]) -> str:
-    """Build an Import-mode CSV partition M block."""
+    """Build an Import-mode CSV partition M block.
+
+    The ``Columns=`` count and the typed-column list are anchored to the CSV's
+    *physical* header (not the Tableau column metadata), so the read never gets
+    truncated and no type step references a column the file does not contain.
+    """
+    delim = detect_delimiter(path)
+    header = read_csv_header(path)
+    header_set = set(header)
+    phys_count = len(header) if header else len(columns)
+    use_cols = [c for c in columns if not header_set or c["name"] in header_set]
     typed = ",\n".join(
         f'{TAB}{TAB}{TAB}{TAB}{{"{c["name"]}", {_m_type(c["dataType"])}}}'
-        for c in columns
+        for c in use_cols
     )
     return (
         f"{TAB}partition {quote(table)} = m\n"
@@ -108,13 +119,88 @@ def csv_partition(table: str, path: str, columns: List[Dict]) -> str:
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"
         f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
-        f"[Delimiter=\",\", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n"
+        f'[Delimiter="{_m_delimiter(delim)}", Columns={phys_count}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
         f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n"
         f"{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes(Promoted, {{\n{typed}\n"
         f'{TAB}{TAB}{TAB}{TAB}}}, "en-US")\n'
         f"{TAB}{TAB}{TAB}in\n"
         f"{TAB}{TAB}{TAB}{TAB}Typed\n"
     )
+
+
+def detect_delimiter(path: str) -> str:
+    """Sniff the field delimiter from a CSV's header line.
+
+    Returns one of ',', ';', '\\t', '|'. Falls back to ',' when the file is
+    unreadable or no candidate appears. Power BI's Csv.Document defaults to
+    comma, so semicolon/tab/pipe files must be detected and emitted explicitly.
+    """
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as fh:
+            line = fh.readline()
+    except OSError:
+        return ","
+    candidates = [",", ";", "\t", "|"]
+    best = max(candidates, key=line.count)
+    return best if line.count(best) > 0 else ","
+
+
+def _m_delimiter(delim: str) -> str:
+    """Render a delimiter char for an M Csv.Document Delimiter property."""
+    return {",": ",", ";": ";", "\t": "#(tab)", "|": "|"}.get(delim, ",")
+
+
+def read_csv_header(path: str) -> List[str]:
+    """Return the physical header names of a CSV, or [] if it cannot be read."""
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as fh:
+            return next(_csv.reader(fh, delimiter=detect_delimiter(path)))
+    except (OSError, StopIteration):
+        return []
+
+
+def read_csv_sample(path: str, max_rows: int = 100) -> Tuple[List[str], List[List[str]]]:
+    """Return (header, sample-rows) from a CSV for light type inference."""
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as fh:
+            reader = _csv.reader(fh, delimiter=detect_delimiter(path))
+            header = next(reader)
+            rows = []
+            for i, row in enumerate(reader):
+                if i >= max_rows:
+                    break
+                rows.append(row)
+            return header, rows
+    except (OSError, StopIteration):
+        return [], []
+
+
+def infer_csv_type(rows: List[List[str]], idx: int) -> str:
+    """Infer an IR dataType ('integer'/'real'/'string') for one CSV column."""
+    vals = [r[idx].strip() for r in rows if idx < len(r) and r[idx].strip() != ""]
+    if not vals:
+        return "string"
+    if all(_is_int(v) for v in vals):
+        return "integer"
+    if all(_is_float(v) for v in vals):
+        return "real"
+    return "string"
+
+
+def _is_int(v: str) -> bool:
+    v = v.replace(",", "").strip()
+    if v[:1] in ("+", "-"):
+        v = v[1:]
+    return v.isdigit()
+
+
+def _is_float(v: str) -> bool:
+    try:
+        float(v.replace(",", "").strip())
+        return True
+    except ValueError:
+        return False
+
 
 
 def datatable_partition(table: str, columns: List[Dict], rows: List[List]) -> str:

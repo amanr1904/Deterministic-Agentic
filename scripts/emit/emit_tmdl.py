@@ -105,7 +105,63 @@ def _columns_for(table: Dict, ir: Dict) -> List[Dict]:
                 for c in table["datatable"]["columns"]]
     ds = table.get("sourceDatasource")
     cols = [c for c in ir["columns"] if ds is None or c["datasource"] == ds]
-    return cols or ir["columns"]
+    cols = cols or ir["columns"]
+    cols = _dedupe_columns(cols)
+    if table.get("role") != "date":
+        cols = _reconcile_with_csv(table, ir, cols)
+    return cols
+
+
+def _reconcile_with_csv(table: Dict, ir: Dict, ir_cols: List[Dict]) -> List[Dict]:
+    """Rebuild the column list from the CSV's physical header.
+
+    The Tableau metadata often omits physical columns and invents logical ones
+    (calc fields, ':Measure Names') that are not in the file. Anchoring on the
+    real header guarantees every emitted column maps to a column that actually
+    exists, so the model load never fails with 'column X wasn't found'. IR types
+    are kept for known columns; unknown columns get a light sampled inference.
+    """
+    path = table.get("sourceFile") or _first_csv(ir)
+    if not str(path).lower().endswith(".csv"):
+        return ir_cols
+    abs_path = _abs_csv(ir, path)
+    header, rows = B.read_csv_sample(abs_path)
+    if not header:
+        return ir_cols
+    ir_by_key = {c["name"].strip().lower(): c for c in ir_cols}
+    out, seen = [], set()
+    for idx, raw_name in enumerate(header):
+        key = raw_name.strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        match = ir_by_key.get(key)
+        if match:
+            col = dict(match)
+            col["name"] = raw_name
+        else:
+            col = {"name": raw_name, "dataType": B.infer_csv_type(rows, idx),
+                   "role": "dimension", "format": None}
+        out.append(col)
+    return out
+
+
+def _dedupe_columns(cols: List[Dict]) -> List[Dict]:
+    """Drop duplicate column names (case-insensitive), keeping first occurrence.
+
+    A workbook can expose the same column from several datasources (e.g. a Hyper
+    extract and its CSV template both define 'Census Date'). A single flat table
+    must declare each column once or TMDL load fails with 'objects cannot be
+    merged because both declare the same property: dataType'.
+    """
+    seen, out = set(), []
+    for c in cols:
+        key = c["name"].strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(c)
+    return out
 
 
 def _partition_for(table: Dict, ir: Dict, cols: List[Dict]) -> str:
