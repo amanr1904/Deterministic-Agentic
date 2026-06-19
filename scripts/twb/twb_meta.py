@@ -104,7 +104,15 @@ def extract_hierarchies(root: ET.Element) -> List[Dict]:
 # Physical tables + column->table map — drives fact / dimension assignment
 # --------------------------------------------------------------------------- #
 def extract_physical_tables(root: ET.Element) -> List[Dict]:
-    """Return distinct physical relations (tables) with their source columns."""
+    """Return distinct physical relations (tables) with columns + CSV parse settings.
+
+    Parse settings (delimiter, encoding, header, decimal/thousands chars) are read
+    from the workbook METADATA — the <columns> wrapper attributes and the
+    <metadata-record class='capability'> attributes — so the emitter never has to
+    open the data file to sniff them. This keeps the pipeline metadata-only and
+    makes European CSVs (';' delimiter, ',' decimals, windows-1252) correct.
+    """
+    caps = _capability_attrs(root)
     tables: List[Dict] = []
     seen = set()
     for ds in X.iter_datasources(root):
@@ -116,12 +124,80 @@ def extract_physical_tables(root: ET.Element) -> List[Dict]:
             name = X.strip_brackets(X.attr(rel, "name"))
             if not name or name in seen:
                 continue
+            cols_el = rel.find("columns")
             cols = [X.attr(c, "name") for c in rel.findall("columns/column")]
             cols = [c for c in cols if c]
             if cols:
                 seen.add(name)
-                tables.append({"name": name, "columns": cols})
+                tables.append({
+                    "name": name,
+                    "columns": cols,
+                    "parse": _parse_settings(cols_el, caps.get(name, {})),
+                })
     return tables
+
+
+# character-set name -> Power Query / Windows code page (Encoding= in M).
+_CHARSET_CODEPAGE = {
+    "utf-8": 65001, "utf8": 65001, "windows-1252": 1252, "cp1252": 1252,
+    "iso-8859-1": 28591, "latin1": 28591, "utf-16": 1200, "utf-16le": 1200,
+    "us-ascii": 20127, "ascii": 20127,
+}
+
+
+def _parse_settings(cols_el, cap: Dict) -> Dict:
+    """Build a CSV parse-settings dict from <columns> attrs + capability attrs.
+
+    Prefers the explicit <columns> wrapper (separator/character-set/header), then
+    fills decimal/thousands/locale from the capability metadata-record. Returns a
+    delimiter, code page, header flag and number-format chars — all from metadata.
+    """
+    sep = (X.attr(cols_el, "separator") if cols_el is not None else None) \
+        or cap.get("field-delimiter")
+    charset = (X.attr(cols_el, "character-set") if cols_el is not None else None) \
+        or cap.get("character-set")
+    header = (X.attr(cols_el, "header") if cols_el is not None else None)
+    has_header = (header == "yes") if header else (cap.get("header-row") == "true")
+    locale = (X.attr(cols_el, "locale") if cols_el is not None else None) \
+        or cap.get("locale")
+    codepage = _CHARSET_CODEPAGE.get((charset or "").lower(), 65001)
+    return {
+        "delimiter": sep,
+        "charset": charset,
+        "codepage": codepage,
+        "hasHeader": has_header,
+        "decimalChar": cap.get("decimal-char"),
+        "thousandsChar": cap.get("thousands-char"),
+        "locale": locale,
+    }
+
+
+def _capability_attrs(root: ET.Element) -> Dict[str, Dict]:
+    """Map physical table name -> {field-delimiter, character-set, decimal-char, ...}.
+
+    Tableau writes one <metadata-record class='capability'> per CSV with an
+    <attributes> block describing how it parsed that file. Values are quoted
+    (e.g. '\"UTF-8\"'); we strip the quotes. Keyed by the parent-name table.
+    """
+    out: Dict[str, Dict] = {}
+    for ds in X.iter_datasources(root):
+        if X.attr(ds, "name") == "Parameters":
+            continue
+        for rec in ds.iter("metadata-record"):
+            if X.attr(rec, "class") != "capability":
+                continue
+            table = X.strip_brackets(rec.findtext("parent-name") or "")
+            if not table:
+                continue
+            attrs: Dict[str, str] = {}
+            for a in rec.findall("attributes/attribute"):
+                key = X.attr(a, "name")
+                val = (a.text or "").strip().strip('"')
+                if key:
+                    attrs[key] = val
+            if attrs:
+                out.setdefault(table, {}).update(attrs)
+    return out
 
 
 def extract_column_table_map(root: ET.Element) -> Dict[str, str]:
@@ -145,6 +221,67 @@ def extract_column_table_map(root: ET.Element) -> Dict[str, str]:
                     if key and table:
                         mapping[key] = table
     return mapping
+
+
+# --------------------------------------------------------------------------- #
+# Column metadata (<metadata-records>) — authoritative physical lineage
+# --------------------------------------------------------------------------- #
+# Tableau records one <metadata-record class='column'> per physical column with
+# its true storage type (local-type), default aggregation, owning physical table
+# (parent-name) and original database/file column name (remote-name). This is a
+# more reliable source than scraping <cols><map>, and gives the LLM the physical
+# lineage (logical -> physical table + remote column) it otherwise can't see.
+_MEASURE_AGGS = {"Sum", "Count", "CountD", "Average", "Avg", "Min", "Max", "Median"}
+
+
+def extract_column_metadata(root: ET.Element) -> Dict[str, Dict]:
+    """Map logical column name -> {remoteName, parentTable, metaType, aggregation, metaRole}.
+
+    Deterministic and None-safe: a column absent from metadata-records simply has
+    no entry. Never overwrites or guesses; consumers merge this additively.
+    """
+    out: Dict[str, Dict] = {}
+    for ds in X.iter_datasources(root):
+        if X.attr(ds, "name") == "Parameters":
+            continue
+        for meta in ds.iter("metadata-records"):
+            for rec in meta.findall("metadata-record"):
+                if X.attr(rec, "class") != "column":
+                    continue
+                local = X.strip_brackets(rec.findtext("local-name") or "")
+                if not local or local in out:
+                    continue
+                agg = (rec.findtext("aggregation") or "").strip() or None
+                parent = X.strip_brackets(rec.findtext("parent-name") or "") or None
+                remote = (rec.findtext("remote-name") or "").strip() or None
+                local_type = (rec.findtext("local-type") or "").strip() or None
+                out[local] = {
+                    "remoteName": remote,
+                    "parentTable": parent,
+                    "metaType": local_type,
+                    "aggregation": agg,
+                    "metaRole": "measure" if agg in _MEASURE_AGGS else "dimension",
+                }
+    return out
+
+
+def build_calc_name_map(root: ET.Element) -> Dict[str, str]:
+    """Map EVERY calculated column's internal name -> its caption (no dedup).
+
+    Unlike the caption-deduped calc list, this captures duplicated calcs whose
+    internal name carries a `(copy)_<hash>` suffix, so inter-calc references in
+    formulas can be inlined to readable captions for the LLM and DAX translator.
+    """
+    out: Dict[str, str] = {}
+    for ds in X.iter_datasources(root):
+        for col in ds.iter("column"):
+            if col.find("calculation") is None:
+                continue
+            fn = X.strip_brackets(X.attr(col, "name"))
+            if not fn:
+                continue
+            out[fn] = X.attr(col, "caption") or fn
+    return out
 
 
 # --------------------------------------------------------------------------- #

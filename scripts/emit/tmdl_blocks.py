@@ -97,12 +97,15 @@ def measure_block(m: Dict, seq: int) -> str:
     return "\n".join(lines)
 
 
-def csv_partition(table: str, path: str, columns: List[Dict], delimiter: str = ",") -> str:
+def csv_partition(table: str, path: str, columns: List[Dict], delimiter: str = ",",
+                  codepage: int = 65001) -> str:
     """Build an Import-mode CSV partition M block.
 
     The caller passes the detected ``delimiter`` and a column list already
     reconciled to the CSV's physical header (see emit_tmdl._reconcile_with_csv),
     so ``Columns=`` and the typed-column steps always match the file exactly.
+    ``codepage`` is the Windows code page from workbook metadata (65001 = UTF-8,
+    1252 = windows-1252).
     """
     typed = ",\n".join(
         f'{TAB}{TAB}{TAB}{TAB}{{"{ c["name"]}", {_m_type(c["dataType"])}}}'
@@ -114,7 +117,7 @@ def csv_partition(table: str, path: str, columns: List[Dict], delimiter: str = "
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"
         f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
-        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
+        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding={codepage}, QuoteStyle=QuoteStyle.Csv]),\n'
         f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n"
         f"{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes(Promoted, {{\n{typed}\n"
         f'{TAB}{TAB}{TAB}{TAB}}}, "en-US")\n'
@@ -199,6 +202,7 @@ def robust_csv_partition(
     delimiter: str,
     date_cols: List[str],
     decimal_cols: List[str],
+    codepage: int = 65001,
 ) -> str:
     """Build a fact-table partition for European-style CSVs (semicolon delimiter,
     dd/MM/yyyy dates, comma-decimal numbers).  Non-date/decimal columns are typed
@@ -226,7 +230,7 @@ def robust_csv_partition(
     steps = (
         f"{TAB}{TAB}{TAB}let\n"
         f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
-        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
+        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding={codepage}, QuoteStyle=QuoteStyle.Csv]),\n'
         f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true])"
     )
     prev = "Promoted"
@@ -274,6 +278,108 @@ def raw_partition(table: str, m_body: str) -> str:
     )
 
 
+# --- Multi-source (non-CSV) partition builder --------------------------------
+# Relational connectors: IR sourceType (lowercased) -> (M Source expression,
+# navigation-record key). Schema-style connectors navigate with [Schema,Item];
+# Name-style connectors navigate with [Name].
+_DB_CONNECTOR = {
+    "sqlserver":  ('Sql.Database("{server}", "{database}")', "schema"),
+    "postgresql": ('PostgreSQL.Database("{server}", "{database}")', "schema"),
+    "mysql":      ('MySQL.Database("{server}", "{database}")', "name"),
+    "oracle":     ('Oracle.Database("{server}")', "schema"),
+}
+_DEFAULT_SCHEMA = {"sqlserver": "dbo", "postgresql": "public"}
+
+
+def _source_head(source_type: str, source: Dict, table: str) -> Tuple[str, str]:
+    """Return (indented M step lines without trailing comma, last-step name).
+
+    Builds the connector + navigation steps for a non-CSV source. Unknown
+    sources fall back to a clearly-labelled ODBC navigation the user can finish
+    in Power BI Desktop.
+    """
+    st = source_type.lower()
+    server = source.get("server") or ""
+    database = source.get("database") or ""
+    schema = source.get("schema") or _DEFAULT_SCHEMA.get(st, "")
+    tbl = source.get("table") or table
+    file = source.get("file") or ""
+    sheet = source.get("sheet") or tbl
+    query = source.get("query") or ""
+
+    # Custom SQL (Tableau relation type="text") -> native query partition.
+    if query and st in _DB_CONNECTOR:
+        q = " ".join(query.split()).replace('"', '""')
+        expr, _ = _DB_CONNECTOR[st]
+        if st == "sqlserver":
+            steps = [f'Source = Sql.Database("{server}", "{database}", [Query="{q}"])']
+        else:
+            steps = [f"Db = {expr.format(server=server, database=database)}",
+                     f'Source = Value.NativeQuery(Db, "{q}")']
+        return ",\n".join(f"{TAB}{TAB}{TAB}{TAB}{ln}" for ln in steps), "Source"
+
+    if st == "excel":
+        steps = [
+            f'Source = Excel.Workbook(File.Contents("{file}"), null, true)',
+            f'Navigation = Source{{[Item="{sheet}", Kind="Sheet"]}}[Data]',
+            "Promoted = Table.PromoteHeaders(Navigation, [PromoteAllScalars=true])",
+        ]
+        prev = "Promoted"
+    elif st == "parquet":
+        steps = [f'Source = Parquet.Document(File.Contents("{file}"))']
+        prev = "Source"
+    elif st in _DB_CONNECTOR:
+        expr, nav_key = _DB_CONNECTOR[st]
+        src = expr.format(server=server, database=database)
+        if nav_key == "schema":
+            nav = f'Navigation = Source{{[Schema="{schema}", Item="{tbl}"]}}[Data]'
+        else:
+            nav = f'Navigation = Source{{[Name="{tbl}"]}}[Data]'
+        steps = [f"Source = {src}", nav]
+        prev = "Navigation"
+    else:
+        # Generic ODBC / unrecognised source — emit a finishable stub.
+        steps = [
+            f'Source = Odbc.DataSource("dsn={database or server}", [HierarchicalNavigation=true])',
+            f'Navigation = Source{{[Name="{tbl}"]}}[Data]',
+        ]
+        prev = "Navigation"
+
+    indented = ",\n".join(f"{TAB}{TAB}{TAB}{TAB}{ln}" for ln in steps)
+    return indented, prev
+
+
+def source_partition(table: str, source: Dict, columns: List[Dict]) -> str:
+    """Build an Import-mode partition for a NON-CSV source.
+
+    ``source`` carries the detected connection facts:
+      sourceType (excel/parquet/sqlserver/postgresql/mysql/oracle/odbc/…),
+      server, database, schema, table, file, sheet.
+    Routes on sourceType to the matching M connector, then applies IR column
+    typing. Any unrecognised source degrades to an ODBC stub so the model still
+    opens; precise/custom sources can always be supplied via ``mExpression``.
+    """
+    head, prev = _source_head(source.get("sourceType", ""), source, table)
+    body = f"{TAB}{TAB}{TAB}let\n{head}"
+    if columns:
+        typed = ",\n".join(
+            f'{TAB}{TAB}{TAB}{TAB}{TAB}{{"{c["name"]}", {_m_type(c.get("dataType", "string"))}}}'
+            for c in columns
+        )
+        body += (
+            f",\n{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes({prev}, {{\n"
+            f"{typed}\n{TAB}{TAB}{TAB}{TAB}}}, \"en-US\")"
+        )
+        prev = "Typed"
+    body += f"\n{TAB}{TAB}{TAB}in\n{TAB}{TAB}{TAB}{TAB}{prev}\n"
+    return (
+        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}{TAB}mode: import\n"
+        f"{TAB}{TAB}source =\n"
+        f"{body}"
+    )
+
+
 def datatable_partition(table: str, columns: List[Dict], rows: List[List]) -> str:
     """Build a disconnected DATATABLE partition (parameter selector table)."""
     coldef = ",\n".join(
@@ -310,6 +416,7 @@ def dim_partition(
     delimiter: str,
     logical_key: str,
     all_columns: List[Dict],
+    codepage: int = 65001,
 ) -> str:
     """Build a full-dimension partition: load ALL CSV columns, apply any renames
     (csv_name → logical_name), null-filter on key, deduplicate.
@@ -347,7 +454,7 @@ def dim_partition(
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"
         f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
-        f'[Delimiter="{delimiter}", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
+        f'[Delimiter="{delimiter}", Encoding={codepage}, QuoteStyle=QuoteStyle.Csv]),\n'
         f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n"
         f"{rename_step}"
         f"{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes({after_rename}, {{\n"

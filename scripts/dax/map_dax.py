@@ -83,6 +83,42 @@ def _clean_table(name: str) -> str:
     return name
 
 
+# A datasource-qualified column ref inside a formula: [federated.<hash>].[col]
+_DS_QUALIFIED_RE = re.compile(r"\[federated\.[^\]]+\]\.(\[[^\]]+\])")
+
+
+def _normalize_refs(formula: str) -> str:
+    """Strip the datasource prefix from column refs so simple patterns match.
+
+    Tableau stores calc formulas with fully-qualified refs like
+    `[federated.18e8..].[int_rate]`. The translator's patterns expect a bare
+    `[int_rate]`, so collapse the qualifier here first.
+    """
+    return _DS_QUALIFIED_RE.sub(r"\1", formula or "")
+
+
+def _strip_outer_parens(expr: str) -> str:
+    """Remove redundant wrapping parentheses: '(SUM([x]))' -> 'SUM([x])'."""
+    expr = expr.strip()
+    while expr.startswith("(") and expr.endswith(")"):
+        depth = 0
+        wraps = True
+        for i, ch in enumerate(expr):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0 and i < len(expr) - 1:
+                    wraps = False
+                    break
+        if wraps:
+            expr = expr[1:-1].strip()
+        else:
+            break
+    return expr
+
+
+
 def _col_ref(table: str, column: str, colmap: Dict[str, str]) -> str:
     """Qualify a column with its owning table (from columnTableMap, else host)."""
     owner = _clean_table(colmap.get(column, table))
@@ -91,7 +127,7 @@ def _col_ref(table: str, column: str, colmap: Dict[str, str]) -> str:
 
 def _translate_scalar(expr: str, table: str, ctx: Dict) -> Optional[str]:
     """Translate a single literal / aggregation / column ref to DAX, else None."""
-    expr = expr.strip()
+    expr = _strip_outer_parens(_normalize_refs(expr))
     # String literals are checked first: their content may contain words that
     # look like Tableau keywords (e.g. "Include"/"Exclude") but are just text.
     m = STRING_LIT_RE.match(expr)
@@ -185,7 +221,7 @@ def _translate_case(formula: str, table: str, ctx: Dict) -> Optional[str]:
 
 def translate(formula: str, table: str, ctx: Dict) -> Optional[Tuple[str, Optional[str]]]:
     """Return (dax, formatString) if deterministically translatable, else None."""
-    formula = formula.strip()
+    formula = _strip_outer_parens(_normalize_refs(formula))
 
     # CASE is attempted before the complex-token guard so simple CASEs translate;
     # a CASE the parser cannot fully handle falls through to None (-> LLM).

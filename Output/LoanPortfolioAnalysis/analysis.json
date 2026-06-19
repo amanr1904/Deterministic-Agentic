@@ -1,0 +1,2845 @@
+{
+  "irVersion": "1.0",
+  "workbook": {
+    "name": "Loan Portfolio Analysis",
+    "pascalName": "LoanPortfolioAnalysis",
+    "sourcePath": "C:/Users/BoghraJeelKishorbhai/Deterministic-Agentic/Data/Loan/Loan Portfolio Analysis.twb",
+    "version": "18.1",
+    "platform": ""
+  },
+  "dataSources": [
+    {
+      "name": "loan",
+      "internalName": "federated.16y2ccv0oumkec17gjd171giuxq2",
+      "connectionClass": "textscan",
+      "sourceType": "CSV",
+      "files": [
+        "loan.csv",
+        "C:/Users/AmanRajMAQSoftware/Downloads/semantic model generation v2/semantic model generation v2/Data/Loan/Loan Portfolio Analysis.twb Files/Data/archive (1)"
+      ],
+      "server": "",
+      "database": null,
+      "schema": null,
+      "tables": [
+        "loan#csv"
+      ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "loan#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
+      "active": false
+    },
+    {
+      "name": "loan_count_by_year",
+      "internalName": "federated.106erd311glrtl1g0g3vi037m874",
+      "connectionClass": "textscan",
+      "sourceType": "CSV",
+      "files": [
+        "loan_count_by_year.csv",
+        "C:/Users/AmanRajMAQSoftware/Downloads/semantic model generation v2/semantic model generation v2/Data/Loan/Loan Portfolio Analysis.twb Files/Data/archive (1)"
+      ],
+      "server": "",
+      "database": null,
+      "schema": null,
+      "tables": [
+        "loan_count_by_year#csv"
+      ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "loan_count_by_year#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
+      "active": false
+    },
+    {
+      "name": "loan_purposes",
+      "internalName": "federated.1gh0fei0mocrpn13x35pv0cckbgb",
+      "connectionClass": "textscan",
+      "sourceType": "CSV",
+      "files": [
+        "loan_purposes.csv",
+        "C:/Users/AmanRajMAQSoftware/Downloads/semantic model generation v2/semantic model generation v2/Data/Loan/Loan Portfolio Analysis.twb Files/Data/archive (1)"
+      ],
+      "server": "",
+      "database": null,
+      "schema": null,
+      "tables": [
+        "loan_purposes#csv"
+      ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "loan_purposes#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
+      "active": false
+    },
+    {
+      "name": "loan_with_region",
+      "internalName": "federated.0qx98441urz5j9129rdi117nloz4",
+      "connectionClass": "textscan",
+      "sourceType": "CSV",
+      "files": [
+        "loan_with_region.csv",
+        "C:/Users/AmanRajMAQSoftware/Downloads/semantic model generation v2/semantic model generation v2/Data/Loan/Loan Portfolio Analysis.twb Files/Data/archive (1)"
+      ],
+      "server": "",
+      "database": null,
+      "schema": null,
+      "tables": [
+        "loan_with_region#csv"
+      ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "loan_with_region#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
+      "active": false
+    },
+    {
+      "name": "state_region",
+      "internalName": "federated.02h1jrq1n99lvz16ue4dl0fyyj5n",
+      "connectionClass": "textscan",
+      "sourceType": "CSV",
+      "files": [
+        "state_region.csv",
+        "C:/Users/AmanRajMAQSoftware/Downloads/semantic model generation v2/semantic model generation v2/Data/Loan/Loan Portfolio Analysis.twb Files/Data/archive (1)"
+      ],
+      "server": "",
+      "database": null,
+      "schema": null,
+      "tables": [
+        "state_region#csv"
+      ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "state_region#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
+      "active": false
+    },
+    {
+      "name": "customer",
+      "internalName": "federated.18e8p121a6tl721befxy016u4rxt",
+      "connectionClass": "textscan",
+      "sourceType": "CSV",
+      "files": [
+        "customer.csv",
+        "C:/Users/AmanRajMAQSoftware/Downloads/semantic model generation v2/semantic model generation v2/Data/Loan"
+      ],
+      "server": "",
+      "database": null,
+      "schema": null,
+      "tables": [
+        "loan#csv",
+        "customer#csv",
+        "loan_purposes#csv",
+        "state_region#csv"
+      ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "loan#csv",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "customer#csv",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "loan_purposes#csv",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "state_region#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
+      "active": true
+    }
+  ],
+  "columns": [
+    {
+      "datasource": "loan",
+      "name": "loan_id",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 0,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_id",
+      "metaType": "integer"
+    },
+    {
+      "datasource": "loan",
+      "name": "customer_id",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 1,
+      "physicalTable": "loan.csv",
+      "remoteName": "customer_id",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "loan_status",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 2,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_status",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "loan_amount",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 3,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_amount",
+      "metaType": "real"
+    },
+    {
+      "datasource": "loan",
+      "name": "state",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 4,
+      "physicalTable": "loan.csv",
+      "remoteName": "state",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "funded_amount",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 5,
+      "physicalTable": "loan.csv",
+      "remoteName": "funded_amount",
+      "metaType": "real"
+    },
+    {
+      "datasource": "loan",
+      "name": "term",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 6,
+      "physicalTable": "loan.csv",
+      "remoteName": "term",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "int_rate",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 7,
+      "physicalTable": "loan.csv",
+      "remoteName": "int_rate",
+      "metaType": "real"
+    },
+    {
+      "datasource": "loan",
+      "name": "installment",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 8,
+      "physicalTable": "loan.csv",
+      "remoteName": "installment",
+      "metaType": "real"
+    },
+    {
+      "datasource": "loan",
+      "name": "grade",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 9,
+      "physicalTable": "loan.csv",
+      "remoteName": "grade",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "issue_d",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 10,
+      "physicalTable": "loan.csv",
+      "remoteName": "issue_d",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "issue_date",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 11,
+      "physicalTable": "loan.csv",
+      "remoteName": "issue_date",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "issue_year",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 12,
+      "physicalTable": "loan.csv",
+      "remoteName": "issue_year",
+      "metaType": "real"
+    },
+    {
+      "datasource": "loan",
+      "name": "pymnt_plan",
+      "caption": null,
+      "dataType": "boolean",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 13,
+      "physicalTable": "loan.csv",
+      "remoteName": "pymnt_plan",
+      "metaType": "boolean"
+    },
+    {
+      "datasource": "loan",
+      "name": "type",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 14,
+      "physicalTable": "loan.csv",
+      "remoteName": "type",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "purpose",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 15,
+      "physicalTable": "loan.csv",
+      "remoteName": "purpose",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "description",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 16,
+      "physicalTable": "loan.csv",
+      "remoteName": "description",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan",
+      "name": "notes",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 17,
+      "physicalTable": "loan.csv",
+      "remoteName": "notes",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan_count_by_year",
+      "name": "issue_year",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 0,
+      "physicalTable": "loan.csv",
+      "remoteName": "issue_year",
+      "metaType": "real"
+    },
+    {
+      "datasource": "loan_count_by_year",
+      "name": "loan_count",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 1,
+      "physicalTable": "loan_count_by_year.csv",
+      "remoteName": "loan_count",
+      "metaType": "integer"
+    },
+    {
+      "datasource": "loan_purposes",
+      "name": "purpose",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 0,
+      "physicalTable": "loan.csv",
+      "remoteName": "purpose",
+      "metaType": "string"
+    },
+    {
+      "datasource": "loan_with_region",
+      "name": "loan_id",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 0,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_id",
+      "metaType": "integer"
+    },
+    {
+      "datasource": "loan_with_region",
+      "name": "loan_amount",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 1,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_amount",
+      "metaType": "real"
+    },
+    {
+      "datasource": "loan_with_region",
+      "name": "region",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 2,
+      "physicalTable": "loan_with_region.csv",
+      "remoteName": "region",
+      "metaType": "string"
+    },
+    {
+      "datasource": "state_region",
+      "name": "state",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 0,
+      "physicalTable": "loan.csv",
+      "remoteName": "state",
+      "metaType": "string"
+    },
+    {
+      "datasource": "state_region",
+      "name": "subregion",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 1,
+      "physicalTable": "state_region.csv",
+      "remoteName": "subregion",
+      "metaType": "string"
+    },
+    {
+      "datasource": "state_region",
+      "name": "region",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 2,
+      "physicalTable": "loan_with_region.csv",
+      "remoteName": "region",
+      "metaType": "string"
+    },
+    {
+      "datasource": "state_region",
+      "name": "int_rate",
+      "caption": "Int Rate",
+      "dataType": "real",
+      "role": "measure",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": null,
+      "physicalTable": "loan.csv",
+      "remoteName": "int_rate",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "loan_id",
+      "caption": null,
+      "dataType": "integer",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 0,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_id",
+      "metaType": "integer"
+    },
+    {
+      "datasource": "customer",
+      "name": "customer_id",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 1,
+      "physicalTable": "loan.csv",
+      "remoteName": "customer_id",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "loan_status",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 2,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_status",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "loan_amount",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 3,
+      "physicalTable": "loan.csv",
+      "remoteName": "loan_amount",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "state",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 4,
+      "physicalTable": "loan.csv",
+      "remoteName": "state",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "funded_amount",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 5,
+      "physicalTable": "loan.csv",
+      "remoteName": "funded_amount",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "term",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 6,
+      "physicalTable": "loan.csv",
+      "remoteName": "term",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "int_rate",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 7,
+      "physicalTable": "loan.csv",
+      "remoteName": "int_rate",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "installment",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 8,
+      "physicalTable": "loan.csv",
+      "remoteName": "installment",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "grade",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 9,
+      "physicalTable": "loan.csv",
+      "remoteName": "grade",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "issue_d",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 10,
+      "physicalTable": "loan.csv",
+      "remoteName": "issue_d",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "issue_date",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 11,
+      "physicalTable": "loan.csv",
+      "remoteName": "issue_date",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "issue_year",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 12,
+      "physicalTable": "loan.csv",
+      "remoteName": "issue_year",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "pymnt_plan",
+      "caption": null,
+      "dataType": "boolean",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 13,
+      "physicalTable": "loan.csv",
+      "remoteName": "pymnt_plan",
+      "metaType": "boolean"
+    },
+    {
+      "datasource": "customer",
+      "name": "type",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 14,
+      "physicalTable": "loan.csv",
+      "remoteName": "type",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "purpose",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 15,
+      "physicalTable": "loan.csv",
+      "remoteName": "purpose",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "description",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 16,
+      "physicalTable": "loan.csv",
+      "remoteName": "description",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "notes",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 17,
+      "physicalTable": "loan.csv",
+      "remoteName": "notes",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "emp_title",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 19,
+      "physicalTable": "customer.csv",
+      "remoteName": "emp_title",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "emp_length",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 20,
+      "physicalTable": "customer.csv",
+      "remoteName": "emp_length",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "home_ownership",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 21,
+      "physicalTable": "customer.csv",
+      "remoteName": "home_ownership",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "annual_inc",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 22,
+      "physicalTable": "customer.csv",
+      "remoteName": "annual_inc",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "annual_inc_joint",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 23,
+      "physicalTable": "customer.csv",
+      "remoteName": "annual_inc_joint",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "verification_status",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 24,
+      "physicalTable": "customer.csv",
+      "remoteName": "verification_status",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "zip_code",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 25,
+      "physicalTable": "customer.csv",
+      "remoteName": "zip_code",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "addr_state",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 26,
+      "physicalTable": "customer.csv",
+      "remoteName": "addr_state",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "avg_cur_bal",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 27,
+      "physicalTable": "customer.csv",
+      "remoteName": "avg_cur_bal",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "Tot_cur_bal",
+      "caption": null,
+      "dataType": "real",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 28,
+      "physicalTable": "customer.csv",
+      "remoteName": "Tot_cur_bal",
+      "metaType": "real"
+    },
+    {
+      "datasource": "customer",
+      "name": "subregion",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 31,
+      "physicalTable": "state_region.csv",
+      "remoteName": "subregion",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "region",
+      "caption": null,
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 32,
+      "physicalTable": "loan_with_region.csv",
+      "remoteName": "region",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "customer_id (customer.csv)",
+      "caption": "Customer Id (Customer.Csv)",
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 18,
+      "physicalTable": "customer.csv",
+      "remoteName": "customer_id",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "purpose (loan_purposes.csv)",
+      "caption": "Purpose (Loan Purposes.Csv)",
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": null,
+      "format": null,
+      "ordinal": 29,
+      "physicalTable": "loan_purposes.csv",
+      "remoteName": "purpose",
+      "metaType": "string"
+    },
+    {
+      "datasource": "customer",
+      "name": "state (state_region.csv)",
+      "caption": "State (State Region.Csv)",
+      "dataType": "string",
+      "role": "dimension",
+      "semanticRole": "[State].[Name]",
+      "format": null,
+      "ordinal": 30,
+      "physicalTable": "state_region.csv",
+      "remoteName": "state",
+      "metaType": "string"
+    }
+  ],
+  "calculatedFields": [
+    {
+      "caption": "Top N",
+      "fieldName": "[Parameter 1]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "1",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
+    },
+    {
+      "caption": "Averag Interest Rate",
+      "fieldName": "[Calculation_1872509957402626]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "(SUM([federated.18e8p121a6tl721befxy016u4rxt].[int_rate]))",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "int_rate"
+      ]
+    },
+    {
+      "caption": "Total Loans",
+      "fieldName": "[Calculation_1872509954945024]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "COUNT([loan_id])",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "loan_id"
+      ]
+    },
+    {
+      "caption": "Total Funded Amount",
+      "fieldName": "[Calculation_1872509955170305]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "SUM([loan_amount])",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "loan_amount"
+      ]
+    },
+    {
+      "caption": "Default Flag",
+      "fieldName": "[Calculation_1872509959208964]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "IF [loan_status] = \"Charged Off\" THEN 1 ELSE 0 END",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "loan_status"
+      ]
+    },
+    {
+      "caption": "Default Rate",
+      "fieldName": "[Calculation_1872509959417861]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "SUM([Default Flag]) / COUNT([loan_id])",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Default Flag",
+        "loan_id"
+      ]
+    },
+    {
+      "caption": "Default Risk Category",
+      "fieldName": "[Calculation_1872509959573510]",
+      "dataType": "string",
+      "role": "measure",
+      "formula": "IF [Default Rate] > 0.20 THEN \"High Risk\"\r\nELSE \"Safe\"\r\nEND",
+      "isTableCalc": false,
+      "complexity": "trivial",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Default Rate"
+      ]
+    },
+    {
+      "caption": "YoY Growth %",
+      "fieldName": "[Calculation_1872509966282760]",
+      "dataType": "real",
+      "role": "measure",
+      "formula": "(COUNT([loan_id]) - LOOKUP(COUNT([loan_id]), -1))\r\n/\r\nLOOKUP(COUNT([loan_id]), -1)",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "loan_id"
+      ]
+    },
+    {
+      "caption": "Highlight Peak Year",
+      "fieldName": "[Calculation_1872509966647305]",
+      "dataType": "string",
+      "role": "measure",
+      "formula": "IF COUNT([loan_id]) = WINDOW_MAX(COUNT([loan_id]))\r\nTHEN \"Peak\"\r\nELSE \"Normal\"\r\nEND",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "loan_id"
+      ]
+    },
+    {
+      "caption": "State Rank",
+      "fieldName": "[Calculation_1872509972021258]",
+      "dataType": "integer",
+      "role": "measure",
+      "formula": "RANK(SUM([loan_amount]), 'desc')",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "loan_amount"
+      ]
+    },
+    {
+      "caption": "Top N Filter",
+      "fieldName": "[Calculation_1872509973000203]",
+      "dataType": "boolean",
+      "role": "measure",
+      "formula": "INDEX() <= [Top N]",
+      "isTableCalc": true,
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Top N"
+      ]
+    }
+  ],
+  "parameters": [
+    {
+      "name": "Top N",
+      "internalName": "[Parameter 1]",
+      "dataType": "integer",
+      "domainType": "range",
+      "default": "1",
+      "values": [],
+      "range": {
+        "min": "1",
+        "max": "50",
+        "granularity": "1"
+      },
+      "format": null
+    }
+  ],
+  "worksheets": [
+    {
+      "name": "Avg Interest Rate",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[avg:int_rate:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "int_rate",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "values": [
+        "int_rate"
+      ],
+      "measures": [
+        {
+          "field": "int_rate",
+          "agg": "AVG",
+          "column": "int_rate"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "int_rate"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "barChart"
+    },
+    {
+      "name": "Default Rate",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[usr:Calculation_1872509959417861:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "Default Rate",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "values": [
+        "Default Rate"
+      ],
+      "measures": [
+        {
+          "field": "Default Rate",
+          "agg": "SUM",
+          "column": "Calculation_1872509959417861"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "Default Rate"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "barChart"
+    },
+    {
+      "name": "Default Rate by Grade",
+      "datasource": "customer",
+      "markClass": "Square",
+      "rows": [
+        "federated.18e8p121a6tl721befxy016u4rxt].[none:grade:nk"
+      ],
+      "cols": [
+        "federated.18e8p121a6tl721befxy016u4rxt].[none:term:nk"
+      ],
+      "encodings": {
+        "color": "federated.18e8p121a6tl721befxy016u4rxt].[usr:Calculation_1872509959417861:qk",
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[usr:Calculation_1872509959417861:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "Default Rate",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "term",
+        "Default Risk Category"
+      ],
+      "values": [
+        "Default Rate"
+      ],
+      "measures": [
+        {
+          "field": "Default Rate",
+          "agg": "SUM",
+          "column": "Calculation_1872509959417861"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "Default Rate"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "treemap"
+    },
+    {
+      "name": "Filters",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": null,
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": null,
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "values": [],
+      "measures": [],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "tableEx"
+    },
+    {
+      "name": "Loan Amount by Purpose",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": "federated.18e8p121a6tl721befxy016u4rxt].[sum:loan_amount:qk",
+        "size": "federated.18e8p121a6tl721befxy016u4rxt].[sum:loan_amount:qk",
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[none:purpose:nk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "loan_amount",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "values": [
+        "loan_amount"
+      ],
+      "measures": [
+        {
+          "field": "loan_amount",
+          "agg": "SUM",
+          "column": "loan_amount"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "loan_amount"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "treemap"
+    },
+    {
+      "name": "Loan Status by Grade",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [
+        "federated.18e8p121a6tl721befxy016u4rxt].[cnt:loan_id:qk"
+      ],
+      "cols": [
+        "federated.18e8p121a6tl721befxy016u4rxt].[none:grade:nk"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[cnt:loan_id:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "loan_id",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "values": [
+        "loan_id"
+      ],
+      "measures": [
+        {
+          "field": "loan_id",
+          "agg": "COUNT",
+          "column": "loan_id"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "loan_id"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "columnChart"
+    },
+    {
+      "name": "Loan Term Split",
+      "datasource": "customer",
+      "markClass": "Pie",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": "federated.18e8p121a6tl721befxy016u4rxt].[none:term:nk",
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[pcto:cnt:loan_id:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": "federated.18e8p121a6tl721befxy016u4rxt].[cnt:loan_id:qk",
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "loan_id",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "term",
+        "Default Risk Category"
+      ],
+      "values": [
+        "loan_id"
+      ],
+      "measures": [
+        {
+          "field": "loan_id",
+          "agg": "COUNT",
+          "column": "loan_id"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "loan_id"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "pieChart"
+    },
+    {
+      "name": "Loans Issued Year Over Year",
+      "datasource": "customer",
+      "markClass": "Line",
+      "rows": [
+        "federated.18e8p121a6tl721befxy016u4rxt].[cnt:loan_id:qk"
+      ],
+      "cols": [
+        "federated.18e8p121a6tl721befxy016u4rxt].[none:issue_year:ok"
+      ],
+      "encodings": {
+        "color": "federated.18e8p121a6tl721befxy016u4rxt].[usr:Calculation_1872509966647305:nk",
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[usr:Calculation_1872509966282760:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "loan_id",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category",
+        "Highlight Peak Year"
+      ],
+      "values": [
+        "loan_id",
+        "YoY Growth %"
+      ],
+      "measures": [
+        {
+          "field": "loan_id",
+          "agg": "COUNT",
+          "column": "loan_id"
+        },
+        {
+          "field": "YoY Growth %",
+          "agg": "SUM",
+          "column": "Calculation_1872509966282760"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "loan_id",
+          "YoY Growth %"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "lineChart"
+    },
+    {
+      "name": "Top 10 States by Total Loan Volume",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [
+        "([federated.18e8p121a6tl721befxy016u4rxt].[none:region:nk]",
+        "([federated.18e8p121a6tl721befxy016u4rxt].[none:subregion:nk]",
+        "[federated.18e8p121a6tl721befxy016u4rxt].[none:state (state_region.csv):nk]))"
+      ],
+      "cols": [
+        "federated.18e8p121a6tl721befxy016u4rxt].[sum:loan_amount:qk"
+      ],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[sum:loan_amount:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "loan_amount",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "region",
+        "state (state_region.csv)",
+        "subregion",
+        "Default Risk Category",
+        "Top N Filter"
+      ],
+      "values": [
+        "loan_amount"
+      ],
+      "measures": [
+        {
+          "field": "loan_amount",
+          "agg": "SUM",
+          "column": "loan_amount"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "loan_amount"
+        ],
+        "orientation": "horizontal"
+      },
+      "orientation": "horizontal",
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "region",
+        "subregion",
+        "state (state_region.csv)",
+        "Top N Filter",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Midwest",
+            "Northeast",
+            "South",
+            "West"
+          ],
+          "range": null
+        },
+        {
+          "field": "state (state_region.csv)",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "subregion",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Top N Filter",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": {
+        "field": "region",
+        "n": 10,
+        "direction": "TOP",
+        "byMeasure": "SUM([loan_amount])",
+        "sortDirection": "DESC"
+      },
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "barChart"
+    },
+    {
+      "name": "Total Funded Amount",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[sum:loan_amount:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "loan_amount",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "values": [
+        "loan_amount"
+      ],
+      "measures": [
+        {
+          "field": "loan_amount",
+          "agg": "SUM",
+          "column": "loan_amount"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "loan_amount"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "barChart"
+    },
+    {
+      "name": "Total Loans",
+      "datasource": "customer",
+      "markClass": "Automatic",
+      "rows": [],
+      "cols": [],
+      "encodings": {
+        "color": null,
+        "size": null,
+        "text": "federated.18e8p121a6tl721befxy016u4rxt].[cnt:loan_id:qk",
+        "shape": null,
+        "detail": null,
+        "label": null,
+        "tooltip": null,
+        "wedgeSize": null,
+        "path": null
+      },
+      "categoryField": "grade",
+      "valueField": "loan_id",
+      "categoryDateLevel": null,
+      "dimensions": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "values": [
+        "loan_id"
+      ],
+      "measures": [
+        {
+          "field": "loan_id",
+          "agg": "COUNT",
+          "column": "loan_id"
+        }
+      ],
+      "axes": {
+        "category": "grade",
+        "categoryLevel": null,
+        "values": [
+          "loan_id"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
+      "caption": null,
+      "title": null,
+      "filters": [
+        "grade",
+        "issue_year",
+        "loan_status",
+        "purpose",
+        "Default Risk Category"
+      ],
+      "filterDetails": [
+        {
+          "field": "grade",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "issue_year",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "loan_status",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "purpose",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Default Risk Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
+      "sort": null,
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "barChart"
+    }
+  ],
+  "dashboards": [
+    {
+      "name": "Loan Portfolio Overview & Risk Analysis ",
+      "size": {
+        "w": 1550,
+        "h": 1600
+      },
+      "title": "{Sheet Name}",
+      "background": null,
+      "zones": [
+        {
+          "type": "viz",
+          "worksheet": "Total Loans",
+          "field": null,
+          "x": 516,
+          "y": 8653,
+          "w": 26778,
+          "h": 10555
+        },
+        {
+          "type": "viz",
+          "worksheet": "Total Funded Amount",
+          "field": null,
+          "x": 52968,
+          "y": 8653,
+          "w": 23871,
+          "h": 10555
+        },
+        {
+          "type": "viz",
+          "worksheet": "Avg Interest Rate",
+          "field": null,
+          "x": 27294,
+          "y": 8653,
+          "w": 25674,
+          "h": 10555
+        },
+        {
+          "type": "viz",
+          "worksheet": "Loan Status by Grade",
+          "field": null,
+          "x": 516,
+          "y": 19208,
+          "w": 48616,
+          "h": 34476
+        },
+        {
+          "type": "viz",
+          "worksheet": "Loan Amount by Purpose",
+          "field": null,
+          "x": 49132,
+          "y": 19208,
+          "w": 50352,
+          "h": 34476
+        },
+        {
+          "type": "viz",
+          "worksheet": "Loans Issued Year Over Year",
+          "field": null,
+          "x": 53744,
+          "y": 53684,
+          "w": 45740,
+          "h": 24819
+        },
+        {
+          "type": "viz",
+          "worksheet": "Loan Term Split",
+          "field": null,
+          "x": 53731,
+          "y": 78503,
+          "w": 45753,
+          "h": 20997
+        },
+        {
+          "type": "viz",
+          "worksheet": "Top 10 States by Total Loan Volume",
+          "field": null,
+          "x": 516,
+          "y": 53684,
+          "w": 53228,
+          "h": 24819
+        },
+        {
+          "type": "filter",
+          "worksheet": "Avg Interest Rate",
+          "field": "grade",
+          "x": 516,
+          "y": 3125,
+          "w": 26778,
+          "h": 5528
+        },
+        {
+          "type": "filter",
+          "worksheet": "Avg Interest Rate",
+          "field": "loan_status",
+          "x": 27294,
+          "y": 3125,
+          "w": 26425,
+          "h": 5528
+        },
+        {
+          "type": "filter",
+          "worksheet": "Avg Interest Rate",
+          "field": "purpose",
+          "x": 53719,
+          "y": 3125,
+          "w": 25286,
+          "h": 5528
+        },
+        {
+          "type": "filter",
+          "worksheet": "Avg Interest Rate",
+          "field": "issue_year",
+          "x": 79005,
+          "y": 3125,
+          "w": 20479,
+          "h": 5528
+        },
+        {
+          "type": "viz",
+          "worksheet": "Default Rate by Grade",
+          "field": null,
+          "x": 516,
+          "y": 78503,
+          "w": 53215,
+          "h": 20997
+        },
+        {
+          "type": "viz",
+          "worksheet": "Default Rate",
+          "field": null,
+          "x": 76839,
+          "y": 8653,
+          "w": 22645,
+          "h": 10555
+        },
+        {
+          "type": "viz",
+          "worksheet": "Loans Issued Year Over Year",
+          "field": null,
+          "x": 89200,
+          "y": 54438,
+          "w": 9333,
+          "h": 4000
+        },
+        {
+          "type": "viz",
+          "worksheet": "Loan Term Split",
+          "field": null,
+          "x": 89067,
+          "y": 83250,
+          "w": 9333,
+          "h": 4000
+        },
+        {
+          "type": "viz",
+          "worksheet": "Loan Amount by Purpose",
+          "field": null,
+          "x": 86452,
+          "y": 20000,
+          "w": 12194,
+          "h": 4188
+        },
+        {
+          "type": "viz",
+          "worksheet": "Default Rate by Grade",
+          "field": null,
+          "x": 44200,
+          "y": 78875,
+          "w": 9333,
+          "h": 5500
+        }
+      ],
+      "buttons": []
+    }
+  ],
+  "actions": [
+    {
+      "name": "Highlight 2 (generated)",
+      "type": "other",
+      "sourceSheet": null,
+      "sourceDashboard": "Loan Portfolio Overview & Risk Analysis ",
+      "target": "Loan Portfolio Overview & Risk Analysis ",
+      "activation": "on-select"
+    }
+  ],
+  "physicalTables": [
+    {
+      "name": "loan.csv",
+      "columns": [
+        "loan_id",
+        "customer_id",
+        "loan_status",
+        "loan_amount",
+        "state",
+        "funded_amount",
+        "term",
+        "int_rate",
+        "installment",
+        "grade",
+        "issue_d",
+        "issue_date",
+        "issue_year",
+        "pymnt_plan",
+        "type",
+        "purpose",
+        "description",
+        "notes"
+      ],
+      "parse": {
+        "delimiter": ",",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_IN"
+      }
+    },
+    {
+      "name": "loan_count_by_year.csv",
+      "columns": [
+        "issue_year",
+        "loan_count"
+      ],
+      "parse": {
+        "delimiter": ",",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_IN"
+      }
+    },
+    {
+      "name": "loan_purposes.csv",
+      "columns": [
+        "purpose"
+      ],
+      "parse": {
+        "delimiter": null,
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_IN"
+      }
+    },
+    {
+      "name": "loan_with_region.csv",
+      "columns": [
+        "loan_id",
+        "loan_amount",
+        "region"
+      ],
+      "parse": {
+        "delimiter": ",",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_IN"
+      }
+    },
+    {
+      "name": "state_region.csv",
+      "columns": [
+        "state",
+        "subregion",
+        "region"
+      ],
+      "parse": {
+        "delimiter": ",",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_IN"
+      }
+    },
+    {
+      "name": "customer.csv",
+      "columns": [
+        "customer_id",
+        "emp_title",
+        "emp_length",
+        "home_ownership",
+        "annual_inc",
+        "annual_inc_joint",
+        "verification_status",
+        "zip_code",
+        "addr_state",
+        "avg_cur_bal",
+        "Tot_cur_bal"
+      ],
+      "parse": {
+        "delimiter": ",",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_IN"
+      }
+    }
+  ],
+  "columnTableMap": {
+    "Tot_cur_bal": "customer.csv",
+    "addr_state": "customer.csv",
+    "annual_inc": "customer.csv",
+    "annual_inc_joint": "customer.csv",
+    "avg_cur_bal": "customer.csv",
+    "customer_id (customer.csv)": "customer.csv",
+    "customer_id": "loan.csv",
+    "description": "loan.csv",
+    "emp_length": "customer.csv",
+    "emp_title": "customer.csv",
+    "funded_amount": "loan.csv",
+    "grade": "loan.csv",
+    "home_ownership": "customer.csv",
+    "installment": "loan.csv",
+    "int_rate": "loan.csv",
+    "issue_d": "loan.csv",
+    "issue_date": "loan.csv",
+    "issue_year": "loan.csv",
+    "loan_amount": "loan.csv",
+    "loan_id": "loan.csv",
+    "loan_status": "loan.csv",
+    "notes": "loan.csv",
+    "purpose (loan_purposes.csv)": "loan_purposes.csv",
+    "purpose": "loan.csv",
+    "pymnt_plan": "loan.csv",
+    "region": "state_region.csv",
+    "state (state_region.csv)": "state_region.csv",
+    "state": "loan.csv",
+    "subregion": "state_region.csv",
+    "term": "loan.csv",
+    "type": "loan.csv",
+    "verification_status": "customer.csv",
+    "zip_code": "customer.csv",
+    "loan_count": "loan_count_by_year.csv"
+  },
+  "relationships": [
+    {
+      "fromTable": "loan.csv",
+      "toTable": "customer.csv",
+      "fromColumn": "customer_id",
+      "toColumn": "customer_id (customer.csv)",
+      "operator": "=",
+      "toSideUnique": true
+    },
+    {
+      "fromTable": "loan.csv",
+      "toTable": "loan_purposes.csv",
+      "fromColumn": "purpose",
+      "toColumn": "purpose (loan_purposes.csv)",
+      "operator": "=",
+      "toSideUnique": true
+    },
+    {
+      "fromTable": "loan.csv",
+      "toTable": "state_region.csv",
+      "fromColumn": "state",
+      "toColumn": "state (state_region.csv)",
+      "operator": "=",
+      "toSideUnique": true
+    }
+  ],
+  "hierarchies": [
+    {
+      "name": "Geography",
+      "datasource": "customer",
+      "levels": [
+        "region",
+        "subregion",
+        "state (state_region.csv)"
+      ]
+    }
+  ],
+  "sets": [],
+  "groups": [],
+  "bins": [],
+  "theme": {
+    "fontFamily": null,
+    "titleFontSize": null,
+    "worksheetFontSize": null,
+    "formatRules": null,
+    "markColors": [
+      "#4e79a7",
+      "#f28e2b"
+    ]
+  },
+  "blending": {
+    "blended": false,
+    "datasources": [
+      "customer"
+    ]
+  },
+  "rls": {
+    "detected": false,
+    "type": null,
+    "securedTable": null,
+    "mappingTable": null,
+    "userColumn": null,
+    "signalField": null
+  }
+}

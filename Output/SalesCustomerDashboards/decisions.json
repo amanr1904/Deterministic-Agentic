@@ -1,4 +1,4 @@
-{
+﻿{
   "decisionsVersion": "1.0",
   "modelName": "SalesCustomerDashboards",
   "tableStrategy": "star-schema",
@@ -8,23 +8,23 @@
       "role": "fact",
       "sourceType": "csv",
       "sourceFile": "C:\\Users\\BoghraJeelKishorbhai\\Deterministic-Agentic\\Data\\Sales and Customer\\Orders.csv",
-      "keyColumns": ["Order ID"]
+      "keyColumns": []
     },
     {
       "name": "Customers",
       "role": "dim",
       "sourceType": "csv",
       "sourceFile": "C:\\Users\\BoghraJeelKishorbhai\\Deterministic-Agentic\\Data\\Sales and Customer\\Customers.csv",
-      "keyColumns": ["Customer_ID"],
-      "dedupKey": "Customer_ID"
+      "keyColumns": ["Customer ID"],
+      "dedupKey": "Customer ID"
     },
     {
       "name": "Location",
       "role": "dim",
       "sourceType": "csv",
       "sourceFile": "C:\\Users\\BoghraJeelKishorbhai\\Deterministic-Agentic\\Data\\Sales and Customer\\Location.csv",
-      "keyColumns": ["Postal_Code"],
-      "dedupKey": "Postal_Code"
+      "keyColumns": ["Postal Code"],
+      "dedupKey": "Postal Code"
     },
     {
       "name": "Products",
@@ -53,13 +53,13 @@
   "relationships": [
     {
       "fromColumn": "Orders.Customer ID",
-      "toColumn": "Customers.Customer_ID",
+      "toColumn": "Customers.Customer ID",
       "crossFilter": "single",
       "active": true
     },
     {
       "fromColumn": "Orders.Postal Code",
-      "toColumn": "Location.Postal_Code",
+      "toColumn": "Location.Postal Code",
       "crossFilter": "single",
       "active": true
     },
@@ -77,169 +77,115 @@
       "dax": "SELECTEDVALUE ( 'Select Year'[Select Year], 2023 )",
       "formatString": "0",
       "displayFolder": "Parameters",
-      "description": "Year chosen in the Select Year parameter slicer (defaults to 2023).",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "Total Sales",
-      "dax": "SUM ( 'Orders'[Sales] )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Base Measures",
-      "description": "Total sales amount.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "Total Profit",
-      "dax": "SUM ( 'Orders'[Profit] )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Base Measures",
-      "description": "Total profit amount.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "Total Quantity",
-      "dax": "SUM ( 'Orders'[Quantity] )",
-      "formatString": "#,0",
-      "displayFolder": "Base Measures",
-      "description": "Total units sold.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "Total Customers",
-      "dax": "DISTINCTCOUNT ( 'Orders'[Customer ID] )",
-      "formatString": "#,0",
-      "displayFolder": "Base Measures",
-      "description": "Distinct number of customers.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "Total Orders",
-      "dax": "DISTINCTCOUNT ( 'Orders'[Order ID] )",
-      "formatString": "#,0",
-      "displayFolder": "Base Measures",
-      "description": "Distinct number of orders.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "Sales per Customer",
-      "dax": "DIVIDE ( [Total Sales], [Total Customers] )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Base Measures",
-      "description": "Average sales per customer.",
+      "description": "Year chosen in the Select Year slicer (defaults to 2023).",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "CY Sales",
-      "dax": "VAR yr = [Selected Year]\nRETURN\nCALCULATE ( [Total Sales], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
-      "formatString": "\\$#,0",
+      "dax": "VAR y = [Selected Year]\nRETURN\n    CALCULATE ( SUM ( 'Orders'[Sales] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
+      "formatString": "#,0",
       "displayFolder": "Current Year",
-      "description": "Sales in the selected year.",
+      "description": "Sales for the selected year.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Sales",
+      "dax": "VAR y = [Selected Year] - 1\nRETURN\n    CALCULATE ( SUM ( 'Orders'[Sales] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
+      "formatString": "#,0",
+      "displayFolder": "Prior Year",
+      "description": "Sales for the prior year.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "CY Profit",
-      "dax": "VAR yr = [Selected Year]\nRETURN\nCALCULATE ( [Total Profit], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
-      "formatString": "\\$#,0",
+      "dax": "VAR y = [Selected Year]\nRETURN\n    CALCULATE ( SUM ( 'Orders'[Profit] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
+      "formatString": "#,0",
       "displayFolder": "Current Year",
-      "description": "Profit in the selected year.",
+      "description": "Profit for the selected year.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Profit",
+      "dax": "VAR y = [Selected Year] - 1\nRETURN\n    CALCULATE ( SUM ( 'Orders'[Profit] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
+      "formatString": "#,0",
+      "displayFolder": "Prior Year",
+      "description": "Profit for the prior year.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "CY Quantity",
-      "dax": "VAR yr = [Selected Year]\nRETURN\nCALCULATE ( [Total Quantity], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
+      "dax": "VAR y = [Selected Year]\nRETURN\n    CALCULATE ( SUM ( 'Orders'[Quantity] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
       "formatString": "#,0",
       "displayFolder": "Current Year",
-      "description": "Quantity in the selected year.",
+      "description": "Quantity for the selected year.",
       "source": "llm"
     },
     {
       "table": "Orders",
-      "name": "CY Customers",
-      "dax": "VAR yr = [Selected Year]\nRETURN\nCALCULATE ( [Total Customers], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
+      "name": "PY Quantity",
+      "dax": "VAR y = [Selected Year] - 1\nRETURN\n    CALCULATE ( SUM ( 'Orders'[Quantity] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
       "formatString": "#,0",
-      "displayFolder": "Current Year",
-      "description": "Customers in the selected year.",
+      "displayFolder": "Prior Year",
+      "description": "Quantity for the prior year.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "CY Orders",
-      "dax": "VAR yr = [Selected Year]\nRETURN\nCALCULATE ( [Total Orders], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
+      "dax": "VAR y = [Selected Year]\nRETURN\n    CALCULATE ( DISTINCTCOUNT ( 'Orders'[Order ID] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
       "formatString": "#,0",
       "displayFolder": "Current Year",
-      "description": "Orders in the selected year.",
+      "description": "Distinct order count for the selected year.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Orders",
+      "dax": "VAR y = [Selected Year] - 1\nRETURN\n    CALCULATE ( DISTINCTCOUNT ( 'Orders'[Order ID] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
+      "formatString": "#,0",
+      "displayFolder": "Prior Year",
+      "description": "Distinct order count for the prior year.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "CY Customers",
+      "dax": "VAR y = [Selected Year]\nRETURN\n    CALCULATE ( DISTINCTCOUNT ( 'Orders'[Customer ID] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
+      "formatString": "#,0",
+      "displayFolder": "Current Year",
+      "description": "Distinct customer count for the selected year.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "PY Customers",
+      "dax": "VAR y = [Selected Year] - 1\nRETURN\n    CALCULATE ( DISTINCTCOUNT ( 'Orders'[Customer ID] ), FILTER ( 'Orders', YEAR ( 'Orders'[Order Date] ) = y ) )",
+      "formatString": "#,0",
+      "displayFolder": "Prior Year",
+      "description": "Distinct customer count for the prior year.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "CY Sales per Customer",
       "dax": "DIVIDE ( [CY Sales], [CY Customers] )",
-      "formatString": "\\$#,0",
+      "formatString": "#,0",
       "displayFolder": "Current Year",
-      "description": "Sales per customer in the selected year.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "PY Sales",
-      "dax": "VAR yr = [Selected Year] - 1\nRETURN\nCALCULATE ( [Total Sales], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Prior Year",
-      "description": "Sales in the prior year.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "PY Profit",
-      "dax": "VAR yr = [Selected Year] - 1\nRETURN\nCALCULATE ( [Total Profit], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Prior Year",
-      "description": "Profit in the prior year.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "PY Quantity",
-      "dax": "VAR yr = [Selected Year] - 1\nRETURN\nCALCULATE ( [Total Quantity], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
-      "formatString": "#,0",
-      "displayFolder": "Prior Year",
-      "description": "Quantity in the prior year.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "PY Customers",
-      "dax": "VAR yr = [Selected Year] - 1\nRETURN\nCALCULATE ( [Total Customers], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
-      "formatString": "#,0",
-      "displayFolder": "Prior Year",
-      "description": "Customers in the prior year.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "PY Orders",
-      "dax": "VAR yr = [Selected Year] - 1\nRETURN\nCALCULATE ( [Total Orders], FILTER ( ALL ( 'Orders'[Order Date] ), YEAR ( 'Orders'[Order Date] ) = yr ) )",
-      "formatString": "#,0",
-      "displayFolder": "Prior Year",
-      "description": "Orders in the prior year.",
+      "description": "Selected-year sales divided by selected-year customers.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "PY Sales per Customer",
       "dax": "DIVIDE ( [PY Sales], [PY Customers] )",
-      "formatString": "\\$#,0",
+      "formatString": "#,0",
       "displayFolder": "Prior Year",
-      "description": "Sales per customer in the prior year.",
+      "description": "Prior-year sales divided by prior-year customers.",
       "source": "llm"
     },
     {
@@ -247,17 +193,17 @@
       "name": "% Diff Sales",
       "dax": "DIVIDE ( [CY Sales] - [PY Sales], [PY Sales] )",
       "formatString": "0.0%",
-      "displayFolder": "YoY %",
-      "description": "Year-over-year change in sales.",
+      "displayFolder": "Variance",
+      "description": "Year-over-year sales change.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "% Diff Profit",
-      "dax": "DIVIDE ( [CY Profit] - [PY Profit], [PY Profit] )",
+      "dax": "DIVIDE ( [CY Profit] - [PY Profit], [CY Profit] )",
       "formatString": "0.0%",
-      "displayFolder": "YoY %",
-      "description": "Year-over-year change in profit.",
+      "displayFolder": "Variance",
+      "description": "Year-over-year profit change (over current-year profit, matching the source workbook).",
       "source": "llm"
     },
     {
@@ -265,17 +211,8 @@
       "name": "% Diff Quantity",
       "dax": "DIVIDE ( [CY Quantity] - [PY Quantity], [PY Quantity] )",
       "formatString": "0.0%",
-      "displayFolder": "YoY %",
-      "description": "Year-over-year change in quantity.",
-      "source": "llm"
-    },
-    {
-      "table": "Orders",
-      "name": "% Diff Customers",
-      "dax": "DIVIDE ( [CY Customers] - [PY Customers], [PY Customers] )",
-      "formatString": "0.0%",
-      "displayFolder": "YoY %",
-      "description": "Year-over-year change in customers.",
+      "displayFolder": "Variance",
+      "description": "Year-over-year quantity change.",
       "source": "llm"
     },
     {
@@ -283,8 +220,17 @@
       "name": "% Diff Orders",
       "dax": "DIVIDE ( [CY Orders] - [PY Orders], [PY Orders] )",
       "formatString": "0.0%",
-      "displayFolder": "YoY %",
-      "description": "Year-over-year change in orders.",
+      "displayFolder": "Variance",
+      "description": "Year-over-year order-count change.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "% Diff Customers",
+      "dax": "DIVIDE ( [CY Customers] - [PY Customers], [PY Customers] )",
+      "formatString": "0.0%",
+      "displayFolder": "Variance",
+      "description": "Year-over-year customer-count change.",
       "source": "llm"
     },
     {
@@ -292,103 +238,99 @@
       "name": "% Diff Sales per Customers",
       "dax": "DIVIDE ( [CY Sales per Customer] - [PY Sales per Customer], [PY Sales per Customer] )",
       "formatString": "0.0%",
-      "displayFolder": "YoY %",
+      "displayFolder": "Variance",
       "description": "Year-over-year change in sales per customer.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "KPI CY Less PY",
-      "dax": "IF ( [CY Sales] < [PY Sales], \"\u2b24\", \"\" )",
+      "dax": "IF ( [CY Sales] < [PY Sales], UNICHAR ( 11044 ), \"\" )",
       "formatString": null,
-      "displayFolder": "Indicators",
-      "description": "Dot glyph shown when current-year sales fall below the prior year.",
+      "displayFolder": "KPI",
+      "description": "Shows a filled dot when current-year sales are below prior-year sales.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "KPI Sales Avg",
-      "dax": "VAR cur = [CY Sales]\nVAR avg = AVERAGEX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Sales] )\nRETURN\nIF ( cur > avg, \"Above\", \"Below\" )",
+      "dax": "VAR cur = [CY Sales]\nVAR avgValue = AVERAGEX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Sales] )\nRETURN\n    IF ( cur > avgValue, \"Above\", \"Below\" )",
       "formatString": null,
-      "displayFolder": "Indicators",
-      "description": "Marks each period above or below the average current-year sales (Tableau WINDOW_AVG).",
+      "displayFolder": "KPI",
+      "description": "Above/Below versus the average current-year sales across the customers in view (Tableau WINDOW_AVG).",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "KPI Profit Avg",
-      "dax": "VAR cur = [CY Profit]\nVAR avg = AVERAGEX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Profit] )\nRETURN\nIF ( cur > avg, \"Above\", \"Below\" )",
+      "dax": "VAR cur = [CY Profit]\nVAR avgValue = AVERAGEX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Profit] )\nRETURN\n    IF ( cur > avgValue, \"Above\", \"Below\" )",
       "formatString": null,
-      "displayFolder": "Indicators",
-      "description": "Marks each period above or below the average current-year profit (Tableau WINDOW_AVG).",
+      "displayFolder": "KPI",
+      "description": "Above/Below versus the average current-year profit across the customers in view (Tableau WINDOW_AVG).",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "Min/Max Sales",
-      "dax": "VAR cur = [CY Sales]\nVAR mx = MAXX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Sales] )\nVAR mn = MINX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Sales] )\nRETURN\nIF ( cur = mx || cur = mn, cur )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Indicators",
-      "description": "Returns sales only at the highest/lowest period (Tableau WINDOW_MAX/MIN).",
+      "dax": "VAR cur = [CY Sales]\nVAR mx = MAXX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Sales] )\nVAR mn = MINX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Sales] )\nRETURN\n    IF ( cur = mx || cur = mn, cur )",
+      "formatString": "#,0",
+      "displayFolder": "Min/Max",
+      "description": "Returns the value only on the highest or lowest current-year sales row in view (Tableau WINDOW_MAX/MIN).",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "Min/Max Profit",
-      "dax": "VAR cur = [CY Profit]\nVAR mx = MAXX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Profit] )\nVAR mn = MINX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Profit] )\nRETURN\nIF ( cur = mx || cur = mn, cur )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Indicators",
-      "description": "Returns profit only at the highest/lowest period (Tableau WINDOW_MAX/MIN).",
+      "dax": "VAR cur = [CY Profit]\nVAR mx = MAXX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Profit] )\nVAR mn = MINX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Profit] )\nRETURN\n    IF ( cur = mx || cur = mn, cur )",
+      "formatString": "#,0",
+      "displayFolder": "Min/Max",
+      "description": "Returns the value only on the highest or lowest current-year profit row in view.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "Min/Max Quantity",
-      "dax": "VAR cur = [CY Quantity]\nVAR mx = MAXX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Quantity] )\nVAR mn = MINX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Quantity] )\nRETURN\nIF ( cur = mx || cur = mn, cur )",
+      "dax": "VAR cur = [CY Quantity]\nVAR mx = MAXX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Quantity] )\nVAR mn = MINX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Quantity] )\nRETURN\n    IF ( cur = mx || cur = mn, cur )",
       "formatString": "#,0",
-      "displayFolder": "Indicators",
-      "description": "Returns quantity only at the highest/lowest period (Tableau WINDOW_MAX/MIN).",
+      "displayFolder": "Min/Max",
+      "description": "Returns the value only on the highest or lowest current-year quantity row in view.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "Min/Max Orders",
-      "dax": "VAR cur = [CY Orders]\nVAR mx = MAXX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Orders] )\nVAR mn = MINX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Orders] )\nRETURN\nIF ( cur = mx || cur = mn, cur )",
+      "dax": "VAR cur = [CY Orders]\nVAR mx = MAXX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Orders] )\nVAR mn = MINX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Orders] )\nRETURN\n    IF ( cur = mx || cur = mn, cur )",
       "formatString": "#,0",
-      "displayFolder": "Indicators",
-      "description": "Returns order count only at the highest/lowest period (Tableau WINDOW_MAX/MIN).",
+      "displayFolder": "Min/Max",
+      "description": "Returns the value only on the highest or lowest current-year order-count row in view.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "Min/Max Customers",
-      "dax": "VAR cur = [CY Customers]\nVAR mx = MAXX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Customers] )\nVAR mn = MINX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Customers] )\nRETURN\nIF ( cur = mx || cur = mn, cur )",
+      "dax": "VAR cur = [CY Customers]\nVAR mx = MAXX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Customers] )\nVAR mn = MINX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Customers] )\nRETURN\n    IF ( cur = mx || cur = mn, cur )",
       "formatString": "#,0",
-      "displayFolder": "Indicators",
-      "description": "Returns customer count only at the highest/lowest period (Tableau WINDOW_MAX/MIN).",
+      "displayFolder": "Min/Max",
+      "description": "Returns the value only on the highest or lowest current-year customer-count row in view.",
       "source": "llm"
     },
     {
       "table": "Orders",
       "name": "Min/Max Sales Per Customers",
-      "dax": "VAR cur = [CY Sales per Customer]\nVAR mx = MAXX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Sales per Customer] )\nVAR mn = MINX ( ALLSELECTED ( 'Orders'[Order Date] ), [CY Sales per Customer] )\nRETURN\nIF ( cur = mx || cur = mn, cur )",
-      "formatString": "\\$#,0",
-      "displayFolder": "Indicators",
-      "description": "Returns sales-per-customer only at the highest/lowest period (Tableau WINDOW_MAX/MIN).",
+      "dax": "VAR cur = [CY Sales per Customer]\nVAR mx = MAXX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Sales per Customer] )\nVAR mn = MINX ( ALLSELECTED ( 'Customers'[Customer ID] ), [CY Sales per Customer] )\nRETURN\n    IF ( cur = mx || cur = mn, cur )",
+      "formatString": "#,0",
+      "displayFolder": "Min/Max",
+      "description": "Returns the value only on the highest or lowest current-year sales-per-customer row in view.",
+      "source": "llm"
+    },
+    {
+      "table": "Orders",
+      "name": "Nr of Orders per Customers",
+      "dax": "DISTINCTCOUNT ( 'Orders'[Order ID] )",
+      "formatString": "#,0",
+      "displayFolder": "Current Year",
+      "description": "Distinct order count in the current filter context (Tableau FIXED [Customer]: COUNTD([Order])).",
       "source": "llm"
     }
-  ],
-  "visualDecisions": [
-    { "worksheet": "KPI Customers", "visualType": "card", "reason": "KPI tile showing a single metric vs prior year." },
-    { "worksheet": "KPI Orders", "visualType": "card", "reason": "KPI tile showing a single metric vs prior year." },
-    { "worksheet": "KPI Profit", "visualType": "card", "reason": "KPI tile showing a single metric vs prior year." },
-    { "worksheet": "KPI Quantity", "visualType": "card", "reason": "KPI tile showing a single metric vs prior year." },
-    { "worksheet": "KPI Sales", "visualType": "card", "reason": "KPI tile showing a single metric vs prior year." },
-    { "worksheet": "KPI Sales Per Customers", "visualType": "card", "reason": "KPI tile showing a single metric vs prior year." },
-    { "worksheet": "Test KPI", "visualType": "card", "reason": "Scratch KPI sheet rendered as a card." },
-    { "worksheet": "Test KPI2", "visualType": "card", "reason": "Scratch KPI sheet rendered as a card." },
-    { "worksheet": "Test Max Min", "visualType": "card", "reason": "Scratch min/max sheet rendered as a card." },
-    { "worksheet": "Top Customers", "visualType": "tableEx", "reason": "Ranked crosstab of customers with multiple measure columns." },
-    { "worksheet": "Weekly Trends", "visualType": "lineChart", "reason": "Sales trend over the Order Date axis." }
   ]
 }

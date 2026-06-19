@@ -3,7 +3,7 @@
   "workbook": {
     "name": "Sales & Customer Dashboards",
     "pascalName": "SalesCustomerDashboards",
-    "sourcePath": "Data/Sales and Customer/Sales & Customer Dashboards.twb",
+    "sourcePath": "C:/Users/BoghraJeelKishorbhai/Deterministic-Agentic/Data/Sales and Customer/Sales & Customer Dashboards.twb",
     "version": "18.1",
     "platform": ""
   },
@@ -30,6 +30,51 @@
         "Extract].[Location.csv_DF4EAC7E83794D459E9117839A9D605A",
         "Extract].[Products.csv_62ED95945D1146228C3236829E70736C"
       ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "Orders#csv",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "Customers#csv",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "Location#csv",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "Products#csv",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "Extract.Orders.csv_905AF3F5FECA431C80766E0C0C188760",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "Extract.Customers.csv_6DC64CBD7A91476C8367C3011943FE6B",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "Extract.Location.csv_DF4EAC7E83794D459E9117839A9D605A",
+          "type": "table"
+        },
+        {
+          "schema": null,
+          "table": "Extract.Products.csv_62ED95945D1146228C3236829E70736C",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
       "active": true
     }
   ],
@@ -42,7 +87,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 0
+      "ordinal": 0,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Row ID",
+      "metaType": "integer"
     },
     {
       "datasource": "Sales DataSource",
@@ -52,7 +100,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 1
+      "ordinal": 1,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Order ID",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -62,7 +113,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 2
+      "ordinal": 2,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Order Date",
+      "metaType": "date"
     },
     {
       "datasource": "Sales DataSource",
@@ -72,7 +126,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 3
+      "ordinal": 3,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Ship Date",
+      "metaType": "date"
     },
     {
       "datasource": "Sales DataSource",
@@ -82,7 +139,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 4
+      "ordinal": 4,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Ship Mode",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -92,7 +152,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 5
+      "ordinal": 5,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Customer ID",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -102,7 +165,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 6
+      "ordinal": 6,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Segment",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -112,7 +178,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 7
+      "ordinal": 7,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Postal Code",
+      "metaType": "integer"
     },
     {
       "datasource": "Sales DataSource",
@@ -122,7 +191,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 8
+      "ordinal": 8,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Product ID",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -132,7 +204,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 9
+      "ordinal": 9,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Sales",
+      "metaType": "real"
     },
     {
       "datasource": "Sales DataSource",
@@ -142,7 +217,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 10
+      "ordinal": 10,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Quantity",
+      "metaType": "integer"
     },
     {
       "datasource": "Sales DataSource",
@@ -152,7 +230,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 11
+      "ordinal": 11,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Discount",
+      "metaType": "real"
     },
     {
       "datasource": "Sales DataSource",
@@ -162,7 +243,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 12
+      "ordinal": 12,
+      "physicalTable": "Orders.csv",
+      "remoteName": "Profit",
+      "metaType": "real"
     },
     {
       "datasource": "Sales DataSource",
@@ -172,7 +256,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 14
+      "ordinal": 14,
+      "physicalTable": "Customers.csv",
+      "remoteName": "Customer Name",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -182,7 +269,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 16
+      "ordinal": 16,
+      "physicalTable": "Location.csv",
+      "remoteName": "City",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -192,7 +282,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 17
+      "ordinal": 17,
+      "physicalTable": "Location.csv",
+      "remoteName": "State",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -202,7 +295,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 18
+      "ordinal": 18,
+      "physicalTable": "Location.csv",
+      "remoteName": "Region",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -212,7 +308,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 19
+      "ordinal": 19,
+      "physicalTable": "Location.csv",
+      "remoteName": "Country/Region",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -222,7 +321,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 21
+      "ordinal": 21,
+      "physicalTable": "Products.csv",
+      "remoteName": "Category",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -232,7 +334,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 22
+      "ordinal": 22,
+      "physicalTable": "Products.csv",
+      "remoteName": "Sub-Category",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -242,7 +347,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 23
+      "ordinal": 23,
+      "physicalTable": "Products.csv",
+      "remoteName": "Product Name",
+      "metaType": "string"
     },
     {
       "datasource": "Sales DataSource",
@@ -251,8 +359,11 @@
       "dataType": "integer",
       "role": "dimension",
       "semanticRole": "[ZipCode].[Name]",
-      "format": null,
-      "ordinal": 15
+      "format": "*00000",
+      "ordinal": 15,
+      "physicalTable": "Location.csv",
+      "remoteName": "Postal Code",
+      "metaType": "integer"
     }
   ],
   "calculatedFields": [
@@ -264,187 +375,264 @@
       "formula": "2023",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "% Diff Orders",
       "fieldName": "[% Diff Customers (copy)_3221481164597477394]",
       "dataType": "real",
       "role": "measure",
-      "formula": "(COUNTD([CY Sales (copy)_3221481164594982929]) - COUNTD([PY Sales (copy)_3221481164594888720])) / COUNTD([PY Sales (copy)_3221481164594888720])",
+      "formula": "(COUNTD([CY Orders]) - COUNTD([PY Orders])) / COUNTD([PY Orders])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Orders",
+        "PY Orders"
+      ]
     },
     {
       "caption": "% Diff Customers",
       "fieldName": "[% Diff Quantity (copy)_3221481164588376075]",
       "dataType": "real",
       "role": "measure",
-      "formula": "(COUNTD([CY Sales (copy)_3221481164532666369]) - COUNTD([CY Customers (copy)_3221481164533411843])) / COUNTD([CY Customers (copy)_3221481164533411843])",
+      "formula": "(COUNTD([CY Customers]) - COUNTD([PY Customers])) / COUNTD([PY Customers])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Customers",
+        "PY Customers"
+      ]
     },
     {
       "caption": "% Diff Quantity",
       "fieldName": "[% Diff Sales (copy) (copy)_237846410425131013]",
       "dataType": "real",
       "role": "measure",
-      "formula": "(SUM([CY Sales (copy) (copy)_237846410424193025]) - SUM([PY Sales (copy) (copy)_237846410424823811])) / SUM([PY Sales (copy) (copy)_237846410424823811])",
+      "formula": "(SUM([CY Quantity]) - SUM([PY Quantity])) / SUM([PY Quantity])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Quantity",
+        "PY Quantity"
+      ]
     },
     {
       "caption": "% Diff Profit",
       "fieldName": "[% Diff Sales (copy)_237846410425122820]",
       "dataType": "real",
       "role": "measure",
-      "formula": "(SUM([CY Sales (copy)_237846410424180736]) - SUM([PY Sales (copy)_237846410424815618])) / SUM([CY Sales (copy)_237846410424180736])",
+      "formula": "(SUM([CY Profit]) - SUM([PY Profit])) / SUM([CY Profit])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Profit",
+        "PY Profit"
+      ]
     },
     {
       "caption": "% Diff Sales per Customers",
       "fieldName": "[% Diff Sales (copy)_3221481164536066054]",
       "dataType": "real",
       "role": "measure",
-      "formula": "([CY Profit (copy)_3221481164532895746] - [CY Sales per Customer (copy)_3221481164533485572]) / [CY Sales per Customer (copy)_3221481164533485572]",
+      "formula": "([CY Sales per Customer] - [PY Sales per Customer]) / [PY Sales per Customer]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales per Customer",
+        "PY Sales per Customer"
+      ]
     },
     {
       "caption": "PY Customers",
       "fieldName": "[CY Customers (copy)_3221481164533411843]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "IF YEAR([Order Date])= [Parameters].[Parameter 1]-1 THEN [Customer ID] \r\nEND",
+      "formula": "IF YEAR([Order Date])= [Select Year]-1 THEN [Customer ID] \r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Customer ID"
+      ]
     },
     {
       "caption": "CY Sales per Customer",
       "fieldName": "[CY Profit (copy)_3221481164532895746]",
       "dataType": "real",
       "role": "measure",
-      "formula": "SUM([Calculation_721701895334993921]) / COUNTD([CY Sales (copy)_3221481164532666369])",
+      "formula": "SUM([CY Sales]) / COUNTD([CY Customers])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales",
+        "CY Customers"
+      ]
     },
     {
       "caption": "CY Quantity",
       "fieldName": "[CY Sales (copy) (copy)_237846410424193025]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Quantity]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year] THEN [Quantity]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Quantity"
+      ]
     },
     {
       "caption": "CY Profit",
       "fieldName": "[CY Sales (copy)_237846410424180736]",
       "dataType": "real",
       "role": "measure",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Profit]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year] THEN [Profit]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Profit"
+      ]
     },
     {
       "caption": "CY Customers",
       "fieldName": "[CY Sales (copy)_3221481164532666369]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "IF YEAR([Order Date])= [Parameters].[Parameter 1] THEN [Customer ID] \r\nEND",
+      "formula": "IF YEAR([Order Date])= [Select Year] THEN [Customer ID] \r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Customer ID"
+      ]
     },
     {
       "caption": "CY Orders",
       "fieldName": "[CY Sales (copy)_3221481164594982929]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Order ID]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year] THEN [Order ID]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Order ID"
+      ]
     },
     {
       "caption": "PY Sales",
       "fieldName": "[CY Sales (copy)_721701895335804930]",
       "dataType": "real",
       "role": "measure",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Sales]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year]-1 THEN [Sales]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Sales"
+      ]
     },
     {
       "caption": "PY Sales per Customer",
       "fieldName": "[CY Sales per Customer (copy)_3221481164533485572]",
       "dataType": "real",
       "role": "measure",
-      "formula": "SUM([CY Sales (copy)_721701895335804930]) / COUNTD([CY Customers (copy)_3221481164533411843])",
+      "formula": "SUM([PY Sales]) / COUNTD([PY Customers])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "PY Sales",
+        "PY Customers"
+      ]
     },
     {
       "caption": "Current Year",
       "fieldName": "[Calculation_1240741752607899648]",
       "dataType": "integer",
       "role": "dimension",
-      "formula": "[Parameters].[Parameter 1]",
+      "formula": "[Select Year]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Select Year"
+      ]
     },
     {
       "caption": "Previous Year",
       "fieldName": "[Calculation_1240741752607936513]",
       "dataType": "integer",
       "role": "dimension",
-      "formula": "[Parameters].[Parameter 1]-1",
+      "formula": "[Select Year]-1",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Select Year"
+      ]
     },
     {
       "caption": "KPI CY Less PY",
       "fieldName": "[Calculation_2435040078806671369]",
       "dataType": "string",
       "role": "measure",
-      "formula": "IF SUM([Calculation_721701895334993921]) < SUM([CY Sales (copy)_721701895335804930]) THEN '⬤'\r\nELSE ''\r\nEND",
+      "formula": "IF SUM([CY Sales]) < SUM([PY Sales]) THEN '⬤'\r\nELSE ''\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales",
+        "PY Sales"
+      ]
     },
     {
       "caption": "KPI Sales Avg",
       "fieldName": "[Calculation_2435040078825054219]",
       "dataType": "string",
       "role": "measure",
-      "formula": "IF SUM([Calculation_721701895334993921]) > WINDOW_AVG(SUM([Calculation_721701895334993921]))\r\nTHEN 'Above'\r\nELSE 'Below'\r\nEND",
+      "formula": "IF SUM([CY Sales]) > WINDOW_AVG(SUM([CY Sales]))\r\nTHEN 'Above'\r\nELSE 'Below'\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales"
+      ]
     },
     {
       "caption": "CY Sales",
       "fieldName": "[Calculation_721701895334993921]",
       "dataType": "real",
       "role": "measure",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1] THEN [Sales]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year] THEN [Sales]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Sales"
+      ]
     },
     {
       "caption": "Order Date (Year)",
@@ -454,137 +642,187 @@
       "formula": "YEAR([Order Date])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order Date"
+      ]
     },
     {
       "caption": "% Diff Sales",
       "fieldName": "[Calculation_721701895340638217]",
       "dataType": "real",
       "role": "measure",
-      "formula": "(SUM([Calculation_721701895334993921]) - SUM([CY Sales (copy)_721701895335804930])) / SUM([CY Sales (copy)_721701895335804930])",
+      "formula": "(SUM([CY Sales]) - SUM([PY Sales])) / SUM([PY Sales])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales",
+        "PY Sales"
+      ]
     },
     {
       "caption": "Min/Max Sales",
       "fieldName": "[Calculation_721701895347843083]",
       "dataType": "real",
       "role": "measure",
-      "formula": "IF SUM([Calculation_721701895334993921]) = WINDOW_MAX(SUM([Calculation_721701895334993921]))\r\nTHEN SUM([Calculation_721701895334993921])\r\nELSEIF SUM([Calculation_721701895334993921]) = WINDOW_MIN(SUM([Calculation_721701895334993921]))\r\nTHEN SUM([Calculation_721701895334993921])\r\nEND",
+      "formula": "IF SUM([CY Sales]) = WINDOW_MAX(SUM([CY Sales]))\r\nTHEN SUM([CY Sales])\r\nELSEIF SUM([CY Sales]) = WINDOW_MIN(SUM([CY Sales]))\r\nTHEN SUM([CY Sales])\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales"
+      ]
     },
     {
       "caption": "{SUM([CY Sales])}",
       "fieldName": "[Calculation_721701895351046156]",
       "dataType": "real",
       "role": "measure",
-      "formula": "{SUM([Calculation_721701895334993921])}",
+      "formula": "{SUM([CY Sales])}",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales"
+      ]
     },
     {
       "caption": "Nr of Orders per Customers",
       "fieldName": "[Calculation_998110323739992064]",
       "dataType": "integer",
       "role": "dimension",
-      "formula": "{ FIXED [CY Sales (copy)_3221481164532666369]: COUNTD([CY Sales (copy)_3221481164594982929])}",
+      "formula": "{ FIXED [CY Customers]: COUNTD([CY Orders])}",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "CY Customers",
+        "CY Orders"
+      ]
     },
     {
       "caption": "KPI Profit Avg",
       "fieldName": "[KPI Sales Avg (copy)_2435040078826737676]",
       "dataType": "string",
       "role": "measure",
-      "formula": "IF SUM([CY Sales (copy)_237846410424180736]) > WINDOW_AVG(SUM([CY Sales (copy)_237846410424180736]))\r\nTHEN 'Above'\r\nELSE 'Below'\r\nEND",
+      "formula": "IF SUM([CY Profit]) > WINDOW_AVG(SUM([CY Profit]))\r\nTHEN 'Above'\r\nELSE 'Below'\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Profit"
+      ]
     },
     {
       "caption": "Min/Max Sales Per Customers",
       "fieldName": "[Min/Max Quantity (copy)_3221481164537155591]",
       "dataType": "real",
       "role": "measure",
-      "formula": "IF [CY Profit (copy)_3221481164532895746] = WINDOW_MAX([CY Profit (copy)_3221481164532895746])\r\nTHEN [CY Profit (copy)_3221481164532895746] \r\nELSEIF [CY Profit (copy)_3221481164532895746] = WINDOW_MIN([CY Profit (copy)_3221481164532895746])\r\nTHEN [CY Profit (copy)_3221481164532895746]\r\nEND",
+      "formula": "IF [CY Sales per Customer] = WINDOW_MAX([CY Sales per Customer])\r\nTHEN [CY Sales per Customer] \r\nELSEIF [CY Sales per Customer] = WINDOW_MIN([CY Sales per Customer])\r\nTHEN [CY Sales per Customer]\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Sales per Customer"
+      ]
     },
     {
       "caption": "Min/Max Customers",
       "fieldName": "[Min/Max Quantity (copy)_3221481164588691468]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "IF COUNTD([CY Sales (copy)_3221481164532666369]) = WINDOW_MAX(COUNTD([CY Sales (copy)_3221481164532666369]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164532666369])\r\nELSEIF COUNTD([CY Sales (copy)_3221481164532666369]) = WINDOW_MIN(COUNTD([CY Sales (copy)_3221481164532666369]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164532666369])\r\nEND",
+      "formula": "IF COUNTD([CY Customers]) = WINDOW_MAX(COUNTD([CY Customers]))\r\nTHEN COUNTD([CY Customers])\r\nELSEIF COUNTD([CY Customers]) = WINDOW_MIN(COUNTD([CY Customers]))\r\nTHEN COUNTD([CY Customers])\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Customers"
+      ]
     },
     {
       "caption": "Min/Max Quantity",
       "fieldName": "[Min/Max Sales (copy) (copy)_237846410425856007]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "IF SUM([CY Sales (copy) (copy)_237846410424193025]) = WINDOW_MAX(SUM([CY Sales (copy) (copy)_237846410424193025]))\r\nTHEN SUM([CY Sales (copy) (copy)_237846410424193025])\r\nELSEIF SUM([CY Sales (copy) (copy)_237846410424193025]) = WINDOW_MIN(SUM([CY Sales (copy) (copy)_237846410424193025]))\r\nTHEN SUM([CY Sales (copy) (copy)_237846410424193025])\r\nEND",
+      "formula": "IF SUM([CY Quantity]) = WINDOW_MAX(SUM([CY Quantity]))\r\nTHEN SUM([CY Quantity])\r\nELSEIF SUM([CY Quantity]) = WINDOW_MIN(SUM([CY Quantity]))\r\nTHEN SUM([CY Quantity])\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Quantity"
+      ]
     },
     {
       "caption": "Min/Max Profit",
       "fieldName": "[Min/Max Sales (copy)_237846410425847814]",
       "dataType": "real",
       "role": "measure",
-      "formula": "IF SUM([CY Sales (copy)_237846410424180736]) = WINDOW_MAX(SUM([CY Sales (copy)_237846410424180736]))\r\nTHEN SUM([CY Sales (copy)_237846410424180736])\r\nELSEIF SUM([CY Sales (copy)_237846410424180736]) = WINDOW_MIN(SUM([CY Sales (copy)_237846410424180736]))\r\nTHEN SUM([CY Sales (copy)_237846410424180736])\r\nEND",
+      "formula": "IF SUM([CY Profit]) = WINDOW_MAX(SUM([CY Profit]))\r\nTHEN SUM([CY Profit])\r\nELSEIF SUM([CY Profit]) = WINDOW_MIN(SUM([CY Profit]))\r\nTHEN SUM([CY Profit])\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Profit"
+      ]
     },
     {
       "caption": "Min/Max Orders",
       "fieldName": "[Min/Max Sales (copy)_3221481164601258003]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "IF COUNTD([CY Sales (copy)_3221481164594982929]) = WINDOW_MAX(COUNTD([CY Sales (copy)_3221481164594982929]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164594982929])\r\nELSEIF COUNTD([CY Sales (copy)_3221481164594982929]) = WINDOW_MIN(COUNTD([CY Sales (copy)_3221481164594982929]))\r\nTHEN COUNTD([CY Sales (copy)_3221481164594982929])\r\nEND",
+      "formula": "IF COUNTD([CY Orders]) = WINDOW_MAX(COUNTD([CY Orders]))\r\nTHEN COUNTD([CY Orders])\r\nELSEIF COUNTD([CY Orders]) = WINDOW_MIN(COUNTD([CY Orders]))\r\nTHEN COUNTD([CY Orders])\r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "CY Orders"
+      ]
     },
     {
       "caption": "PY Quantity",
       "fieldName": "[PY Sales (copy) (copy)_237846410424823811]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Quantity]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year]-1 THEN [Quantity]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Quantity"
+      ]
     },
     {
       "caption": "PY Profit",
       "fieldName": "[PY Sales (copy)_237846410424815618]",
       "dataType": "real",
       "role": "measure",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Profit]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year]-1 THEN [Profit]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Profit"
+      ]
     },
     {
       "caption": "PY Orders",
       "fieldName": "[PY Sales (copy)_3221481164594888720]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "IF YEAR([Order Date]) = [Parameters].[Parameter 1]-1 THEN [Order ID]\r\nEND",
+      "formula": "IF YEAR([Order Date]) = [Select Year]-1 THEN [Order ID]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Order Date",
+        "Select Year",
+        "Order ID"
+      ]
     }
   ],
   "parameters": [
@@ -627,13 +865,35 @@
         "path": null
       },
       "categoryField": "Nr of Orders per Customers",
-      "valueField": null,
+      "valueField": "CY Customers",
       "categoryDateLevel": null,
       "dimensions": [
         "Nr of Orders per Customers",
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
+      ],
+      "values": [
         "CY Customers"
       ],
-      "values": [],
+      "measures": [
+        {
+          "field": "CY Customers",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164532666369"
+        }
+      ],
+      "axes": {
+        "category": "Nr of Orders per Customers",
+        "categoryLevel": null,
+        "values": [
+          "CY Customers"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": null,
       "filters": [
@@ -643,6 +903,44 @@
         "State",
         "Sub-Category"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -661,7 +959,15 @@
         "gridlines": false,
         "showFieldLabels": false,
         "markStroke": "#333333",
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": "10",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "barChart"
     },
@@ -688,14 +994,77 @@
         "path": null
       },
       "categoryField": "Order Date",
-      "valueField": null,
+      "valueField": "Current Year",
       "categoryDateLevel": "month",
       "dimensions": [
         "Order Date",
-        "usr:Min",
-        "Max Quantity (copy)_3221481164588691468:qk"
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
-      "values": [],
+      "values": [
+        "Current Year",
+        "Previous Year",
+        "PY Customers",
+        "CY Customers",
+        "Calculation",
+        "% Diff Customers",
+        "Min/Max Customers"
+      ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "Previous Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607936513"
+        },
+        {
+          "field": "PY Customers",
+          "agg": "COUNTD",
+          "column": "CY Customers (copy)_3221481164533411843"
+        },
+        {
+          "field": "CY Customers",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164532666369"
+        },
+        {
+          "field": "Calculation",
+          "agg": "SUM",
+          "column": "Calculation_3221481164589563917"
+        },
+        {
+          "field": "% Diff Customers",
+          "agg": "SUM",
+          "column": "% Diff Quantity (copy)_3221481164588376075"
+        },
+        {
+          "field": "Min/Max Customers",
+          "agg": "SUM",
+          "column": "Min/Max Quantity (copy)_3221481164588691468"
+        }
+      ],
+      "axes": {
+        "category": "Order Date",
+        "categoryLevel": "month",
+        "values": [
+          "Current Year",
+          "Previous Year",
+          "PY Customers",
+          "CY Customers",
+          "Calculation",
+          "% Diff Customers",
+          "Min/Max Customers"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Total Customers\n{value}\n{value}  vs. PY",
       "filters": [
@@ -705,6 +1074,44 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -725,9 +1132,17 @@
         "gridlines": false,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "KPI Orders",
@@ -752,14 +1167,84 @@
         "path": null
       },
       "categoryField": "Order Date",
-      "valueField": null,
+      "valueField": "Current Year",
       "categoryDateLevel": "month",
       "dimensions": [
         "Order Date",
-        "usr:Min",
-        "Max Sales (copy)_3221481164601258003:qk"
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
-      "values": [],
+      "values": [
+        "Current Year",
+        "Previous Year",
+        "CY Orders",
+        "PY Orders",
+        "Calculation",
+        "% Diff Orders",
+        "Min/Max Customers",
+        "Min/Max Orders"
+      ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "Previous Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607936513"
+        },
+        {
+          "field": "CY Orders",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164594982929"
+        },
+        {
+          "field": "PY Orders",
+          "agg": "COUNTD",
+          "column": "PY Sales (copy)_3221481164594888720"
+        },
+        {
+          "field": "Calculation",
+          "agg": "SUM",
+          "column": "Calculation_3221481164605767702"
+        },
+        {
+          "field": "% Diff Orders",
+          "agg": "SUM",
+          "column": "% Diff Customers (copy)_3221481164597477394"
+        },
+        {
+          "field": "Min/Max Customers",
+          "agg": "SUM",
+          "column": "Min/Max Quantity (copy)_3221481164588691468"
+        },
+        {
+          "field": "Min/Max Orders",
+          "agg": "SUM",
+          "column": "Min/Max Sales (copy)_3221481164601258003"
+        }
+      ],
+      "axes": {
+        "category": "Order Date",
+        "categoryLevel": "month",
+        "values": [
+          "Current Year",
+          "Previous Year",
+          "CY Orders",
+          "PY Orders",
+          "Calculation",
+          "% Diff Orders",
+          "Min/Max Customers",
+          "Min/Max Orders"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Total Orders\n{value}\n{value}  vs. PY",
       "filters": [
@@ -769,6 +1254,44 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -789,9 +1312,17 @@
         "gridlines": false,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "KPI Profit",
@@ -816,14 +1347,77 @@
         "path": null
       },
       "categoryField": "Order Date",
-      "valueField": null,
+      "valueField": "Current Year",
       "categoryDateLevel": "month",
       "dimensions": [
         "Order Date",
-        "usr:Min",
-        "Max Sales (copy)_237846410425847814:qk"
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
-      "values": [],
+      "values": [
+        "Current Year",
+        "Previous Year",
+        "CY Profit",
+        "Calculation",
+        "PY Profit",
+        "% Diff Profit",
+        "Min/Max Profit"
+      ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "Previous Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607936513"
+        },
+        {
+          "field": "CY Profit",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_237846410424180736"
+        },
+        {
+          "field": "Calculation",
+          "agg": "SUM",
+          "column": "Calculation_237846410426408968"
+        },
+        {
+          "field": "PY Profit",
+          "agg": "SUM",
+          "column": "PY Sales (copy)_237846410424815618"
+        },
+        {
+          "field": "% Diff Profit",
+          "agg": "SUM",
+          "column": "% Diff Sales (copy)_237846410425122820"
+        },
+        {
+          "field": "Min/Max Profit",
+          "agg": "SUM",
+          "column": "Min/Max Sales (copy)_237846410425847814"
+        }
+      ],
+      "axes": {
+        "category": "Order Date",
+        "categoryLevel": "month",
+        "values": [
+          "Current Year",
+          "Previous Year",
+          "CY Profit",
+          "Calculation",
+          "PY Profit",
+          "% Diff Profit",
+          "Min/Max Profit"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Total Profit\n{value}\n{value}  vs. PY",
       "filters": [
@@ -833,6 +1427,44 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -853,9 +1485,17 @@
         "gridlines": false,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "KPI Quantity",
@@ -880,14 +1520,77 @@
         "path": null
       },
       "categoryField": "Order Date",
-      "valueField": null,
+      "valueField": "Current Year",
       "categoryDateLevel": "month",
       "dimensions": [
         "Order Date",
-        "usr:Min",
-        "Max Sales (copy) (copy)_237846410425856007:qk"
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
-      "values": [],
+      "values": [
+        "Current Year",
+        "Previous Year",
+        "CY Quantity",
+        "Calculation",
+        "PY Quantity",
+        "% Diff Quantity",
+        "Min/Max Quantity"
+      ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "Previous Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607936513"
+        },
+        {
+          "field": "CY Quantity",
+          "agg": "SUM",
+          "column": "CY Sales (copy) (copy)_237846410424193025"
+        },
+        {
+          "field": "Calculation",
+          "agg": "SUM",
+          "column": "Calculation_237846410429689866"
+        },
+        {
+          "field": "PY Quantity",
+          "agg": "SUM",
+          "column": "PY Sales (copy) (copy)_237846410424823811"
+        },
+        {
+          "field": "% Diff Quantity",
+          "agg": "SUM",
+          "column": "% Diff Sales (copy) (copy)_237846410425131013"
+        },
+        {
+          "field": "Min/Max Quantity",
+          "agg": "SUM",
+          "column": "Min/Max Sales (copy) (copy)_237846410425856007"
+        }
+      ],
+      "axes": {
+        "category": "Order Date",
+        "categoryLevel": "month",
+        "values": [
+          "Current Year",
+          "Previous Year",
+          "CY Quantity",
+          "Calculation",
+          "PY Quantity",
+          "% Diff Quantity",
+          "Min/Max Quantity"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Total Quantity\n{value}\n{value}  vs. PY",
       "filters": [
@@ -897,6 +1600,44 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -917,9 +1658,17 @@
         "gridlines": false,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "KPI Sales",
@@ -943,15 +1692,84 @@
         "path": null
       },
       "categoryField": "Order Date",
-      "valueField": "Min/Max Sales",
+      "valueField": "Current Year",
       "categoryDateLevel": "month",
       "dimensions": [
-        "Order Date"
+        "Order Date",
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
       "values": [
-        "Min/Max Sales",
-        "{SUM([CY Sales])}"
+        "Current Year",
+        "Previous Year",
+        "PY Sales",
+        "CY Sales",
+        "{SUM([CY Sales])}",
+        "Calculation",
+        "% Diff Sales",
+        "Min/Max Sales"
       ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "Previous Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607936513"
+        },
+        {
+          "field": "PY Sales",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_721701895335804930"
+        },
+        {
+          "field": "CY Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895334993921"
+        },
+        {
+          "field": "{SUM([CY Sales])}",
+          "agg": "SUM",
+          "column": "Calculation_721701895351046156"
+        },
+        {
+          "field": "Calculation",
+          "agg": "SUM",
+          "column": "Calculation_721701895351123981"
+        },
+        {
+          "field": "% Diff Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895340638217"
+        },
+        {
+          "field": "Min/Max Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895347843083"
+        }
+      ],
+      "axes": {
+        "category": "Order Date",
+        "categoryLevel": "month",
+        "values": [
+          "Current Year",
+          "Previous Year",
+          "PY Sales",
+          "CY Sales",
+          "{SUM([CY Sales])}",
+          "Calculation",
+          "% Diff Sales",
+          "Min/Max Sales"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Total Sales\n{{SUM([CY Sales])}}\n{value}  vs. PY",
       "filters": [
@@ -961,6 +1779,44 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -981,9 +1837,17 @@
         "gridlines": false,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "KPI Sales Per Customers",
@@ -1008,14 +1872,77 @@
         "path": null
       },
       "categoryField": "Order Date",
-      "valueField": null,
+      "valueField": "Current Year",
       "categoryDateLevel": "month",
       "dimensions": [
         "Order Date",
-        "usr:Min",
-        "Max Quantity (copy)_3221481164537155591:qk"
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
-      "values": [],
+      "values": [
+        "Current Year",
+        "Previous Year",
+        "Calculation",
+        "% Diff Sales per Customers",
+        "CY Sales per Customer",
+        "PY Sales per Customer",
+        "Min/Max Sales Per Customers"
+      ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "Previous Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607936513"
+        },
+        {
+          "field": "Calculation",
+          "agg": "SUM",
+          "column": "Calculation_3221481164565110792"
+        },
+        {
+          "field": "% Diff Sales per Customers",
+          "agg": "SUM",
+          "column": "% Diff Sales (copy)_3221481164536066054"
+        },
+        {
+          "field": "CY Sales per Customer",
+          "agg": "SUM",
+          "column": "CY Profit (copy)_3221481164532895746"
+        },
+        {
+          "field": "PY Sales per Customer",
+          "agg": "SUM",
+          "column": "CY Sales per Customer (copy)_3221481164533485572"
+        },
+        {
+          "field": "Min/Max Sales Per Customers",
+          "agg": "SUM",
+          "column": "Min/Max Quantity (copy)_3221481164537155591"
+        }
+      ],
+      "axes": {
+        "category": "Order Date",
+        "categoryLevel": "month",
+        "values": [
+          "Current Year",
+          "Previous Year",
+          "Calculation",
+          "% Diff Sales per Customers",
+          "CY Sales per Customer",
+          "PY Sales per Customer",
+          "Min/Max Sales Per Customers"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Total Sales Per Customers\n{value}\n{value}  vs. PY",
       "filters": [
@@ -1025,6 +1952,44 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -1045,9 +2010,17 @@
         "gridlines": false,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Legend KPI",
@@ -1066,11 +2039,27 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "Current Year",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "Current Year",
+        "Previous Year",
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "Current Year",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -1080,15 +2069,61 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": "#00000000",
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Legend Subcategory",
@@ -1107,11 +2142,27 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "Current Year",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "Current Year",
+        "Previous Year",
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "Current Year",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -1121,15 +2172,61 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Subcategory Comparison",
@@ -1153,17 +2250,71 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": "Sub-Category",
-      "valueField": "KPI CY Less PY",
+      "categoryField": "Category",
+      "valueField": "Current Year",
       "categoryDateLevel": null,
       "dimensions": [
-        "Sub-Category"
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category",
+        "KPI CY Less PY"
       ],
       "values": [
-        "KPI CY Less PY",
+        "Current Year",
+        "Previous Year",
+        "CY Profit",
         "PY Sales",
-        "PY Sales"
+        "CY Sales",
+        "% Diff Sales"
       ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "Previous Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607936513"
+        },
+        {
+          "field": "CY Profit",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_237846410424180736"
+        },
+        {
+          "field": "PY Sales",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_721701895335804930"
+        },
+        {
+          "field": "CY Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895334993921"
+        },
+        {
+          "field": "% Diff Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895340638217"
+        }
+      ],
+      "axes": {
+        "category": "Category",
+        "categoryLevel": null,
+        "values": [
+          "Current Year",
+          "Previous Year",
+          "CY Profit",
+          "PY Sales",
+          "CY Sales",
+          "% Diff Sales"
+        ],
+        "orientation": "horizontal"
+      },
+      "orientation": "horizontal",
       "caption": null,
       "title": null,
       "filters": [
@@ -1173,6 +2324,44 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": [
@@ -1203,7 +2392,15 @@
         "gridlines": false,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Medium",
+        "fontSize": "10",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "barChart"
     },
@@ -1228,14 +2425,134 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
-      "categoryDateLevel": null,
+      "categoryField": "Category",
+      "valueField": "PY Customers",
+      "categoryDateLevel": "year",
       "dimensions": [
-        ":Measure Names",
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category",
         "Order Date"
       ],
-      "values": [],
+      "values": [
+        "PY Customers",
+        "CY Customers",
+        "CY Orders",
+        "PY Orders",
+        "CY Quantity",
+        "CY Profit",
+        "PY Sales",
+        "CY Sales",
+        "PY Quantity",
+        "PY Profit",
+        "Profit",
+        "Quantity",
+        "Sales",
+        "CY Sales per Customer",
+        "PY Sales per Customer"
+      ],
+      "measures": [
+        {
+          "field": "PY Customers",
+          "agg": "COUNTD",
+          "column": "CY Customers (copy)_3221481164533411843"
+        },
+        {
+          "field": "CY Customers",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164532666369"
+        },
+        {
+          "field": "CY Orders",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164594982929"
+        },
+        {
+          "field": "PY Orders",
+          "agg": "COUNTD",
+          "column": "PY Sales (copy)_3221481164594888720"
+        },
+        {
+          "field": "CY Quantity",
+          "agg": "SUM",
+          "column": "CY Sales (copy) (copy)_237846410424193025"
+        },
+        {
+          "field": "CY Profit",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_237846410424180736"
+        },
+        {
+          "field": "PY Sales",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_721701895335804930"
+        },
+        {
+          "field": "CY Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895334993921"
+        },
+        {
+          "field": "PY Quantity",
+          "agg": "SUM",
+          "column": "PY Sales (copy) (copy)_237846410424823811"
+        },
+        {
+          "field": "PY Profit",
+          "agg": "SUM",
+          "column": "PY Sales (copy)_237846410424815618"
+        },
+        {
+          "field": "Profit",
+          "agg": "SUM",
+          "column": "Profit"
+        },
+        {
+          "field": "Quantity",
+          "agg": "SUM",
+          "column": "Quantity"
+        },
+        {
+          "field": "Sales",
+          "agg": "SUM",
+          "column": "Sales"
+        },
+        {
+          "field": "CY Sales per Customer",
+          "agg": "SUM",
+          "column": "CY Profit (copy)_3221481164532895746"
+        },
+        {
+          "field": "PY Sales per Customer",
+          "agg": "SUM",
+          "column": "CY Sales per Customer (copy)_3221481164533485572"
+        }
+      ],
+      "axes": {
+        "category": "Category",
+        "categoryLevel": "year",
+        "values": [
+          "PY Customers",
+          "CY Customers",
+          "CY Orders",
+          "PY Orders",
+          "CY Quantity",
+          "CY Profit",
+          "PY Sales",
+          "CY Sales",
+          "PY Quantity",
+          "PY Profit",
+          "Profit",
+          "Quantity",
+          "Sales",
+          "CY Sales per Customer",
+          "PY Sales per Customer"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -1245,15 +2562,61 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Test KPI2",
@@ -1274,13 +2637,154 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Category",
+      "valueField": "PY Customers",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names"
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
-      "values": [],
+      "values": [
+        "PY Customers",
+        "CY Customers",
+        "CY Orders",
+        "PY Orders",
+        "CY Quantity",
+        "CY Profit",
+        "PY Sales",
+        "CY Sales",
+        "PY Quantity",
+        "PY Profit",
+        "% Diff Orders",
+        "% Diff Customers",
+        "% Diff Quantity",
+        "% Diff Profit",
+        "% Diff Sales per Customers",
+        "CY Sales per Customer",
+        "PY Sales per Customer",
+        "% Diff Sales"
+      ],
+      "measures": [
+        {
+          "field": "PY Customers",
+          "agg": "COUNTD",
+          "column": "CY Customers (copy)_3221481164533411843"
+        },
+        {
+          "field": "CY Customers",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164532666369"
+        },
+        {
+          "field": "CY Orders",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164594982929"
+        },
+        {
+          "field": "PY Orders",
+          "agg": "COUNTD",
+          "column": "PY Sales (copy)_3221481164594888720"
+        },
+        {
+          "field": "CY Quantity",
+          "agg": "SUM",
+          "column": "CY Sales (copy) (copy)_237846410424193025"
+        },
+        {
+          "field": "CY Profit",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_237846410424180736"
+        },
+        {
+          "field": "PY Sales",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_721701895335804930"
+        },
+        {
+          "field": "CY Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895334993921"
+        },
+        {
+          "field": "PY Quantity",
+          "agg": "SUM",
+          "column": "PY Sales (copy) (copy)_237846410424823811"
+        },
+        {
+          "field": "PY Profit",
+          "agg": "SUM",
+          "column": "PY Sales (copy)_237846410424815618"
+        },
+        {
+          "field": "% Diff Orders",
+          "agg": "SUM",
+          "column": "% Diff Customers (copy)_3221481164597477394"
+        },
+        {
+          "field": "% Diff Customers",
+          "agg": "SUM",
+          "column": "% Diff Quantity (copy)_3221481164588376075"
+        },
+        {
+          "field": "% Diff Quantity",
+          "agg": "SUM",
+          "column": "% Diff Sales (copy) (copy)_237846410425131013"
+        },
+        {
+          "field": "% Diff Profit",
+          "agg": "SUM",
+          "column": "% Diff Sales (copy)_237846410425122820"
+        },
+        {
+          "field": "% Diff Sales per Customers",
+          "agg": "SUM",
+          "column": "% Diff Sales (copy)_3221481164536066054"
+        },
+        {
+          "field": "CY Sales per Customer",
+          "agg": "SUM",
+          "column": "CY Profit (copy)_3221481164532895746"
+        },
+        {
+          "field": "PY Sales per Customer",
+          "agg": "SUM",
+          "column": "CY Sales per Customer (copy)_3221481164533485572"
+        },
+        {
+          "field": "% Diff Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895340638217"
+        }
+      ],
+      "axes": {
+        "category": "Category",
+        "categoryLevel": null,
+        "values": [
+          "PY Customers",
+          "CY Customers",
+          "CY Orders",
+          "PY Orders",
+          "CY Quantity",
+          "CY Profit",
+          "PY Sales",
+          "CY Sales",
+          "PY Quantity",
+          "PY Profit",
+          "% Diff Orders",
+          "% Diff Customers",
+          "% Diff Quantity",
+          "% Diff Profit",
+          "% Diff Sales per Customers",
+          "CY Sales per Customer",
+          "PY Sales per Customer",
+          "% Diff Sales"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -1290,15 +2794,61 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Test Max Min",
@@ -1321,14 +2871,99 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
-      "categoryDateLevel": null,
+      "categoryField": "Order Date",
+      "valueField": "CY Customers",
+      "categoryDateLevel": "month",
       "dimensions": [
-        ":Measure Names",
-        "Order Date"
+        "Order Date",
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category"
       ],
-      "values": [],
+      "values": [
+        "CY Customers",
+        "CY Quantity",
+        "CY Profit",
+        "CY Sales",
+        "CY Sales per Customer",
+        "Min/Max Sales",
+        "Min/Max Sales Per Customers",
+        "Min/Max Customers",
+        "Min/Max Quantity",
+        "Min/Max Profit"
+      ],
+      "measures": [
+        {
+          "field": "CY Customers",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164532666369"
+        },
+        {
+          "field": "CY Quantity",
+          "agg": "SUM",
+          "column": "CY Sales (copy) (copy)_237846410424193025"
+        },
+        {
+          "field": "CY Profit",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_237846410424180736"
+        },
+        {
+          "field": "CY Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895334993921"
+        },
+        {
+          "field": "CY Sales per Customer",
+          "agg": "SUM",
+          "column": "CY Profit (copy)_3221481164532895746"
+        },
+        {
+          "field": "Min/Max Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895347843083"
+        },
+        {
+          "field": "Min/Max Sales Per Customers",
+          "agg": "SUM",
+          "column": "Min/Max Quantity (copy)_3221481164537155591"
+        },
+        {
+          "field": "Min/Max Customers",
+          "agg": "SUM",
+          "column": "Min/Max Quantity (copy)_3221481164588691468"
+        },
+        {
+          "field": "Min/Max Quantity",
+          "agg": "SUM",
+          "column": "Min/Max Sales (copy) (copy)_237846410425856007"
+        },
+        {
+          "field": "Min/Max Profit",
+          "agg": "SUM",
+          "column": "Min/Max Sales (copy)_237846410425847814"
+        }
+      ],
+      "axes": {
+        "category": "Order Date",
+        "categoryLevel": "month",
+        "values": [
+          "CY Customers",
+          "CY Quantity",
+          "CY Profit",
+          "CY Sales",
+          "CY Sales per Customer",
+          "Min/Max Sales",
+          "Min/Max Sales Per Customers",
+          "Min/Max Customers",
+          "Min/Max Quantity",
+          "Min/Max Profit"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -1338,15 +2973,61 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Top Customers",
@@ -1371,16 +3052,58 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Category",
+      "valueField": "CY Orders",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Calculation_782500491678904334",
+        "Category",
+        "City",
         "Customer Name",
-        "Order Date"
+        "Region",
+        "State",
+        "Sub-Category",
+        "Calculation"
       ],
-      "values": [],
+      "values": [
+        "CY Orders",
+        "Order Date",
+        "CY Profit",
+        "CY Sales"
+      ],
+      "measures": [
+        {
+          "field": "CY Orders",
+          "agg": "COUNTD",
+          "column": "CY Sales (copy)_3221481164594982929"
+        },
+        {
+          "field": "Order Date",
+          "agg": "MAX",
+          "column": "Order Date"
+        },
+        {
+          "field": "CY Profit",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_237846410424180736"
+        },
+        {
+          "field": "CY Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895334993921"
+        }
+      ],
+      "axes": {
+        "category": "Category",
+        "categoryLevel": null,
+        "values": [
+          "CY Orders",
+          "Order Date",
+          "CY Profit",
+          "CY Sales"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": null,
       "filters": [
@@ -1391,15 +3114,74 @@
         "Sub-Category",
         "Customer Name"
       ],
+      "filterDetails": [
+        {
+          "field": "Customer Name",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": {
+        "field": "Customer Name",
+        "n": 10,
+        "direction": "TOP",
+        "byMeasure": "SUM([CY Sales (copy)_237846410424180736])",
+        "sortDirection": "DESC"
+      },
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Weekly Trends",
@@ -1422,15 +3204,52 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": "Order Date",
-      "valueField": "CY Sales",
+      "categoryField": "Category",
+      "valueField": "Current Year",
       "categoryDateLevel": "week",
       "dimensions": [
+        "Category",
+        "City",
+        "Region",
+        "State",
+        "Sub-Category",
+        "KPI Sales Avg",
+        "KPI Profit Avg",
         "Order Date"
       ],
       "values": [
+        "Current Year",
+        "CY Profit",
         "CY Sales"
       ],
+      "measures": [
+        {
+          "field": "Current Year",
+          "agg": "SUM",
+          "column": "Calculation_1240741752607899648"
+        },
+        {
+          "field": "CY Profit",
+          "agg": "SUM",
+          "column": "CY Sales (copy)_237846410424180736"
+        },
+        {
+          "field": "CY Sales",
+          "agg": "SUM",
+          "column": "Calculation_721701895334993921"
+        }
+      ],
+      "axes": {
+        "category": "Category",
+        "categoryLevel": "week",
+        "values": [
+          "Current Year",
+          "CY Profit",
+          "CY Sales"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": null,
       "filters": [
@@ -1440,15 +3259,61 @@
         "State",
         "City"
       ],
+      "filterDetails": [
+        {
+          "field": "Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Category",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "State",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "City",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": false,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": null
+        "showMarkLabels": null,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     }
   ],
   "dashboards": [
@@ -2001,14 +3866,32 @@
         "Quantity",
         "Discount",
         "Profit"
-      ]
+      ],
+      "parse": {
+        "delimiter": ";",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": ",",
+        "thousandsChar": ".",
+        "locale": "en_DE"
+      }
     },
     {
       "name": "Customers.csv",
       "columns": [
         "Customer ID",
         "Customer Name"
-      ]
+      ],
+      "parse": {
+        "delimiter": ";",
+        "charset": "windows-1252",
+        "codepage": 1252,
+        "hasHeader": true,
+        "decimalChar": ",",
+        "thousandsChar": ".",
+        "locale": "en_DE"
+      }
     },
     {
       "name": "Location.csv",
@@ -2018,7 +3901,16 @@
         "State",
         "Region",
         "Country/Region"
-      ]
+      ],
+      "parse": {
+        "delimiter": ";",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": ",",
+        "thousandsChar": ".",
+        "locale": "en_DE"
+      }
     },
     {
       "name": "Products.csv",
@@ -2027,7 +3919,16 @@
         "Category",
         "Sub-Category",
         "Product Name"
-      ]
+      ],
+      "parse": {
+        "delimiter": ";",
+        "charset": "windows-1252",
+        "codepage": 1252,
+        "hasHeader": true,
+        "decimalChar": ",",
+        "thousandsChar": ".",
+        "locale": "en_DE"
+      }
     }
   ],
   "columnTableMap": {

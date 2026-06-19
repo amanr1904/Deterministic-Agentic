@@ -14,7 +14,7 @@ import argparse
 import json
 import os
 import sys
-from typing import Dict
+from typing import Dict, List
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import twb_xml as X  # noqa: E402
@@ -39,6 +39,28 @@ def build_ir(twb_path: str) -> Dict:
     param_map = F.build_param_map(parameters)
     measures = F.measure_captions(calc_fields, columns)
 
+    # Inline inter-calc references ([Calculation_<id>] / [Name (copy)_<hash>] ->
+    # [Caption]) so the IR formulas are readable and the DAX translator can
+    # resolve measure refs. Uses the full calc-name map (includes duplicated calcs).
+    formula_ref_map = M.build_calc_name_map(root)
+    for c in calc_fields:
+        c["formula"] = F.resolve_formula_refs(c.get("formula"), formula_ref_map)
+        c["dependsOn"] = F.formula_dependencies(c["formula"])
+
+    # Enrich columns + column->table map with authoritative physical lineage from
+    # <metadata-records> (true type, owning physical table, original column name).
+    col_meta = M.extract_column_metadata(root)
+    for c in columns:
+        m = col_meta.get(c["name"])
+        if m:
+            c["physicalTable"] = m["parentTable"]
+            c["remoteName"] = m["remoteName"]
+            c["metaType"] = m["metaType"]
+    column_table_map = M.extract_column_table_map(root)
+    for name, meta in col_meta.items():
+        if name not in column_table_map and meta["parentTable"]:
+            column_table_map[name] = meta["parentTable"]
+
     return {
         "irVersion": IR_VERSION,
         "workbook": {
@@ -56,7 +78,7 @@ def build_ir(twb_path: str) -> Dict:
         "dashboards": V.extract_dashboards(root, calc_map, param_map),
         "actions": V.extract_actions(root, calc_map),
         "physicalTables": M.extract_physical_tables(root),
-        "columnTableMap": M.extract_column_table_map(root),
+        "columnTableMap": column_table_map,
         "relationships": M.extract_relationships(root),
         "hierarchies": M.extract_hierarchies(root),
         "sets": _extract_sets(root),
@@ -153,6 +175,32 @@ def _summary(ir: Dict) -> str:
     )
 
 
+def _coverage(ir: Dict) -> List[str]:
+    """Audit that every visual and dashboard zone looks fully captured.
+
+    Returns human-readable warnings (never fatal) so a parse that silently drops
+    a worksheet's fields or references a missing sheet is visible immediately,
+    instead of surfacing later as a blank Power BI visual.
+    """
+    warnings: List[str] = []
+    ws_names = {w["name"] for w in ir["worksheets"]}
+    for w in ir["worksheets"]:
+        has_fields = bool(w["dimensions"] or w["values"] or w["measures"])
+        has_shelf = bool(w["rows"] or w["cols"])
+        if has_shelf and not has_fields:
+            warnings.append(f"worksheet '{w['name']}' has shelves but no resolved fields")
+    placed = set()
+    for db in ir["dashboards"]:
+        for z in db["zones"]:
+            wsname = z.get("worksheet")
+            if z.get("type") == "viz":
+                placed.add(wsname)
+                if wsname not in ws_names:
+                    warnings.append(
+                        f"dashboard '{db['name']}' references unknown worksheet '{wsname}'")
+    return warnings
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Parse a .twb into analysis.json (IR).")
     parser.add_argument("twb", help="path to the .twb file")
@@ -167,6 +215,8 @@ def main(argv=None) -> int:
     out_dir = resolve_output_dir(ir, args.output_root)
     path = write_ir(ir, out_dir)
     print(f"Wrote IR: {path}\n{_summary(ir)}")
+    for w in _coverage(ir):
+        print(f"  WARN: {w}", file=sys.stderr)
     return 0
 
 

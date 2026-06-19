@@ -35,6 +35,52 @@ def build_calc_map(calc_fields: List[Dict]) -> Dict[str, str]:
     return out
 
 
+# Any bracketed field reference inside a formula, optionally datasource-qualified:
+#   [Calculation_4609...]   |   [federated.<hash>].[Calculation_4609...]
+#   [CY Sales (copy)_3221...]  (a duplicated calc referenced by internal name)
+_CALC_REF = re.compile(r"\[(?:[^\[\]]+\]\.\[)?([^\[\]]+)\]")
+
+
+def resolve_formula_refs(formula: Optional[str], calc_map: Dict[str, str]) -> Optional[str]:
+    """Replace internal calc references with their friendly caption.
+
+    Tableau stores inter-calc references by internal id (`Calculation_<id>`) or by
+    a duplicated internal name (`CY Sales (copy)_<hash>`), sometimes datasource-
+    qualified. Inlining the caption makes the formula readable for the LLM and
+    lets the DAX translator resolve measure-to-measure references instead of
+    routing the whole calc to the LLM. A reference whose token is NOT a known calc
+    (e.g. a real source column like `[int_rate]`) is left untouched (never guess).
+    """
+    if not formula:
+        return formula
+
+    def _repl(m: "re.Match") -> str:
+        caption = calc_map.get(m.group(1))
+        return f"[{caption}]" if caption else m.group(0)
+
+    return _CALC_REF.sub(_repl, formula)
+
+
+def formula_dependencies(formula: Optional[str]) -> List[str]:
+    """Return the distinct field/column names a (resolved) formula references.
+
+    Metadata-only: extracts every ``[Field]`` token from the formula so we record
+    WHICH columns/fields each calculation uses — without ever reading the data.
+    Datasource-GUID leftovers are dropped; order of first appearance is kept.
+    """
+    if not formula:
+        return []
+    out: List[str] = []
+    seen = set()
+    for tok in _CALC_REF.findall(formula):
+        name = tok.strip()
+        if name and name not in seen and not name.startswith("federated") \
+                and not name.startswith("Parameters"):
+            seen.add(name)
+            out.append(name)
+    return out
+
+
 def build_param_map(parameters: List[Dict]) -> Dict[str, str]:
     """Map a parameter internal name (Parameter 1) -> caption."""
     out: Dict[str, str] = {}

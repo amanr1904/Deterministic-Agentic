@@ -3,7 +3,7 @@
   "workbook": {
     "name": "Netfix Workbook",
     "pascalName": "NetfixWorkbook",
-    "sourcePath": "Data/Netflix/Netfix Workbook.twb",
+    "sourcePath": "C:/Users/BoghraJeelKishorbhai/Deterministic-Agentic/Data/Netflix/Netfix Workbook.twb",
     "version": "18.1",
     "platform": ""
   },
@@ -24,6 +24,16 @@
       "tables": [
         "netflix_titles#csv"
       ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "netflix_titles#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
       "active": true
     }
   ],
@@ -36,7 +46,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 0
+      "ordinal": 0,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "show_id",
+      "metaType": "integer"
     },
     {
       "datasource": "netflix_titles",
@@ -46,7 +59,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 1
+      "ordinal": 1,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "type",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -56,7 +72,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 2
+      "ordinal": 2,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "title",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -66,7 +85,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 3
+      "ordinal": 3,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "director",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -76,7 +98,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 4
+      "ordinal": 4,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "cast",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -86,7 +111,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 5
+      "ordinal": 5,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "country",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -96,7 +124,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 6
+      "ordinal": 6,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "date_added",
+      "metaType": "date"
     },
     {
       "datasource": "netflix_titles",
@@ -106,7 +137,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 7
+      "ordinal": 7,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "release_year",
+      "metaType": "integer"
     },
     {
       "datasource": "netflix_titles",
@@ -116,7 +150,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 8
+      "ordinal": 8,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "rating",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -126,7 +163,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 9
+      "ordinal": 9,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "duration",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -136,7 +176,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 10
+      "ordinal": 10,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "listed_in",
+      "metaType": "string"
     },
     {
       "datasource": "netflix_titles",
@@ -146,7 +189,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 11
+      "ordinal": 11,
+      "physicalTable": "netflix_titles.csv",
+      "remoteName": "description",
+      "metaType": "string"
     }
   ],
   "calculatedFields": [
@@ -158,7 +204,8 @@
       "formula": "#2024-03-26#",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     }
   ],
   "parameters": [
@@ -195,26 +242,53 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": "Longitude (generated",
-      "valueField": null,
+      "categoryField": "country",
+      "valueField": "show_id",
       "categoryDateLevel": null,
       "dimensions": [
-        "Longitude (generated",
-        "Latitude (generated"
+        "country"
       ],
-      "values": [],
+      "values": [
+        "show_id"
+      ],
+      "measures": [
+        {
+          "field": "show_id",
+          "agg": "COUNTD",
+          "column": "show_id"
+        }
+      ],
+      "axes": {
+        "category": "country",
+        "categoryLevel": null,
+        "values": [
+          "show_id"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Country Wise Distribution",
       "filters": [],
+      "filterDetails": [],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": false
+        "showMarkLabels": false,
+        "markColor": "#aa0000",
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "map"
     },
     {
       "name": "Description",
@@ -233,26 +307,65 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "description",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "description",
+        "title",
+        "type"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "description",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Description",
       "filters": [
         "type",
         "title"
       ],
+      "filterDetails": [
+        {
+          "field": "title",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "type",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "TV Show"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": "10",
+        "fontColor": "#ffffff",
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Duration",
@@ -271,26 +384,65 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "duration",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "duration",
+        "title",
+        "type"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "duration",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Duration",
       "filters": [
         "type",
         "title"
       ],
+      "filterDetails": [
+        {
+          "field": "title",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "type",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "TV Show"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": "10",
+        "fontColor": "#ffffff",
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Genre",
@@ -309,26 +461,65 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "listed_in",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "listed_in",
+        "title",
+        "type"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "listed_in",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Genre",
       "filters": [
         "type",
         "title"
       ],
+      "filterDetails": [
+        {
+          "field": "title",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "type",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "TV Show"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": "10",
+        "fontColor": "#ffffff",
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Movies and TV Shows distribution",
@@ -347,21 +538,51 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
-      "valueField": null,
+      "categoryField": "type",
+      "valueField": "show_id",
       "categoryDateLevel": null,
-      "dimensions": [],
-      "values": [],
+      "dimensions": [
+        "type"
+      ],
+      "values": [
+        "show_id"
+      ],
+      "measures": [
+        {
+          "field": "show_id",
+          "agg": "COUNTD",
+          "column": "show_id"
+        }
+      ],
+      "axes": {
+        "category": "type",
+        "categoryLevel": null,
+        "values": [
+          "show_id"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Movies and TV Shows distribution",
       "filters": [],
+      "filterDetails": [],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "scatterChart"
     },
@@ -382,26 +603,65 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "rating",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "rating",
+        "title",
+        "type"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "rating",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Rating",
       "filters": [
         "type",
         "title"
       ],
+      "filterDetails": [
+        {
+          "field": "title",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "type",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "TV Show"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": "10",
+        "fontColor": "#ffffff",
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Ratings",
@@ -425,25 +685,52 @@
         "path": null
       },
       "categoryField": "rating",
-      "valueField": null,
+      "valueField": "show_id",
       "categoryDateLevel": null,
       "dimensions": [
-        "rating",
+        "rating"
+      ],
+      "values": [
         "show_id"
       ],
-      "values": [],
+      "measures": [
+        {
+          "field": "show_id",
+          "agg": "COUNTD",
+          "column": "show_id"
+        }
+      ],
+      "axes": {
+        "category": "rating",
+        "categoryLevel": null,
+        "values": [
+          "show_id"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Ratings",
       "filters": [],
+      "filterDetails": [],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": "#aa0000",
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": "#ffffff",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "columnChart"
     },
     {
       "name": "Top 10 Genre",
@@ -466,28 +753,69 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": "show_id",
-      "valueField": null,
+      "categoryField": "listed_in",
+      "valueField": "show_id",
       "categoryDateLevel": null,
       "dimensions": [
-        "show_id",
         "listed_in"
       ],
-      "values": [],
+      "values": [
+        "show_id"
+      ],
+      "measures": [
+        {
+          "field": "show_id",
+          "agg": "COUNTD",
+          "column": "show_id"
+        }
+      ],
+      "axes": {
+        "category": "listed_in",
+        "categoryLevel": null,
+        "values": [
+          "show_id"
+        ],
+        "orientation": "horizontal"
+      },
+      "orientation": "horizontal",
       "caption": null,
       "title": "Top 10 Genre",
       "filters": [
         "listed_in"
       ],
+      "filterDetails": [
+        {
+          "field": "listed_in",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": {
+        "field": "listed_in",
+        "n": 10,
+        "direction": "TOP",
+        "byMeasure": "COUNTD([show_id])",
+        "sortDirection": "DESC"
+      },
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": false,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": "#aa0000",
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": "#ffffff",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Total Movies and TV Shows by Years",
@@ -510,26 +838,65 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": "Calculation_1138566281481768960",
-      "valueField": null,
+      "categoryField": "date_added",
+      "valueField": "show_id",
       "categoryDateLevel": "year",
       "dimensions": [
-        "Calculation_1138566281481768960",
+        "date_added",
+        "type",
+        "Calculation"
+      ],
+      "values": [
         "show_id"
       ],
-      "values": [],
+      "measures": [
+        {
+          "field": "show_id",
+          "agg": "COUNTD",
+          "column": "show_id"
+        }
+      ],
+      "axes": {
+        "category": "date_added",
+        "categoryLevel": "year",
+        "values": [
+          "show_id"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Total Movies and TV Shows By Years",
       "filters": [
         "date_added"
       ],
+      "filterDetails": [
+        {
+          "field": "date_added",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": false,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": "#000000",
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": "#ffffff",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "areaChart"
     }
@@ -664,10 +1031,32 @@
         "duration",
         "listed_in",
         "description"
-      ]
+      ],
+      "parse": {
+        "delimiter": ",",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_US"
+      }
     }
   ],
-  "columnTableMap": {},
+  "columnTableMap": {
+    "show_id": "netflix_titles.csv",
+    "type": "netflix_titles.csv",
+    "title": "netflix_titles.csv",
+    "director": "netflix_titles.csv",
+    "cast": "netflix_titles.csv",
+    "country": "netflix_titles.csv",
+    "date_added": "netflix_titles.csv",
+    "release_year": "netflix_titles.csv",
+    "rating": "netflix_titles.csv",
+    "duration": "netflix_titles.csv",
+    "listed_in": "netflix_titles.csv",
+    "description": "netflix_titles.csv"
+  },
   "relationships": [],
   "hierarchies": [],
   "sets": [],

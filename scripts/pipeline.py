@@ -33,6 +33,7 @@ EMIT_TMDL = os.path.join(HERE, "emit", "emit_tmdl.py")
 EMIT_PBIR = os.path.join(HERE, "emit", "emit_pbir.py")
 VALIDATE = os.path.join(
     HERE, "..", "plugins", "pbip", "skills", "pbip", "scripts", "validate_pbip.py")
+SEM_VALIDATE = os.path.join(HERE, "validate_semantics.py")
 BIN_DIR = os.path.join(HERE, "..", "plugins", "pbip", "hooks", "bin")
 
 
@@ -130,7 +131,12 @@ def generate(args) -> int:
     sm_def = os.path.join(project_dir, f"{model_name}.SemanticModel", "definition")
     if os.path.isfile(TMDL_VALIDATE):
         run([TMDL_VALIDATE, sm_def])
-    return run([sys.executable, VALIDATE, project_dir])
+    rc_pbip = run([sys.executable, VALIDATE, project_dir])
+    # Semantic check: every relationship/measure reference must resolve, types
+    # must match, no reserved VAR names, no illegal PBIR properties. This is the
+    # check that catches "won't open in Desktop" errors the syntax validators miss.
+    rc_sem = run([sys.executable, SEM_VALIDATE, project_dir])
+    return rc_sem if rc_sem != 0 else rc_pbip
 
 
 def _model_name(decisions_path: str, project_dir: str) -> str:

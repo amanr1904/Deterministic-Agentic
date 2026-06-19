@@ -32,6 +32,8 @@ def extract_datasources(root: ET.Element, active_names: set) -> List[Dict]:
         conn = _first_connection(ds)
         conn_class = X.attr(conn, "class")
         files = _connection_files(ds)
+        relations = _relations(ds)
+        custom_sql = next((r["sql"] for r in relations if r.get("type") == "customSql"), None)
         result.append({
             "name": caption,
             "internalName": name,
@@ -39,20 +41,137 @@ def extract_datasources(root: ET.Element, active_names: set) -> List[Dict]:
             "sourceType": X.resolve_source_type(conn_class),
             "files": files,
             "server": X.attr(conn, "server"),
-            "database": X.attr(conn, "dbname"),
+            "database": X.attr(conn, "dbname") or X.attr(conn, "database"),
             "schema": X.attr(conn, "schema"),
             "tables": _relation_tables(ds),
+            "relations": relations,
+            "joins": _joins(ds),
+            "customSql": custom_sql,
+            "connectionMode": _connection_mode(ds, conn),
             "active": caption in active_names or name in active_names,
         })
     return result
 
 
 def _first_connection(ds: ET.Element) -> Optional[ET.Element]:
-    conn = X.find(ds, "connection")
-    if conn is None:
+    """Return the most informative physical connection of a datasource.
+
+    A datasource is usually wrapped in a federated <connection> that holds one or
+    more <named-connection>s. Prefer a named-connection whose inner <connection>
+    actually carries a server/dbname (the real source), so cross-database or
+    multi-connection datasources resolve to a populated endpoint rather than an
+    empty federated shell. Falls back to the first named-connection, then the
+    outer connection.
+    """
+    outer = X.find(ds, "connection")
+    if outer is None:
         return None
-    named = conn.find("named-connections/named-connection/connection")
-    return named if named is not None else conn
+    named = outer.findall("named-connections/named-connection/connection")
+    for c in named:
+        if c.get("server") or c.get("dbname") or c.get("database"):
+            return c
+    return named[0] if named else outer
+
+
+def _split_schema_table(table_attr: str) -> tuple:
+    """Split a Tableau relation table like [dbo].[Orders] into (schema, name)."""
+    full = (table_attr or "").replace("[", "").replace("]", "")
+    parts = full.split(".")
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    return None, full
+
+
+def _relations(ds: ET.Element) -> List[Dict]:
+    """Return the physical relations backing a datasource.
+
+    Each entry is either a table reference {schema, table, type:"table"} or a
+    custom-SQL block {type:"customSql", sql:<query>}. Custom SQL (relation
+    type="text") is what lets the emitter build a native-query partition instead
+    of a table navigation — without it the query logic would be lost.
+    """
+    out: List[Dict] = []
+    seen_sql = set()
+    for rel in ds.iter("relation"):
+        table_attr = rel.get("table")
+        if table_attr:
+            schema, name = _split_schema_table(table_attr)
+            entry = {"schema": schema, "table": name, "type": "table"}
+            if entry not in out:
+                out.append(entry)
+        elif rel.get("type") == "text":
+            sql = (rel.text or "").strip()
+            if sql and sql not in seen_sql:
+                seen_sql.add(sql)
+                out.append({"schema": None, "table": rel.get("name") or "CustomSQL",
+                            "type": "customSql", "sql": sql})
+    return out
+
+
+def _join_col(op: Optional[str]) -> Optional[str]:
+    """Return the column name from a Tableau join operand like [Orders].[CustID]."""
+    if not op:
+        return None
+    cleaned = op.replace("[", "").replace("]", "")
+    return cleaned.split(".")[-1].strip() or None
+
+
+def _joins(ds: ET.Element) -> List[Dict]:
+    """Return the physical joins between tables inside a datasource.
+
+    Tableau models multi-table sources as <relation type="join" join="inner|left|
+    right|full"> nodes whose two child <relation> operands are the joined tables
+    and whose <clause>/<expression op="="> carries the key columns. Capturing the
+    join type and key pair lets the star-schema/model layer recreate the physical
+    join (or a model relationship) instead of treating each table as standalone.
+    Both the modern clause form and the legacy left/right attribute form are read.
+    """
+    out: List[Dict] = []
+    for rel in ds.iter("relation"):
+        if rel.get("type") != "join":
+            continue
+        operands = rel.findall("relation")
+        left_tbl = right_tbl = None
+        if len(operands) >= 2:
+            left_tbl = operands[0].get("name") or _split_schema_table(operands[0].get("table") or "")[1]
+            right_tbl = operands[1].get("name") or _split_schema_table(operands[1].get("table") or "")[1]
+        left_col = right_col = None
+        clause = rel.find("clause")
+        top = clause.find("expression") if clause is not None else None
+        if top is not None:
+            ops = top.findall("expression")
+            if len(ops) == 2:
+                left_col = _join_col(ops[0].get("op"))
+                right_col = _join_col(ops[1].get("op"))
+        if left_tbl is None and rel.get("left"):
+            left_tbl = (rel.get("left") or "").replace("[", "").replace("]", "").strip() or None
+        if right_tbl is None and rel.get("right"):
+            right_tbl = (rel.get("right") or "").replace("[", "").replace("]", "").strip() or None
+        entry = {
+            "joinType": (rel.get("join") or "inner").lower(),
+            "leftTable": left_tbl, "rightTable": right_tbl,
+            "leftColumn": left_col, "rightColumn": right_col,
+        }
+        if any(entry[k] for k in ("leftTable", "rightTable")) and entry not in out:
+            out.append(entry)
+    return out
+
+
+def _connection_mode(ds: ET.Element, conn: Optional[ET.Element]) -> str:
+    """Infer 'directQuery' vs 'import' from the Tableau connection.
+
+    A live DB connection with no extract maps to DirectQuery intent; an extract
+    (<extract>) or a file/text relation maps to Import. Advisory IR signal only —
+    the emitter still defaults to import unless told otherwise.
+    """
+    if ds.find(".//extract") is not None:
+        return "import"
+    if any(rel.get("type") == "text" for rel in ds.iter("relation")):
+        return "import"
+    mode = (X.attr(conn, "mode") or "").lower()
+    if "live" in mode:
+        return "directQuery"
+    return "import"
 
 
 def _connection_files(ds: ET.Element) -> List[str]:
@@ -127,8 +246,17 @@ def _column_record(col: ET.Element, ds_caption: str, ordinal: Dict[str, int]) ->
 
 
 def _format_string(col: ET.Element) -> Optional[str]:
+    """Return the column's Tableau number/date format.
+
+    Prefers a nested ``<format>`` element, then falls back to the column's own
+    ``default-format`` attribute (where Tableau stores currency/percent/decimal
+    masks like ``$#,##0`` or ``p0``). Capturing this lets the emitter set a
+    matching Power BI formatString so numbers look like the source workbook.
+    """
     fmt = col.find("./format")
-    return X.attr(fmt, "format") if fmt is not None else None
+    if fmt is not None and X.attr(fmt, "format"):
+        return X.attr(fmt, "format")
+    return X.attr(col, "default-format")
 
 
 def extract_calculated_fields(root: ET.Element) -> List[Dict]:

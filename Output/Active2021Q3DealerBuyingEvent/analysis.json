@@ -3,7 +3,7 @@
   "workbook": {
     "name": "(Active) 2021 Q3 Dealer Buying Event",
     "pascalName": "Active2021Q3DealerBuyingEvent",
-    "sourcePath": "Data/Q3 Buyer/(Active) 2021 Q3 Dealer Buying Event.twb",
+    "sourcePath": "C:/Users/BoghraJeelKishorbhai/Deterministic-Agentic/Data/Q3 Buyer/(Active) 2021 Q3 Dealer Buying Event.twb",
     "version": "18.1",
     "platform": ""
   },
@@ -23,6 +23,21 @@
         "Sheet1$",
         "Extract].[Extract"
       ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "Sheet1$",
+          "type": "table"
+        },
+        {
+          "schema": "Extract",
+          "table": "Extract",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
       "active": true
     }
   ],
@@ -35,7 +50,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 0
+      "ordinal": 0,
+      "physicalTable": "Sheet1",
+      "remoteName": "Item Code",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -45,7 +63,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 1
+      "ordinal": 1,
+      "physicalTable": "Sheet1",
+      "remoteName": "Delivery Month",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -55,7 +76,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 2
+      "ordinal": 2,
+      "physicalTable": "Sheet1",
+      "remoteName": "Base Part Number",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -65,7 +89,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 3
+      "ordinal": 3,
+      "physicalTable": "Sheet1",
+      "remoteName": "Macro Area",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -75,7 +102,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 4
+      "ordinal": 4,
+      "physicalTable": "Sheet1",
+      "remoteName": "Sales Area",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -85,7 +115,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 5
+      "ordinal": 5,
+      "physicalTable": "Sheet1",
+      "remoteName": "Micro Area",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -95,7 +128,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 6
+      "ordinal": 6,
+      "physicalTable": "Sheet1",
+      "remoteName": "Year",
+      "metaType": "integer"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -105,7 +141,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 7
+      "ordinal": 7,
+      "physicalTable": "Sheet1",
+      "remoteName": "Month",
+      "metaType": "integer"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -115,7 +154,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 8
+      "ordinal": 8,
+      "physicalTable": "Sheet1",
+      "remoteName": "Date",
+      "metaType": "date"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -125,7 +167,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 9
+      "ordinal": 9,
+      "physicalTable": "Sheet1",
+      "remoteName": "Sum of Quantity (Units)",
+      "metaType": "integer"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -135,7 +180,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 10
+      "ordinal": 10,
+      "physicalTable": "Sheet1",
+      "remoteName": "Sum of Extra Quantity (Units)",
+      "metaType": "integer"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -145,7 +193,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 11
+      "ordinal": 11,
+      "physicalTable": "Sheet1",
+      "remoteName": "Order Quantity",
+      "metaType": "integer"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -155,7 +206,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 12
+      "ordinal": 12,
+      "physicalTable": "Sheet1",
+      "remoteName": "Cost",
+      "metaType": "real"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -165,7 +219,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 13
+      "ordinal": 13,
+      "physicalTable": "Sheet1",
+      "remoteName": "Dnet",
+      "metaType": "real"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -175,7 +232,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 14
+      "ordinal": 14,
+      "physicalTable": "Sheet1",
+      "remoteName": "MSRP",
+      "metaType": "real"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -185,7 +245,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 15
+      "ordinal": 15,
+      "physicalTable": "Sheet1",
+      "remoteName": "Product Cost $",
+      "metaType": "real"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -195,7 +258,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 16
+      "ordinal": 16,
+      "physicalTable": "Sheet1",
+      "remoteName": "Order $",
+      "metaType": "real"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -205,7 +271,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 17
+      "ordinal": 17,
+      "physicalTable": "Sheet1",
+      "remoteName": "Order $ (MSRP)",
+      "metaType": "real"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -215,7 +284,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 18
+      "ordinal": 18,
+      "physicalTable": "Sheet1",
+      "remoteName": "Margin $",
+      "metaType": "real"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -225,7 +297,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 19
+      "ordinal": 19,
+      "physicalTable": "Sheet1",
+      "remoteName": "Style",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -235,7 +310,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 20
+      "ordinal": 20,
+      "physicalTable": "Sheet1",
+      "remoteName": "Style Code",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -245,7 +323,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 21
+      "ordinal": 21,
+      "physicalTable": "Sheet1",
+      "remoteName": "Style Description",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -255,7 +336,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 22
+      "ordinal": 22,
+      "physicalTable": "Sheet1",
+      "remoteName": "Reorder Type",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -265,7 +349,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 23
+      "ordinal": 23,
+      "physicalTable": "Sheet1",
+      "remoteName": "Garment Type",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -275,7 +362,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 24
+      "ordinal": 24,
+      "physicalTable": "Sheet1",
+      "remoteName": "Product Gender",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -285,7 +375,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 25
+      "ordinal": 25,
+      "physicalTable": "Sheet1",
+      "remoteName": "Product Category",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -295,7 +388,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 26
+      "ordinal": 26,
+      "physicalTable": "Sheet1",
+      "remoteName": "Product Family",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -305,7 +401,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 27
+      "ordinal": 27,
+      "physicalTable": "Sheet1",
+      "remoteName": "Product Sub-Family",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -315,7 +414,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 28
+      "ordinal": 28,
+      "physicalTable": "Sheet1",
+      "remoteName": "Collection",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -325,7 +427,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 29
+      "ordinal": 29,
+      "physicalTable": "Sheet1",
+      "remoteName": "Delivery Season",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -335,7 +440,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 30
+      "ordinal": 30,
+      "physicalTable": "Sheet1",
+      "remoteName": "Delivery Date",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -345,7 +453,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 31
+      "ordinal": 31,
+      "physicalTable": "Sheet1",
+      "remoteName": "Gender/Stature/Type",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -355,7 +466,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 32
+      "ordinal": 32,
+      "physicalTable": "Sheet1",
+      "remoteName": "Base Style",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -365,7 +479,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 33
+      "ordinal": 33,
+      "physicalTable": "Sheet1",
+      "remoteName": "Color",
+      "metaType": "string"
     },
     {
       "datasource": "Sheet1 (Launch Data)",
@@ -387,7 +504,8 @@
       "formula": "10",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "Rank Sort Measure",
@@ -397,7 +515,8 @@
       "formula": "\"Order $ (Decending)\"",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "Base Part",
@@ -407,17 +526,23 @@
       "formula": "[Base Part Number]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Base Part Number"
+      ]
     },
     {
       "caption": "Rank",
       "fieldName": "[Calculation1]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "RANK( SUM([Calculation_1141381037533011970]))",
+      "formula": "RANK( SUM([Measure for Rank]))",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Measure for Rank"
+      ]
     },
     {
       "caption": "Order $ (Percent of Total)",
@@ -427,7 +552,10 @@
       "formula": "SUM([Order $]) / TOTAL(SUM([Order $]))",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order $"
+      ]
     },
     {
       "caption": "Calculation3",
@@ -437,7 +565,10 @@
       "formula": "SUM([Order $]) / TOTAL(SUM([Order $]))",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order $"
+      ]
     },
     {
       "caption": "Master Style",
@@ -447,17 +578,23 @@
       "formula": "LEFT([Style Code],8)",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Style Code"
+      ]
     },
     {
       "caption": "Style Count",
       "fieldName": "[Calculation_1130403519024861186]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "CountD([Calculation_107241981451685888])",
+      "formula": "CountD([Master Style])",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Master Style"
+      ]
     },
     {
       "caption": "Region",
@@ -467,17 +604,26 @@
       "formula": "IF [Sales Area] = \"Canada\" THEN \"Canada\" ELSEIF \r\n[Sales Area] = \"United States of America\" THEN \"USA\" ELSE [Macro Area] END",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Sales Area",
+        "Macro Area"
+      ]
     },
     {
       "caption": "Measure for Rank",
       "fieldName": "[Calculation_1141381037533011970]",
       "dataType": "real",
       "role": "measure",
-      "formula": "Case [Parameters].[Total Orders Parameter]\r\nWHEN \"Order $ (Accending)\" THEN -[Order $]\r\nWHEN \"Order Units (Accending)\" THEN -[Order Quantity]\r\nWHEN \"Order $ (Decending)\" THEN [Order $]\r\nWHEN \"Order Units (Decending)\" THEN [Order Quantity]\r\nEND",
+      "formula": "Case [Rank Sort Measure]\r\nWHEN \"Order $ (Accending)\" THEN -[Order $]\r\nWHEN \"Order Units (Accending)\" THEN -[Order Quantity]\r\nWHEN \"Order $ (Decending)\" THEN [Order $]\r\nWHEN \"Order Units (Decending)\" THEN [Order Quantity]\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Rank Sort Measure",
+        "Order $",
+        "Order Quantity"
+      ]
     },
     {
       "caption": "Base Style Name",
@@ -487,7 +633,10 @@
       "formula": "[Base Style]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Base Style"
+      ]
     },
     {
       "caption": "Global",
@@ -497,7 +646,8 @@
       "formula": "\"Global\"",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": []
     },
     {
       "caption": "Delivery Season ",
@@ -507,7 +657,10 @@
       "formula": "[Delivery Season]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Delivery Season"
+      ]
     },
     {
       "caption": "Delivery Month ",
@@ -517,17 +670,24 @@
       "formula": "[Delivery Month]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Delivery Month"
+      ]
     },
     {
       "caption": "Rank Filter",
       "fieldName": "[Calculation_154248294240215040]",
       "dataType": "string",
       "role": "measure",
-      "formula": "IF [Calculation1] <= [Parameters].[Rank Sort Measure (copy)] THEN \"Yes\" ELSE \"No\" END",
+      "formula": "IF [Rank] <= [Rows Displayed] THEN \"Yes\" ELSE \"No\" END",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Rank",
+        "Rows Displayed"
+      ]
     },
     {
       "caption": "Order $ (U.S. Dealer Net)",
@@ -537,7 +697,10 @@
       "formula": "[Order $]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order $"
+      ]
     },
     {
       "caption": "Category",
@@ -547,7 +710,10 @@
       "formula": "[Product Category]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Product Category"
+      ]
     },
     {
       "caption": "Family",
@@ -557,7 +723,10 @@
       "formula": "[Product Family]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Product Family"
+      ]
     },
     {
       "caption": "Gender",
@@ -567,7 +736,10 @@
       "formula": "[Product Gender]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Product Gender"
+      ]
     },
     {
       "caption": "Sub-Family",
@@ -577,7 +749,10 @@
       "formula": "[Product Sub-Family]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Product Sub-Family"
+      ]
     },
     {
       "caption": "Rank (Order $)",
@@ -587,7 +762,10 @@
       "formula": "RANK( SUM([Order $]))",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Order $"
+      ]
     },
     {
       "caption": "Region ",
@@ -597,7 +775,11 @@
       "formula": "IF [Sales Area] = \"Canada\" THEN \"Canada\" ELSEIF \r\n[Sales Area] = \"United States of America\" THEN \"USA\" ELSE [Macro Area] END",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Sales Area",
+        "Macro Area"
+      ]
     },
     {
       "caption": "Sales Area ",
@@ -607,7 +789,10 @@
       "formula": "[Sales Area]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Sales Area"
+      ]
     },
     {
       "caption": "Style Code ",
@@ -617,7 +802,10 @@
       "formula": "[Style Code]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Style Code"
+      ]
     },
     {
       "caption": "Style Description ",
@@ -627,7 +815,10 @@
       "formula": "[Style Description]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Style Description"
+      ]
     }
   ],
   "parameters": [
@@ -696,25 +887,61 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Base Part",
+      "valueField": "Order $ (U.S. Dealer Net)",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Delivery Season",
+        "Base Part",
+        "Base Style Name",
         "Global",
+        "Collection",
+        "Color",
+        "Delivery Month",
+        "Delivery Season",
         "Garment Type",
-        "Gender",
         "Category",
         "Family",
+        "Gender",
         "Sub-Family",
-        "Base Style Name",
+        "Region ",
+        "Sales Area ",
         "Style Code ",
         "Style Description ",
-        "Color",
-        "Collection"
+        "Style Description"
       ],
-      "values": [],
+      "values": [
+        "Order $ (U.S. Dealer Net)",
+        "Order $ (MSRP)",
+        "Order Quantity"
+      ],
+      "measures": [
+        {
+          "field": "Order $ (U.S. Dealer Net)",
+          "agg": "SUM",
+          "column": "Order $ (At U.S. Dealer Net) (copy)_1441996317248622595"
+        },
+        {
+          "field": "Order $ (MSRP)",
+          "agg": "SUM",
+          "column": "Order $ (MSRP)"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        }
+      ],
+      "axes": {
+        "category": "Base Part",
+        "categoryLevel": null,
+        "values": [
+          "Order $ (U.S. Dealer Net)",
+          "Order $ (MSRP)",
+          "Order Quantity"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -731,15 +958,113 @@
         "Base Part",
         "Base Style Name"
       ],
+      "filterDetails": [
+        {
+          "field": "Base Part",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Base Style Name",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Delivery Month",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Garment Type",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Casual",
+            "Functional"
+          ],
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Family",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Gender",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sub-Family",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Region ",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Sales Area ",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Style Description",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary ",
@@ -759,20 +1084,48 @@
         "path": null
       },
       "categoryField": null,
-      "valueField": null,
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": null,
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Order $ (USD)",
       "filters": [],
+      "filterDetails": [],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "14",
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "card"
     },
@@ -793,11 +1146,33 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
-      "valueField": null,
+      "categoryField": "Garment Type",
+      "valueField": "Order $",
       "categoryDateLevel": null,
-      "dimensions": [],
-      "values": [],
+      "dimensions": [
+        "Garment Type",
+        "Category",
+        "Gender"
+      ],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Garment Type",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Order $ (USD)",
       "filters": [
@@ -805,15 +1180,47 @@
         "Garment Type",
         "Gender"
       ],
+      "filterDetails": [
+        {
+          "field": "Garment Type",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Gender",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "14",
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - Category",
@@ -836,28 +1243,73 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Macro Area",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Macro Area",
         "Product Category"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Macro Area",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Category",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Category  - 3",
@@ -880,29 +1332,85 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Category"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Jan Replenish",
+            "2022   Summer"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Category (Slide)",
@@ -925,28 +1433,73 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Macro Area",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Macro Area",
         "Product Category"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Macro Area",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Category",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Category - 1",
@@ -969,29 +1522,84 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Category"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   July Replenish"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Category - 2",
@@ -1014,29 +1622,84 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Category"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2022   Spring"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Category - 4",
@@ -1059,29 +1722,85 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Category"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Fall",
+            "2021   Winter"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Color",
@@ -1104,28 +1823,73 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Color",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Color"
+        "Color",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Color",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Category",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Delivery Season",
@@ -1148,28 +1912,73 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season ",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Delivery Season "
+        "Delivery Season ",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season ",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Delivery Season",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Delivery Season (Slide)",
@@ -1192,14 +2001,42 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season ",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Delivery Season "
+        "Delivery Season ",
+        "Garment Type",
+        "Macro Area",
+        "Category",
+        "Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season ",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Delivery Season",
       "filters": [
@@ -1208,15 +2045,56 @@
         "Garment Type",
         "Gender"
       ],
+      "filterDetails": [
+        {
+          "field": "Garment Type",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Gender",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Family",
@@ -1239,28 +2117,73 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Macro Area",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Macro Area",
         "Product Family"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Macro Area",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Family",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Family (Slide)",
@@ -1283,14 +2206,42 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Garment Type",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Product Family"
+        "Garment Type",
+        "Macro Area",
+        "Category",
+        "Product Family",
+        "Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Garment Type",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Family",
       "filters": [
@@ -1299,15 +2250,56 @@
         "Gender",
         "Garment Type"
       ],
+      "filterDetails": [
+        {
+          "field": "Garment Type",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Gender",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Garment Type",
@@ -1330,28 +2322,73 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Garment Type",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Garment Type"
+        "Garment Type",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Garment Type",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Garment Type",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Garment Type - 1",
@@ -1374,29 +2411,84 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Garment Type"
+        "Delivery Season",
+        "Garment Type",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   July Replenish"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Garment Type - 2",
@@ -1419,29 +2511,84 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Garment Type"
+        "Delivery Season",
+        "Garment Type",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2022   Spring"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Garment Type - 3",
@@ -1464,29 +2611,85 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Garment Type"
+        "Delivery Season",
+        "Garment Type",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Jan Replenish",
+            "2022   Summer"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Garment Type - 4",
@@ -1509,29 +2712,85 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Garment Type"
+        "Delivery Season",
+        "Garment Type",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Fall",
+            "2021   Winter"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Garment Type Slide)",
@@ -1554,28 +2813,66 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Garment Type",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Garment Type"
+        "Garment Type",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Garment Type",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Garment Type",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - Gender",
@@ -1598,28 +2895,80 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Macro Area",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Macro Area",
         "Product Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Order $ (Percent of Total)",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order $ (Percent of Total)",
+          "agg": "SUM",
+          "column": "Calculation2"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Macro Area",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order $ (Percent of Total)",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Gender",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Gender  - 3",
@@ -1642,29 +2991,85 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Jan Replenish",
+            "2022   Summer"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Gender (Slide)",
@@ -1687,28 +3092,73 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Macro Area",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Macro Area",
         "Product Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Order $ (Percent of Total)"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order $ (Percent of Total)",
+          "agg": "SUM",
+          "column": "Calculation2"
+        }
+      ],
+      "axes": {
+        "category": "Macro Area",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order $ (Percent of Total)"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Gender",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Gender - 1",
@@ -1731,29 +3181,84 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   July Replenish"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Gender - 2",
@@ -1776,29 +3281,84 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2022   Spring"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Gender - 4",
@@ -1821,29 +3381,85 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Product Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Style Count"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Fall",
+            "2021   Winter"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - MacroArea",
@@ -1866,28 +3482,66 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Region"
+        "Region",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - MacroArea (Slide)",
@@ -1910,14 +3564,35 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Region"
+        "Region",
+        "Garment Type",
+        "Macro Area",
+        "Category",
+        "Gender"
       ],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
@@ -1926,15 +3601,56 @@
         "Garment Type",
         "Gender"
       ],
+      "filterDetails": [
+        {
+          "field": "Garment Type",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Gender",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - MacroArea - 1",
@@ -1957,29 +3673,77 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Region"
+        "Region",
+        "Delivery Season",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   July Replenish"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - MacroArea - 2",
@@ -2002,29 +3766,77 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Region"
+        "Region",
+        "Delivery Season",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2022   Spring"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - MacroArea - 3",
@@ -2047,29 +3859,78 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Region"
+        "Region",
+        "Delivery Season",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Jan Replenish",
+            "2022   Summer"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - MacroArea - 4",
@@ -2092,29 +3953,78 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
-        "Region"
+        "Region",
+        "Delivery Season",
+        "Macro Area"
       ],
-      "values": [],
+      "values": [
+        "Order $"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Region",
       "filters": [
         "Macro Area",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Fall",
+            "2021   Winter"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "barChart"
     },
     {
       "name": "Launch Summary - Top Parts",
@@ -2142,35 +4052,89 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank",
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
+        "Product Category",
+        "Product Gender",
         "Style Code",
         "Style Description",
-        "Delivery Season",
-        "Product Gender",
-        "Product Category"
+        "Rank",
+        "Rank Filter"
       ],
       "values": [
-        "Rank"
+        "Order $",
+        "Order Quantity"
       ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Styles",
       "filters": [
         "Macro Area",
         "Rank Filter"
       ],
+      "filterDetails": [
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank Filter",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Yes"
+          ],
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": null,
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- All - 1",
@@ -2195,17 +4159,49 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "July 2021 Core - Top Styles - Global",
       "filters": [
@@ -2213,15 +4209,54 @@
         "Rank",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   July Replenish"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- All - 2",
@@ -2246,17 +4281,49 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Spring 2022 - Top Styles - Global",
       "filters": [
@@ -2264,15 +4331,54 @@
         "Rank",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2022   Spring"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- All - 3",
@@ -2297,32 +4403,94 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Summer 2022 - Top Styles - Global",
       "filters": [
         "Rank",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Jan Replenish",
+            "2022   Summer"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- All - 4",
@@ -2347,17 +4515,49 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Delivery Season",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Delivery Season",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Fall/Winter Chase - Top Styles - Global",
       "filters": [
@@ -2365,15 +4565,55 @@
         "Rank",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Fall",
+            "2021   Winter"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- Int - 1",
@@ -2398,17 +4638,50 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "July 2021 Core  - Top Styles - INT",
       "filters": [
@@ -2417,15 +4690,66 @@
         "Delivery Season",
         "Region"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Asia Pacific",
+            "Canada",
+            "Europe, Mid East, Africa",
+            "Latin America"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   July Replenish"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- Int - 2",
@@ -2450,17 +4774,49 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Spring 2022 - Top Styles - INT",
       "filters": [
@@ -2468,15 +4824,57 @@
         "Region",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Asia Pacific",
+            "Canada",
+            "Europe, Mid East, Africa",
+            "Latin America"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2022   Spring"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- Int - 3",
@@ -2501,17 +4899,50 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Summer 2022 - Top Styles - INT",
       "filters": [
@@ -2520,15 +4951,67 @@
         "Region",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Asia Pacific",
+            "Canada",
+            "Europe, Mid East, Africa",
+            "Latin America"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Jan Replenish",
+            "2022   Summer"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- Int - 4",
@@ -2553,17 +5036,50 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Fall/Winter Chase - Top Styles - INT",
       "filters": [
@@ -2572,15 +5088,67 @@
         "Delivery Season",
         "Region"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Asia Pacific",
+            "Canada",
+            "Europe, Mid East, Africa",
+            "Latin America"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Fall",
+            "2021   Winter"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- US- 1",
@@ -2605,17 +5173,49 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "July 2021 Core  - Top Styles - US",
       "filters": [
@@ -2623,15 +5223,54 @@
         "Region",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "USA"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   July Replenish"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- US- 2",
@@ -2656,17 +5295,50 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Spring 2022 - Top Styles - US",
       "filters": [
@@ -2675,15 +5347,63 @@
         "Region",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "USA"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2022   Spring"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- US- 3",
@@ -2708,17 +5428,50 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
+        "Macro Area",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Summer 2022 - Top Styles - US",
       "filters": [
@@ -2727,15 +5480,64 @@
         "Region",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "USA"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Jan Replenish",
+            "2022   Summer"
+          ],
+          "range": null
+        },
+        {
+          "field": "Macro Area",
+          "filterClass": "categorical",
+          "scope": "exclude",
+          "values": [
+            "%null%"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Launch Summary - Top Parts- US- 4",
@@ -2760,17 +5562,49 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": "Rank (Order $)",
+      "categoryField": "Region",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
+        "Region",
+        "Delivery Season",
         "Style Code",
-        "Style Description"
-      ],
-      "values": [
+        "Style Description",
         "Rank (Order $)"
       ],
+      "values": [
+        "Order $",
+        "Order Quantity",
+        "Rank"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        },
+        {
+          "field": "Rank",
+          "agg": "SUM",
+          "column": "Calculation1"
+        }
+      ],
+      "axes": {
+        "category": "Region",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity",
+          "Rank"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Fall/Winter Chase  - Top Styles - US",
       "filters": [
@@ -2778,15 +5612,55 @@
         "Region",
         "Delivery Season"
       ],
+      "filterDetails": [
+        {
+          "field": "Region",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "USA"
+          ],
+          "range": null
+        },
+        {
+          "field": "Delivery Season",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "2021   Fall",
+            "2021   Winter"
+          ],
+          "range": null
+        },
+        {
+          "field": "Rank",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "1",
+            "max": "10"
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "7",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Sales by Date",
@@ -2809,27 +5683,71 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": "Date",
+      "categoryField": "Reorder Type",
       "valueField": "Order $ (U.S. Dealer Net)",
       "categoryDateLevel": null,
       "dimensions": [
-        "Date"
+        "Reorder Type"
       ],
       "values": [
-        "Order $ (U.S. Dealer Net)"
+        "Order $ (U.S. Dealer Net)",
+        "Date"
       ],
+      "measures": [
+        {
+          "field": "Order $ (U.S. Dealer Net)",
+          "agg": "SUM",
+          "column": "Order $ (At U.S. Dealer Net) (copy)_1441996317248622595"
+        },
+        {
+          "field": "Date",
+          "agg": "SUM",
+          "column": "Date"
+        }
+      ],
+      "axes": {
+        "category": "Reorder Type",
+        "categoryLevel": null,
+        "values": [
+          "Order $ (U.S. Dealer Net)",
+          "Date"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Order $ by Date",
       "filters": [
         "Date"
       ],
+      "filterDetails": [
+        {
+          "field": "Date",
+          "filterClass": "quantitative",
+          "scope": null,
+          "values": null,
+          "range": {
+            "min": "#2021-07-16#",
+            "max": null
+          }
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": true,
         "showFieldLabels": null,
         "markStroke": "#666666",
-        "showMarkLabels": null
+        "showMarkLabels": null,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "8",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "areaChart"
     },
@@ -2854,15 +5772,41 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": "Date",
+      "categoryField": "Garment Type",
       "valueField": "Order $ (U.S. Dealer Net)",
       "categoryDateLevel": null,
       "dimensions": [
-        "Date"
+        "Garment Type",
+        "Category",
+        "Gender",
+        "Reorder Type"
       ],
       "values": [
-        "Order $ (U.S. Dealer Net)"
+        "Order $ (U.S. Dealer Net)",
+        "Date"
       ],
+      "measures": [
+        {
+          "field": "Order $ (U.S. Dealer Net)",
+          "agg": "SUM",
+          "column": "Order $ (At U.S. Dealer Net) (copy)_1441996317248622595"
+        },
+        {
+          "field": "Date",
+          "agg": "SUM",
+          "column": "Date"
+        }
+      ],
+      "axes": {
+        "category": "Garment Type",
+        "categoryLevel": null,
+        "values": [
+          "Order $ (U.S. Dealer Net)",
+          "Date"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": "Order $ by Date",
       "filters": [
@@ -2870,13 +5814,45 @@
         "Garment Type",
         "Gender"
       ],
+      "filterDetails": [
+        {
+          "field": "Garment Type",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Gender",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": true,
         "showFieldLabels": null,
         "markStroke": "#666666",
-        "showMarkLabels": null
+        "showMarkLabels": null,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "12",
+        "fontColor": "#000000",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "areaChart"
     },
@@ -2901,26 +5877,60 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": ":Measure Names",
-      "valueField": null,
+      "categoryField": "Date",
+      "valueField": "Order $",
       "categoryDateLevel": null,
       "dimensions": [
-        ":Measure Names",
         "Date"
       ],
-      "values": [],
+      "values": [
+        "Order $",
+        "Order Quantity"
+      ],
+      "measures": [
+        {
+          "field": "Order $",
+          "agg": "SUM",
+          "column": "Order $"
+        },
+        {
+          "field": "Order Quantity",
+          "agg": "SUM",
+          "column": "Order Quantity"
+        }
+      ],
+      "axes": {
+        "category": "Date",
+        "categoryLevel": null,
+        "values": [
+          "Order $",
+          "Order Quantity"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [],
+      "filterDetails": [],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": null
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Style Count (Slide)",
@@ -2939,13 +5949,33 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "Garment Type",
       "valueField": "Style Count",
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "Garment Type",
+        "Category",
+        "Gender"
+      ],
       "values": [
         "Style Count"
       ],
+      "measures": [
+        {
+          "field": "Style Count",
+          "agg": "SUM",
+          "column": "Calculation_1130403519024861186"
+        }
+      ],
+      "axes": {
+        "category": "Garment Type",
+        "categoryLevel": null,
+        "values": [
+          "Style Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "Style Count",
       "filters": [
@@ -2953,15 +5983,47 @@
         "Garment Type",
         "Gender"
       ],
+      "filterDetails": [
+        {
+          "field": "Garment Type",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Category",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Gender",
+          "filterClass": "categorical",
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": "Tableau Bold",
+        "fontSize": "14",
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "barChart"
     }
   ],
   "dashboards": [
@@ -3862,10 +6924,54 @@
         "Gender/Stature/Type",
         "Base Style",
         "Color"
-      ]
+      ],
+      "parse": {
+        "delimiter": null,
+        "charset": null,
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": null
+      }
     }
   ],
-  "columnTableMap": {},
+  "columnTableMap": {
+    "Item Code": "Sheet1",
+    "Delivery Month": "Sheet1",
+    "Base Part Number": "Sheet1",
+    "Macro Area": "Sheet1",
+    "Sales Area": "Sheet1",
+    "Micro Area": "Sheet1",
+    "Year": "Sheet1",
+    "Month": "Sheet1",
+    "Date": "Sheet1",
+    "Sum of Quantity (Units)": "Sheet1",
+    "Sum of Extra Quantity (Units)": "Sheet1",
+    "Order Quantity": "Sheet1",
+    "Cost": "Sheet1",
+    "Dnet": "Sheet1",
+    "MSRP": "Sheet1",
+    "Product Cost $": "Sheet1",
+    "Order $": "Sheet1",
+    "Order $ (MSRP)": "Sheet1",
+    "Margin $": "Sheet1",
+    "Style": "Sheet1",
+    "Style Code": "Sheet1",
+    "Style Description": "Sheet1",
+    "Reorder Type": "Sheet1",
+    "Garment Type": "Sheet1",
+    "Product Gender": "Sheet1",
+    "Product Category": "Sheet1",
+    "Product Family": "Sheet1",
+    "Product Sub-Family": "Sheet1",
+    "Collection": "Sheet1",
+    "Delivery Season": "Sheet1",
+    "Delivery Date": "Sheet1",
+    "Gender/Stature/Type": "Sheet1",
+    "Base Style": "Sheet1",
+    "Color": "Sheet1"
+  },
   "relationships": [],
   "hierarchies": [
     {

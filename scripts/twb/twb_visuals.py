@@ -23,6 +23,96 @@ MARK_MAP = {
     "Gantt": "ganttChart", "Map": "map",
 }
 
+# Mark classes that draw geographic shapes -> Power BI map.
+MAP_MARKS = {"Map", "Multipolygon", "Polygon", "Filled Map"}
+
+# Tableau <column-instance> derivation -> DAX aggregation. The derivation is the
+# AUTHORITATIVE signal that a field is used as a measure (value) on a sheet, even
+# when the underlying column is dimension-typed (e.g. CountD of an id column).
+DERIVATION_AGG = {
+    "Sum": "SUM", "Avg": "AVG", "Count": "COUNT", "CountD": "COUNTD",
+    "Min": "MIN", "Max": "MAX", "Median": "MEDIAN", "Attr": "ATTR",
+    "StdDev": "STDEV", "Var": "VAR",
+}
+# Date-truncation derivations -> a date grain (these stay DIMENSIONS, not values).
+DATE_DERIV_LEVEL = {
+    "Year": "year", "Quarter": "quarter", "Month": "month", "Week": "week",
+    "Day": "day", "Trunc Year": "year", "Trunc Quarter": "quarter",
+    "Trunc Month": "month", "Trunc Week": "week", "Trunc Day": "day",
+}
+_HASH_SUFFIX = re.compile(r"\s*\(copy\)(\s*\(copy\))*(_\d{6,})?$|_\d{12,}$")
+
+
+def _clean_field(name: str, calc_map: Dict) -> str:
+    """Resolve a raw column token to a friendly field name.
+
+    Maps internal Calculation_<id> -> caption, and strips Tableau duplicate-field
+    noise ((copy) and _<long-digits> suffixes) so shelves read like Tableau's UI.
+    """
+    name = X.strip_brackets(name)
+    if name in calc_map:
+        return calc_map[name]
+    stripped = _HASH_SUFFIX.sub("", name).strip()
+    return calc_map.get(stripped, stripped or name)
+
+
+def _column_instances(ws: ET.Element, calc_map: Dict) -> List[Dict]:
+    """Parse a worksheet's <datasource-dependencies>/<column-instance> block.
+
+    This is the authoritative per-sheet field list: each entry names the source
+    column, its aggregation (derivation) and value/dimension type. Far more
+    reliable than scraping the rows/cols shelf text, which is what the parser
+    used before (and which lost every aggregated measure).
+    """
+    out: List[Dict] = []
+    seen = set()
+    for ci in ws.findall(".//datasource-dependencies/column-instance"):
+        col = X.attr(ci, "column")
+        deriv = X.attr(ci, "derivation", "None")
+        typ = X.attr(ci, "type", "")
+        iname = X.attr(ci, "name", "")
+        if not col or iname in seen:
+            continue
+        seen.add(iname)
+        agg = DERIVATION_AGG.get(deriv)
+        date_level = DATE_DERIV_LEVEL.get(deriv)
+        is_measure = bool(agg) or (typ == "quantitative" and not date_level)
+        out.append({
+            "field": _clean_field(col, calc_map),
+            "column": X.strip_brackets(col),
+            "agg": agg,
+            "type": typ,
+            "instanceName": iname,
+            "isMeasure": is_measure,
+            "dateLevel": date_level,
+        })
+    return out
+
+
+def _topn_filter(ws: ET.Element, calc_map: Dict) -> Optional[Dict]:
+    """Extract a Tableau Top-N filter (groupfilter count/end='top') if present."""
+    for filt in ws.findall(".//filter"):
+        top = filt.find(".//groupfilter[@end='top']")
+        if top is None:
+            top = filt.find(".//groupfilter[@end='bottom']")
+        if top is None:
+            continue
+        count = top.get("count")
+        if not count:
+            continue
+        order = top.find(".//groupfilter[@function='order']")
+        direction = (X.attr(order, "direction") or "DESC").upper() if order is not None else "DESC"
+        by_expr = X.attr(order, "expression") if order is not None else None
+        field = F.resolve_ref(X.attr(filt, "column"), calc_map)
+        return {
+            "field": field,
+            "n": int(count) if count.isdigit() else count,
+            "direction": "TOP" if X.attr(top, "end") == "top" else "BOTTOM",
+            "byMeasure": by_expr,
+            "sortDirection": direction,
+        }
+    return None
+
 
 def worksheet_datasources(root: ET.Element) -> set:
     """Names of datasources referenced by any worksheet (for active flagging)."""
@@ -51,21 +141,113 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
         rows = _shelf_fields(ws, "rows")
         cols = _shelf_fields(ws, "cols")
         encodings = _encodings(pane)
-        fields = F.summarize(rows, cols, encodings, calc_map, measures)
+        instances = _column_instances(ws, calc_map)
+        fields = _resolve_fields(instances, rows, cols, encodings, calc_map, measures)
+        rows_text = (ws.findtext(".//rows") or "")
+        cols_text = (ws.findtext(".//cols") or "")
+        orientation = _orientation(
+            [ci for ci in instances if ci["isMeasure"]], rows_text, cols_text)
         sheets.append({
             "name": name, "datasource": _primary_ds(ws), "markClass": mark_class,
             "rows": rows, "cols": cols, "encodings": encodings,
             "categoryField": fields["category"], "valueField": fields["value"],
             "categoryDateLevel": fields["categoryDateLevel"],
             "dimensions": fields["dimensions"], "values": fields["values"],
+            "measures": fields["measures"],
+            "axes": _axes(fields, orientation),
+            "orientation": orientation,
             "caption": _worksheet_caption(ws, calc_map, param_map),
             "title": _worksheet_title(ws, calc_map, param_map),
             "filters": _worksheet_filters(ws, calc_map),
+            "filterDetails": _worksheet_filter_details(ws, calc_map),
+            "topN": _topn_filter(ws, calc_map),
             "sort": _worksheet_sort(ws, calc_map),
             "formatting": _worksheet_formatting(ws),
-            "inferredVisualType": _infer_type(mark_class, rows, cols, encodings),
+            "inferredVisualType": _infer_type(
+                mark_class, fields, encodings, orientation),
         })
     return sheets
+
+
+def _resolve_fields(instances: List[Dict], rows: List[str], cols: List[str],
+                    enc: Dict, calc_map: Dict, measures: set) -> Dict:
+    """Pick category/value/dimensions/values from column-instances when present.
+
+    The <column-instance> block is authoritative (it carries the aggregation), so
+    it is preferred. When a worksheet has no dependency block we fall back to the
+    legacy shelf-text heuristic in twb_fields.summarize.
+    """
+    if instances:
+        meas = _dedupe([ci["field"] for ci in instances if ci["isMeasure"]])
+        dims = _dedupe([ci["field"] for ci in instances if not ci["isMeasure"]])
+        measures_detail = _dedupe_measures(
+            {"field": ci["field"], "agg": ci["agg"] or "SUM", "column": ci["column"]}
+            for ci in instances if ci["isMeasure"])
+        date_level = next(
+            (ci["dateLevel"] for ci in instances
+             if not ci["isMeasure"] and ci["dateLevel"]), None)
+        return {
+            "category": dims[0] if dims else None,
+            "value": meas[0] if meas else None,
+            "dimensions": dims, "values": meas,
+            "measures": measures_detail, "categoryDateLevel": date_level,
+        }
+    legacy = F.summarize(rows, cols, enc, calc_map, measures)
+    return {
+        "category": legacy["category"], "value": legacy["value"],
+        "dimensions": legacy["dimensions"], "values": legacy["values"],
+        "measures": [{"field": v, "agg": "SUM", "column": v}
+                     for v in legacy["values"]],
+        "categoryDateLevel": legacy["categoryDateLevel"],
+    }
+
+
+def _axes(fields: Dict, orientation: Optional[str]) -> Dict:
+    """Make the 'what vs what' of the chart explicit (category vs value axes).
+
+    Restates the resolved shelf fields as a plain category/value axis pair so the
+    report layer (and a human reader) can see, at a glance, what sits on each
+    axis: the category axis (X for vertical charts), its date grain if any, and
+    the ordered measures plotted on the value axis (Y).
+    """
+    return {
+        "category": fields.get("category"),
+        "categoryLevel": fields.get("categoryDateLevel"),
+        "values": list(fields.get("values") or []),
+        "orientation": orientation,
+    }
+
+
+def _dedupe(items: List[Optional[str]]) -> List[str]:
+    seen: List[str] = []
+    for it in items:
+        if it and it not in seen:
+            seen.append(it)
+    return seen
+
+
+def _dedupe_measures(items) -> List[Dict]:
+    seen: List[Dict] = []
+    names = set()
+    for it in items:
+        if it["field"] and it["field"] not in names:
+            names.add(it["field"])
+            seen.append(it)
+    return seen
+
+
+def _orientation(measure_instances: List[Dict], rows_text: str,
+                 cols_text: str) -> Optional[str]:
+    """Bars are horizontal when the measure sits on Columns, vertical on Rows."""
+    for ci in measure_instances:
+        tok = ci.get("instanceName", "").strip("[]")
+        if not tok:
+            continue
+        if tok in (cols_text or ""):
+            return "horizontal"
+        if tok in (rows_text or ""):
+            return "vertical"
+    return None
 
 
 def _formatted_text_skeleton(node: Optional[ET.Element], calc_map: Dict,
@@ -128,6 +310,78 @@ def _worksheet_filters(ws: ET.Element, calc_map: Dict) -> List[str]:
     return out
 
 
+def _worksheet_filter_details(ws: ET.Element, calc_map: Dict) -> List[Dict]:
+    """Capture every filter's column, type and include/exclude selection (metadata).
+
+    Combines two XML sources so no filter column is missed: the <filter> elements
+    (which carry the class + member logic) and the <slices> list (the complete set
+    of columns filtered on the sheet). Reads only the filter DEFINITION, never the
+    data. Internal pseudo-filters (:Measure Names) and action-generated filters are
+    skipped — those are captured separately in actions[]. Member values capped.
+    """
+    by_field: Dict[str, Dict] = {}
+    order: List[str] = []
+
+    def _add(field: Optional[str], fclass, scope, values, rng):
+        if not field or field.startswith(":"):
+            return
+        if field not in by_field:
+            order.append(field)
+            by_field[field] = {"field": field, "filterClass": fclass,
+                               "scope": scope, "values": values, "range": rng}
+        else:  # enrich an existing slice-only entry with <filter> detail
+            rec = by_field[field]
+            rec["filterClass"] = rec["filterClass"] or fclass
+            rec["scope"] = rec["scope"] or scope
+            rec["values"] = rec["values"] or values
+            rec["range"] = rec["range"] or rng
+
+    # 1) rich <filter> elements (type + member logic)
+    for filt in ws.findall(".//filter"):
+        col = X.attr(filt, "column")
+        if not col or "Action (" in col:
+            continue
+        scope, values, rng = _filter_logic(filt)
+        _add(F.resolve_ref(col, calc_map), X.attr(filt, "class"), scope, values, rng)
+
+    # 2) <slices> columns (the complete filtered-column list)
+    for col in ws.findall(".//slices/column"):
+        ref = (col.text or "").strip()
+        if not ref or "Action (" in ref:
+            continue
+        _add(F.resolve_ref(ref, calc_map), None, None, None, None)
+
+    return [by_field[f] for f in order]
+
+
+def _filter_logic(filt: ET.Element):
+    """Return (scope, values, range) for a <filter>: include/exclude + members.
+
+    Categorical filters list selected members via <groupfilter function='member'>;
+    an 'except'/'exclusions' wrapper means EXCLUDE. Quantitative/range filters
+    carry numeric <min>/<max>. Member values are capped at 25 (this is the filter
+    definition, not data extraction).
+    """
+    members: List[str] = []
+    scope: Optional[str] = None
+    for gf in filt.findall(".//groupfilter"):
+        fn = (X.attr(gf, "function") or "").lower()
+        if fn in ("except", "exclusions"):
+            scope = "exclude"
+        elif fn == "member":
+            if scope is None:
+                scope = "include"
+            mem = X.attr(gf, "member")
+            if mem:
+                members.append(mem.strip('"').strip("[]"))
+    rng = None
+    mn, mx = filt.findtext(".//min"), filt.findtext(".//max")
+    if mn is not None or mx is not None:
+        rng = {"min": mn, "max": mx}
+    values = members[:25] if members else None
+    return scope, values, rng
+
+
 def _worksheet_sort(ws: ET.Element, calc_map: Dict) -> Optional[Dict]:
     """Return {field, direction} for an explicit field sort, else None."""
     s = ws.find(".//sort")
@@ -150,6 +404,9 @@ def _worksheet_formatting(ws: ET.Element) -> Optional[Dict]:
     fmt: Dict[str, object] = {
         "colorPalette": None, "gridlines": None, "showFieldLabels": None,
         "markStroke": None, "showMarkLabels": None,
+        "markColor": None, "background": None,
+        "fontName": None, "fontSize": None, "fontColor": None,
+        "alignment": None, "titleColor": None, "titleFontSize": None,
     }
     palette = [c.text for c in ws.findall(".//table/style//color-palette/color") if c.text]
     if palette:
@@ -164,12 +421,31 @@ def _worksheet_formatting(ws: ET.Element) -> Optional[Dict]:
                     fmt["gridlines"] = (val == "on")
                 elif elem == "worksheet" and attr == "display-field-labels":
                     fmt["showFieldLabels"] = (val == "true")
+                elif elem == "table" and attr == "background-color" and val:
+                    fmt["background"] = val
+                # Font + alignment (first value wins; title scoped separately)
+                if attr == "font-family" and val and not fmt["fontName"]:
+                    fmt["fontName"] = val
+                elif attr == "font-size" and val:
+                    if elem == "title" and not fmt["titleFontSize"]:
+                        fmt["titleFontSize"] = val
+                    elif not fmt["fontSize"]:
+                        fmt["fontSize"] = val
+                elif attr == "text-align" and val and not fmt["alignment"]:
+                    fmt["alignment"] = val
+                elif attr == "color" and val:
+                    if elem == "title" and not fmt["titleColor"]:
+                        fmt["titleColor"] = val
+                    elif not fmt["fontColor"]:
+                        fmt["fontColor"] = val
     for f in ws.findall(".//panes/pane/style//format"):
         attr, val = X.attr(f, "attr"), X.attr(f, "value")
         if attr == "stroke-color":
             fmt["markStroke"] = val
         elif attr == "mark-labels-show":
             fmt["showMarkLabels"] = (val == "true")
+        elif attr == "mark-color" and val:
+            fmt["markColor"] = val
     if all(v is None for v in fmt.values()):
         return None
     return fmt
@@ -210,19 +486,38 @@ def _encodings(pane: Optional[ET.Element]) -> Dict[str, Optional[str]]:
     return enc
 
 
-def _infer_type(mark_class: str, rows: List[str], cols: List[str],
-                enc: Dict[str, Optional[str]]) -> Optional[str]:
-    """Return a Power BI visualType, or None when ambiguous (LLM resolves)."""
+def _infer_type(mark_class: str, fields: Dict,
+                enc: Dict[str, Optional[str]], orientation: Optional[str]) -> Optional[str]:
+    """Return a Power BI visualType, or None when still genuinely ambiguous.
+
+    Driven by the resolved field counts (from column-instances) instead of raw
+    shelf text, so count/distinct measures and KPI cards are now classified.
+    """
+    if mark_class in MAP_MARKS:
+        return "map"
     if mark_class == "Text":
         return "tableEx"
     if mark_class in MARK_MAP:
         return MARK_MAP[mark_class]
+    n_dim = len(fields.get("dimensions") or [])
+    n_val = len(fields.get("values") or [])
+    has_date = fields.get("categoryDateLevel") is not None
     if mark_class == "Automatic":
-        if not rows and not cols:
+        if n_dim == 0 and n_val == 0:
             return "card"
         if enc.get("color") and enc.get("size") and enc.get("text"):
             return "treemap"
-    return None  # could be bar or table -> defer to LLM
+        if n_dim == 0 and n_val >= 1:
+            return "card"                      # single-number KPI
+        if n_val >= 2 and n_dim >= 1:
+            return "tableEx"                   # multi-measure summary table
+        if has_date and n_val >= 1:
+            return "lineChart"                 # measure over a date axis
+        if n_dim >= 1 and n_val >= 1:
+            return "columnChart" if orientation == "vertical" else "barChart"
+        if n_dim >= 1 and n_val == 0:
+            return "tableEx"
+    return None  # leave for the LLM to resolve via decisions.json
 
 
 def extract_dashboards(root: ET.Element, calc_map: Optional[Dict] = None,

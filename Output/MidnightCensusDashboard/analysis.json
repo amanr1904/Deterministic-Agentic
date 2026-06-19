@@ -21,6 +21,22 @@
         "Custom SQL Query",
         "Extract].[Extract"
       ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "Custom SQL Query",
+          "type": "customSql",
+          "sql": "SELECT\n\t\tADT_MASTER.DEPARTMENT_KEY as \"DEPARTMENT_KEY\"\n\t,\tENCOUNTER_MASTER.ENCOUNTER_EPIC_CSN as \"Encounter CSN\"\n\t,\tCASE\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'BLUE RIDGE HOSPITAL' THEN 'Blue Ridge'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'CALDWELL HOSPITAL' THEN 'Caldwell'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Charles A Cannon Jr Memorial Hospital' THEN 'Cannon'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'CHATHAM HOSPITAL' THEN 'Chatham'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'JOHNSTON HOSPITAL' THEN 'Johnston'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Lenoir Memorial Hospital' THEN 'Lenoir'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'NASH HOSPITAL' THEN 'Nash'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'PARDEE HOSPITAL' THEN 'Pardee'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'REX HOSPITAL' THEN 'Rex'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'SOUTHEASTERN REGIONAL HOSPITAL' THEN 'Southeastern'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'UNC HOSPITALS' THEN 'Med Center'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'UNC ROCKINGHAM HOSPITAL' THEN 'Rockingham'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Watauga Medical Center' THEN 'Watauga'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Wayne Memorial Hospital' THEN 'Wayne'\n\t\tEND AS \"Parent Hospital\"\n\t,\tLOCATION_MASTER.LOCATION_NAME AS \"Hospital\"\n\t,\tLOCATION_MASTER.DEPARTMENT_NAME as \"Unit\"\n\t,\tADT_MASTER.ADT_PATIENT_CLASS as \"Patient Class\"\n\t,\tCAST(ADT_MASTER.ADT_EFFECTIVE_INSTANT as DATE) as \"Census Date\"\n\t,\t1 as \"Census Count\"\n\t, \tCASE WHEN getyear(ENCOUNTER_MASTER.ADMISSION_INSTANT)-getyear(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t- case \n\t\t\t\t\t\twhen getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getmonth(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t\t\tOR (getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) = getmonth(PATIENT_MASTER.BIRTH_DATE) AND getday(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getday(PATIENT_MASTER.BIRTH_DATE)) \n\t\t\t\t\t\tthen 1\n\t\t\t\t\t\telse 0\n\t\t\t\t\t  end >>= 18 THEN 1 ELSE 0 END as \"Census Count Adults\"\n\t, \tCASE WHEN getyear(ENCOUNTER_MASTER.ADMISSION_INSTANT)-getyear(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t- case \n\t\t\t\t\t\twhen getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getmonth(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t\t\tOR (getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) = getmonth(PATIENT_MASTER.BIRTH_DATE) AND getday(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getday(PATIENT_MASTER.BIRTH_DATE)) \n\t\t\t\t\t\tthen 1\n\t\t\t\t\t\telse 0\n\t\t\t\t\t  end << 18 THEN 1 ELSE 0 END as \"Census Count Peds\"\nFROM \n\t\t\"REPORTING_EHR\".ADMISSION_DISCHARGE_TRANSFER_MASTER ADT_MASTER\n\t\tLEFT JOIN \"REPORTING_EHR\".LOCATION_MASTER LOCATION_MASTER ON ADT_MASTER.DEPARTMENT_KEY = LOCATION_MASTER.LOCATION_KEY \n\t\t\tAND LOCATION_MASTER.IS_DEPARTMENT = 1\n\t\tLEFT JOIN \"REPORTING_EHR\".ENCOUNTER_MASTER ENCOUNTER_MASTER ON ADT_MASTER.ENCOUNTER_KEY = ENCOUNTER_MASTER.ENCOUNTER_KEY\n\t\tLEFT JOIN \"REPORTING_EHR\".PATIENT_MASTER PATIENT_MASTER ON ENCOUNTER_MASTER.PATIENT_KEY = PATIENT_MASTER.PATIENT_KEY\nWHERE 1=1\n\t\tAND PATIENT_MASTER.IS_TEST = 0\n\t\tAND LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME IN (\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t'BLUE RIDGE HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'CALDWELL HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Charles A Cannon Jr Memorial Hospital'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'CHATHAM HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'JOHNSTON HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Lenoir Memorial Hospital'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'NASH HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'PARDEE HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'REX HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'SOUTHEASTERN REGIONAL HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'UNC HOSPITALS'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'UNC ROCKINGHAM HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Watauga Medical Center'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Wayne Memorial Hospital'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t)\n\t\tAND ADT_MASTER.EVENT_TYPE = 'Census'\n\t\tAND ADT_MASTER.EVENT_SUB_TYPE <<>> 'Canceled'\n\t\tAND ADT_MASTER.DEPARTMENT_KEY IS NOT NULL\n\t\tAND ADT_MASTER.ADT_EFFECTIVE_INSTANT >>= '2020-01-01 00:00:00.000'"
+        },
+        {
+          "schema": "Extract",
+          "table": "Extract",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": "SELECT\n\t\tADT_MASTER.DEPARTMENT_KEY as \"DEPARTMENT_KEY\"\n\t,\tENCOUNTER_MASTER.ENCOUNTER_EPIC_CSN as \"Encounter CSN\"\n\t,\tCASE\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'BLUE RIDGE HOSPITAL' THEN 'Blue Ridge'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'CALDWELL HOSPITAL' THEN 'Caldwell'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Charles A Cannon Jr Memorial Hospital' THEN 'Cannon'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'CHATHAM HOSPITAL' THEN 'Chatham'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'JOHNSTON HOSPITAL' THEN 'Johnston'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Lenoir Memorial Hospital' THEN 'Lenoir'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'NASH HOSPITAL' THEN 'Nash'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'PARDEE HOSPITAL' THEN 'Pardee'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'REX HOSPITAL' THEN 'Rex'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'SOUTHEASTERN REGIONAL HOSPITAL' THEN 'Southeastern'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'UNC HOSPITALS' THEN 'Med Center'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'UNC ROCKINGHAM HOSPITAL' THEN 'Rockingham'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Watauga Medical Center' THEN 'Watauga'\n\t\t\t WHEN LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME = 'Wayne Memorial Hospital' THEN 'Wayne'\n\t\tEND AS \"Parent Hospital\"\n\t,\tLOCATION_MASTER.LOCATION_NAME AS \"Hospital\"\n\t,\tLOCATION_MASTER.DEPARTMENT_NAME as \"Unit\"\n\t,\tADT_MASTER.ADT_PATIENT_CLASS as \"Patient Class\"\n\t,\tCAST(ADT_MASTER.ADT_EFFECTIVE_INSTANT as DATE) as \"Census Date\"\n\t,\t1 as \"Census Count\"\n\t, \tCASE WHEN getyear(ENCOUNTER_MASTER.ADMISSION_INSTANT)-getyear(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t- case \n\t\t\t\t\t\twhen getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getmonth(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t\t\tOR (getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) = getmonth(PATIENT_MASTER.BIRTH_DATE) AND getday(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getday(PATIENT_MASTER.BIRTH_DATE)) \n\t\t\t\t\t\tthen 1\n\t\t\t\t\t\telse 0\n\t\t\t\t\t  end >>= 18 THEN 1 ELSE 0 END as \"Census Count Adults\"\n\t, \tCASE WHEN getyear(ENCOUNTER_MASTER.ADMISSION_INSTANT)-getyear(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t- case \n\t\t\t\t\t\twhen getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getmonth(PATIENT_MASTER.BIRTH_DATE)\n\t\t\t\t\t\t\tOR (getmonth(ENCOUNTER_MASTER.ADMISSION_INSTANT) = getmonth(PATIENT_MASTER.BIRTH_DATE) AND getday(ENCOUNTER_MASTER.ADMISSION_INSTANT) << getday(PATIENT_MASTER.BIRTH_DATE)) \n\t\t\t\t\t\tthen 1\n\t\t\t\t\t\telse 0\n\t\t\t\t\t  end << 18 THEN 1 ELSE 0 END as \"Census Count Peds\"\nFROM \n\t\t\"REPORTING_EHR\".ADMISSION_DISCHARGE_TRANSFER_MASTER ADT_MASTER\n\t\tLEFT JOIN \"REPORTING_EHR\".LOCATION_MASTER LOCATION_MASTER ON ADT_MASTER.DEPARTMENT_KEY = LOCATION_MASTER.LOCATION_KEY \n\t\t\tAND LOCATION_MASTER.IS_DEPARTMENT = 1\n\t\tLEFT JOIN \"REPORTING_EHR\".ENCOUNTER_MASTER ENCOUNTER_MASTER ON ADT_MASTER.ENCOUNTER_KEY = ENCOUNTER_MASTER.ENCOUNTER_KEY\n\t\tLEFT JOIN \"REPORTING_EHR\".PATIENT_MASTER PATIENT_MASTER ON ENCOUNTER_MASTER.PATIENT_KEY = PATIENT_MASTER.PATIENT_KEY\nWHERE 1=1\n\t\tAND PATIENT_MASTER.IS_TEST = 0\n\t\tAND LOCATION_MASTER.PARENT_REVENUE_LOCATION_NAME IN (\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t'BLUE RIDGE HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'CALDWELL HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Charles A Cannon Jr Memorial Hospital'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'CHATHAM HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'JOHNSTON HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Lenoir Memorial Hospital'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'NASH HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'PARDEE HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'REX HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'SOUTHEASTERN REGIONAL HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'UNC HOSPITALS'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'UNC ROCKINGHAM HOSPITAL'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Watauga Medical Center'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t,\t'Wayne Memorial Hospital'\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t)\n\t\tAND ADT_MASTER.EVENT_TYPE = 'Census'\n\t\tAND ADT_MASTER.EVENT_SUB_TYPE <<>> 'Canceled'\n\t\tAND ADT_MASTER.DEPARTMENT_KEY IS NOT NULL\n\t\tAND ADT_MASTER.ADT_EFFECTIVE_INSTANT >>= '2020-01-01 00:00:00.000'",
+      "connectionMode": "import",
       "active": false
     },
     {
@@ -38,6 +54,16 @@
       "tables": [
         "Midnight_Census_Template#csv"
       ],
+      "relations": [
+        {
+          "schema": null,
+          "table": "Midnight_Census_Template#csv",
+          "type": "table"
+        }
+      ],
+      "joins": [],
+      "customSql": null,
+      "connectionMode": "import",
       "active": true
     }
   ],
@@ -50,7 +76,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 6
+      "ordinal": 6,
+      "physicalTable": "Extract",
+      "remoteName": "Census Date",
+      "metaType": "date"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -60,7 +89,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 0
+      "ordinal": 0,
+      "physicalTable": "Extract",
+      "remoteName": "DEPARTMENT_KEY",
+      "metaType": "integer"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -70,7 +102,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 1
+      "ordinal": 1,
+      "physicalTable": "Extract",
+      "remoteName": "Encounter CSN",
+      "metaType": "integer"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -80,7 +115,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 2
+      "ordinal": 2,
+      "physicalTable": "Extract",
+      "remoteName": "Parent Hospital",
+      "metaType": "string"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -90,7 +128,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 3
+      "ordinal": 3,
+      "physicalTable": "Extract",
+      "remoteName": "Hospital",
+      "metaType": "string"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -100,7 +141,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 4
+      "ordinal": 4,
+      "physicalTable": "Extract",
+      "remoteName": "Unit",
+      "metaType": "string"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -110,7 +154,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 5
+      "ordinal": 5,
+      "physicalTable": "Extract",
+      "remoteName": "Patient Class",
+      "metaType": "string"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -120,7 +167,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 6
+      "ordinal": 6,
+      "physicalTable": "Extract",
+      "remoteName": "Census Date",
+      "metaType": "date"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -130,7 +180,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 7
+      "ordinal": 7,
+      "physicalTable": "Extract",
+      "remoteName": "Census Count",
+      "metaType": "integer"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -140,7 +193,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 8
+      "ordinal": 8,
+      "physicalTable": "Extract",
+      "remoteName": "Census Count Adults",
+      "metaType": "integer"
     },
     {
       "datasource": "Midnight_Census_Template",
@@ -150,7 +206,10 @@
       "role": "dimension",
       "semanticRole": null,
       "format": null,
-      "ordinal": 9
+      "ordinal": 9,
+      "physicalTable": "Extract",
+      "remoteName": "Census Count Peds",
+      "metaType": "integer"
     }
   ],
   "calculatedFields": [
@@ -162,7 +221,8 @@
       "formula": "\"(All)\"",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "Date Agg Level",
@@ -172,7 +232,8 @@
       "formula": "\"Monthly\"",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "View",
@@ -182,7 +243,8 @@
       "formula": "\"Bar Chart\"",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "Start Date",
@@ -192,7 +254,8 @@
       "formula": "#2026-01-01#",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "End Date",
@@ -202,47 +265,67 @@
       "formula": "#2026-06-09#",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": []
     },
     {
       "caption": "User Defined Census Count",
       "fieldName": "[Calculation_2234066952297496576]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "CASE [Parameters].[End Date (copy)]\r\n    WHEN '(All)' THEN SUM([Census Count])\r\n    WHEN 'Adults' THEN SUM([Census Count Adults])\r\n    WHEN 'Peds' THEN SUM([Census Count Peds])\r\nEND",
+      "formula": "CASE [Filter Adults/Peds]\r\n    WHEN '(All)' THEN SUM([Census Count])\r\n    WHEN 'Adults' THEN SUM([Census Count Adults])\r\n    WHEN 'Peds' THEN SUM([Census Count Peds])\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Filter Adults/Peds",
+        "Census Count",
+        "Census Count Adults",
+        "Census Count Peds"
+      ]
     },
     {
       "caption": "Date Range Filter",
       "fieldName": "[Calculation_2234066952299909123]",
       "dataType": "boolean",
       "role": "dimension",
-      "formula": "[Census Date] >= [Parameters].[Parameter 3] AND [Census Date] <= [Parameters].[Start Date (copy)_305681891901829120]",
+      "formula": "[Census Date] >= [Start Date] AND [Census Date] <= [End Date]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Census Date",
+        "Start Date",
+        "End Date"
+      ]
     },
     {
       "caption": "Start Month Contains Partial Data?",
       "fieldName": "[Calculation_2234066952300421124]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "IF\r\nYEAR(MAX([Census Date])) = YEAR(MAX([Parameters].[Parameter 3]))\r\nAND MONTH(MAX([Census Date])) = MONTH(MAX([Parameters].[Parameter 3]))\r\nAND MIN([Parameters].[Parameter 3]) <> DATE(STR(YEAR(WINDOW_MIN(MIN([Census Date]))))+'-'+STR(MONTH(WINDOW_MIN(MIN([Census Date]))))+'-01')\r\nTHEN 1 ELSE 0 END",
+      "formula": "IF\r\nYEAR(MAX([Census Date])) = YEAR(MAX([Start Date]))\r\nAND MONTH(MAX([Census Date])) = MONTH(MAX([Start Date]))\r\nAND MIN([Start Date]) <> DATE(STR(YEAR(WINDOW_MIN(MIN([Census Date]))))+'-'+STR(MONTH(WINDOW_MIN(MIN([Census Date]))))+'-01')\r\nTHEN 1 ELSE 0 END",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "Census Date",
+        "Start Date"
+      ]
     },
     {
       "caption": "End Month Contains Partial Data?",
       "fieldName": "[Calculation_2234066952300756997]",
       "dataType": "integer",
       "role": "measure",
-      "formula": "IF MONTH(MAX([Parameters].[Start Date (copy)_305681891901829120])) = 12 THEN\r\n    IF YEAR(MAX([Census Date])) = YEAR(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MONTH(MAX([Census Date])) = MONTH(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MAX([Parameters].[Start Date (copy)_305681891901829120]) <> DATEADD('day', -1, DATE(STR(YEAR(WINDOW_MAX(MAX([Census Date])))+1)+'-'+STR(MONTH(DATEADD('month', 1, WINDOW_MAX(MAX([Census Date])))))+'-01'))\r\n    THEN 1 ELSE 0 END\r\nELSEIF YEAR(MAX([Census Date])) = YEAR(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MONTH(MAX([Census Date])) = MONTH(MAX([Parameters].[Start Date (copy)_305681891901829120]))\r\n    AND MAX([Parameters].[Start Date (copy)_305681891901829120]) <> DATEADD('day', -1, DATE(STR(YEAR(WINDOW_MAX(MAX([Census Date]))))+'-'+STR(MONTH(DATEADD('month', 1, WINDOW_MAX(MAX([Census Date])))))+'-01'))\r\n    THEN 1 ELSE 0 \r\nEND",
+      "formula": "IF MONTH(MAX([End Date])) = 12 THEN\r\n    IF YEAR(MAX([Census Date])) = YEAR(MAX([End Date]))\r\n    AND MONTH(MAX([Census Date])) = MONTH(MAX([End Date]))\r\n    AND MAX([End Date]) <> DATEADD('day', -1, DATE(STR(YEAR(WINDOW_MAX(MAX([Census Date])))+1)+'-'+STR(MONTH(DATEADD('month', 1, WINDOW_MAX(MAX([Census Date])))))+'-01'))\r\n    THEN 1 ELSE 0 END\r\nELSEIF YEAR(MAX([Census Date])) = YEAR(MAX([End Date]))\r\n    AND MONTH(MAX([Census Date])) = MONTH(MAX([End Date]))\r\n    AND MAX([End Date]) <> DATEADD('day', -1, DATE(STR(YEAR(WINDOW_MAX(MAX([Census Date]))))+'-'+STR(MONTH(DATEADD('month', 1, WINDOW_MAX(MAX([Census Date])))))+'-01'))\r\n    THEN 1 ELSE 0 \r\nEND",
       "isTableCalc": true,
       "complexity": "complex",
-      "suggestedDaxKind": "measure"
+      "suggestedDaxKind": "measure",
+      "dependsOn": [
+        "End Date",
+        "Census Date"
+      ]
     },
     {
       "caption": "Default Start Date",
@@ -252,7 +335,8 @@
       "formula": "IF MONTH(TODAY()) >= 7 OR MONTH(TODAY()) <= 9 \r\nTHEN DATE(STR(YEAR(TODAY())) + '-01-01')\r\nELSE\r\n    IF MONTH(TODAY()) < 7 THEN\r\n        DATE(STR(YEAR(TODAY())-1) + '-07-01')\r\n    ELSE DATE(STR(YEAR(TODAY())) + '-07-01')\r\n    END\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": []
     },
     {
       "caption": "Default End Date",
@@ -262,37 +346,48 @@
       "formula": "TODAY()-1",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": []
     },
     {
       "caption": "Date agg_Monthly",
       "fieldName": "[Calculation_2234066952309055503]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "CASE [Parameters].[Parameter 1]\r\n    WHEN 'Monthly' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
+      "formula": "CASE [Date Agg Level]\r\n    WHEN 'Monthly' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Date Agg Level"
+      ]
     },
     {
       "caption": "Partial Months in View?",
       "fieldName": "[Calculation_2234066952314589212]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "IF DAY([Parameters].[Parameter 3]) != 1\r\n    OR DAY(DATEADD('day',1,[Parameters].[Start Date (copy)_305681891901829120])) != 1\r\nTHEN \"**Partial months are displayed in GRAY**\" ELSE \"\" END",
+      "formula": "IF DAY([Start Date]) != 1\r\n    OR DAY(DATEADD('day',1,[End Date])) != 1\r\nTHEN \"**Partial months are displayed in GRAY**\" ELSE \"\" END",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Start Date",
+        "End Date"
+      ]
     },
     {
       "caption": "View_BarChart",
       "fieldName": "[Calculation_2234066952316727326]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "CASE [Parameters].[Parameter 2]\r\n    WHEN 'Bar Chart' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
+      "formula": "CASE [View]\r\n    WHEN 'Bar Chart' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "View"
+      ]
     },
     {
       "caption": "Census Date_CY",
@@ -302,27 +397,36 @@
       "formula": "[Census Date]",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Census Date"
+      ]
     },
     {
       "caption": "Date agg_Daily",
       "fieldName": "[Date agg_Monthly (copy)_2234066952309211152]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "CASE [Parameters].[Parameter 1]\r\n    WHEN 'Daily' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
+      "formula": "CASE [Date Agg Level]\r\n    WHEN 'Daily' THEN 'Include'\r\n    ELSE 'Exclude'\r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "Date Agg Level"
+      ]
     },
     {
       "caption": "View_DataTable",
       "fieldName": "[View_BarChart (copy)_2234066952316837919]",
       "dataType": "string",
       "role": "dimension",
-      "formula": "CASE [Parameters].[Parameter 2]\r\n    WHEN 'Data Table' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
+      "formula": "CASE [View]\r\n    WHEN 'Data Table' THEN 'Include'\r\n    ELSE 'Exclude' \r\nEND",
       "isTableCalc": false,
       "complexity": "trivial",
-      "suggestedDaxKind": "column"
+      "suggestedDaxKind": "column",
+      "dependsOn": [
+        "View"
+      ]
     }
   ],
   "parameters": [
@@ -417,13 +521,36 @@
       },
       "categoryField": "Census Date",
       "valueField": "User Defined Census Count",
-      "categoryDateLevel": "day",
+      "categoryDateLevel": "month",
       "dimensions": [
-        "Census Date"
+        "Census Date",
+        "Date Range Filter",
+        "View_BarChart",
+        "Date agg_Daily",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
       ],
       "values": [
         "User Defined Census Count"
       ],
+      "measures": [
+        {
+          "field": "User Defined Census Count",
+          "agg": "SUM",
+          "column": "Calculation_2234066952297496576"
+        }
+      ],
+      "axes": {
+        "category": "Census Date",
+        "categoryLevel": "month",
+        "values": [
+          "User Defined Census Count"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": null,
       "filters": [
@@ -435,13 +562,77 @@
         "Date agg_Daily",
         "View_BarChart"
       ],
+      "filterDetails": [
+        {
+          "field": "View_BarChart",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "Date agg_Daily",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": "#004263",
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "barChart"
     },
@@ -469,17 +660,39 @@
         "path": null
       },
       "categoryField": "Census Date",
-      "valueField": "Start Month Contains Partial Data?",
-      "categoryDateLevel": "day",
+      "valueField": "User Defined Census Count",
+      "categoryDateLevel": "month",
       "dimensions": [
         "Census Date",
+        "Date Range Filter",
+        "Date agg_Daily",
         "Hospital",
-        "Unit"
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "View_DataTable",
+        "Start Month Contains Partial Data?",
+        "End Month Contains Partial Data?"
       ],
       "values": [
-        "Start Month Contains Partial Data?",
         "User Defined Census Count"
       ],
+      "measures": [
+        {
+          "field": "User Defined Census Count",
+          "agg": "SUM",
+          "column": "Calculation_2234066952297496576"
+        }
+      ],
+      "axes": {
+        "category": "Census Date",
+        "categoryLevel": "month",
+        "values": [
+          "User Defined Census Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -491,13 +704,77 @@
         "Date agg_Daily",
         "View_DataTable"
       ],
+      "filterDetails": [
+        {
+          "field": "Date agg_Daily",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "View_DataTable",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "tableEx"
     },
@@ -518,11 +795,25 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "Date Range Filter",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "Date Range Filter",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -532,9 +823,61 @@
         "Patient Class",
         "Unit"
       ],
+      "filterDetails": [
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
-      "formatting": null,
-      "inferredVisualType": "card"
+      "formatting": {
+        "colorPalette": null,
+        "gridlines": null,
+        "showFieldLabels": null,
+        "markStroke": null,
+        "showMarkLabels": null,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": "14",
+        "fontColor": "#004263",
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
+      },
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Filters Applied Caption",
@@ -557,14 +900,28 @@
         "path": null
       },
       "categoryField": "Census Date",
-      "valueField": "Start Month Contains Partial Data?",
+      "valueField": null,
       "categoryDateLevel": "month",
       "dimensions": [
-        "Census Date"
+        "Census Date",
+        "Date Range Filter",
+        "View_BarChart",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "Start Month Contains Partial Data?",
+        "End Month Contains Partial Data?"
       ],
-      "values": [
-        "Start Month Contains Partial Data?"
-      ],
+      "values": [],
+      "measures": [],
+      "axes": {
+        "category": "Census Date",
+        "categoryLevel": "month",
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": "Filter(s) Applied: Date Range: {Start Date}-{End Date}; Parent Hospital(s): {Parent Hospital}; Hospital(s): {Hospital}; Unit(s): {Unit}; Patient Class: {Patient Class}; Filter Adults/Peds: {Filter Adults/Peds}",
       "title": null,
       "filters": [
@@ -575,13 +932,68 @@
         "Unit",
         "View_BarChart"
       ],
+      "filterDetails": [
+        {
+          "field": "View_BarChart",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "null"
+          ],
+          "range": null
+        },
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "barChart"
     },
@@ -602,11 +1014,25 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "Date Range Filter",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "Date Range Filter",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": "{Sheet Name}\n{Data Update Time}\nRefreshes Daily (2:00 AM)",
       "filters": [
@@ -616,9 +1042,47 @@
         "Patient Class",
         "Unit"
       ],
+      "filterDetails": [
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": null,
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Monthly bar",
@@ -646,12 +1110,36 @@
       "valueField": "User Defined Census Count",
       "categoryDateLevel": "month",
       "dimensions": [
-        "Census Date"
+        "Census Date",
+        "Date Range Filter",
+        "Date agg_Monthly",
+        "View_BarChart",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "Start Month Contains Partial Data?",
+        "End Month Contains Partial Data?"
       ],
       "values": [
-        "User Defined Census Count",
-        "Start Month Contains Partial Data?"
+        "User Defined Census Count"
       ],
+      "measures": [
+        {
+          "field": "User Defined Census Count",
+          "agg": "SUM",
+          "column": "Calculation_2234066952297496576"
+        }
+      ],
+      "axes": {
+        "category": "Census Date",
+        "categoryLevel": "month",
+        "values": [
+          "User Defined Census Count"
+        ],
+        "orientation": "vertical"
+      },
+      "orientation": "vertical",
       "caption": null,
       "title": null,
       "filters": [
@@ -663,13 +1151,77 @@
         "Date agg_Monthly",
         "View_BarChart"
       ],
+      "filterDetails": [
+        {
+          "field": "Date agg_Monthly",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "View_BarChart",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "barChart"
     },
@@ -698,18 +1250,40 @@
         "path": null
       },
       "categoryField": "Census Date",
-      "valueField": "Start Month Contains Partial Data?",
+      "valueField": "User Defined Census Count",
       "categoryDateLevel": "month",
       "dimensions": [
         "Census Date",
-        "Census Date_CY",
+        "Date Range Filter",
+        "Date agg_Monthly",
         "Hospital",
-        "Unit"
+        "Parent Hospital",
+        "Patient Class",
+        "Unit",
+        "View_DataTable",
+        "Start Month Contains Partial Data?",
+        "End Month Contains Partial Data?",
+        "Census Date_CY"
       ],
       "values": [
-        "Start Month Contains Partial Data?",
         "User Defined Census Count"
       ],
+      "measures": [
+        {
+          "field": "User Defined Census Count",
+          "agg": "SUM",
+          "column": "Calculation_2234066952297496576"
+        }
+      ],
+      "axes": {
+        "category": "Census Date",
+        "categoryLevel": "month",
+        "values": [
+          "User Defined Census Count"
+        ],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -721,13 +1295,77 @@
         "Date agg_Monthly",
         "View_DataTable"
       ],
+      "filterDetails": [
+        {
+          "field": "Date agg_Monthly",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "View_DataTable",
+          "filterClass": "categorical",
+          "scope": "include",
+          "values": [
+            "Include"
+          ],
+          "range": null
+        },
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": false,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
       },
       "inferredVisualType": "tableEx"
     },
@@ -748,11 +1386,26 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "Date Range Filter",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "Date Range Filter",
+        "Partial Months in View?",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "Date Range Filter",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -762,15 +1415,61 @@
         "Patient Class",
         "Unit"
       ],
+      "filterDetails": [
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": "#999999",
+        "alignment": "center",
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     },
     {
       "name": "Sheet 9",
@@ -789,11 +1488,25 @@
         "wedgeSize": null,
         "path": null
       },
-      "categoryField": null,
+      "categoryField": "Date Range Filter",
       "valueField": null,
       "categoryDateLevel": null,
-      "dimensions": [],
+      "dimensions": [
+        "Date Range Filter",
+        "Hospital",
+        "Parent Hospital",
+        "Patient Class",
+        "Unit"
+      ],
       "values": [],
+      "measures": [],
+      "axes": {
+        "category": "Date Range Filter",
+        "categoryLevel": null,
+        "values": [],
+        "orientation": null
+      },
+      "orientation": null,
       "caption": null,
       "title": null,
       "filters": [
@@ -803,15 +1516,61 @@
         "Patient Class",
         "Unit"
       ],
+      "filterDetails": [
+        {
+          "field": "Date Range Filter",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Parent Hospital",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Patient Class",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        },
+        {
+          "field": "Unit",
+          "filterClass": null,
+          "scope": null,
+          "values": null,
+          "range": null
+        }
+      ],
+      "topN": null,
       "sort": null,
       "formatting": {
         "colorPalette": null,
         "gridlines": null,
         "showFieldLabels": null,
         "markStroke": null,
-        "showMarkLabels": true
+        "showMarkLabels": true,
+        "markColor": null,
+        "background": null,
+        "fontName": null,
+        "fontSize": null,
+        "fontColor": null,
+        "alignment": null,
+        "titleColor": null,
+        "titleFontSize": null
       },
-      "inferredVisualType": "card"
+      "inferredVisualType": "tableEx"
     }
   ],
   "dashboards": [
@@ -1109,10 +1868,30 @@
         "Census Count",
         "Census Count Adults",
         "Census Count Peds"
-      ]
+      ],
+      "parse": {
+        "delimiter": ",",
+        "charset": "UTF-8",
+        "codepage": 65001,
+        "hasHeader": true,
+        "decimalChar": null,
+        "thousandsChar": null,
+        "locale": "en_US"
+      }
     }
   ],
-  "columnTableMap": {},
+  "columnTableMap": {
+    "DEPARTMENT_KEY": "Extract",
+    "Encounter CSN": "Extract",
+    "Parent Hospital": "Extract",
+    "Hospital": "Extract",
+    "Unit": "Extract",
+    "Patient Class": "Extract",
+    "Census Date": "Extract",
+    "Census Count": "Extract",
+    "Census Count Adults": "Extract",
+    "Census Count Peds": "Extract"
+  },
   "relationships": [],
   "hierarchies": [],
   "sets": [],
