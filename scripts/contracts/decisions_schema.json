@@ -117,6 +117,112 @@
           }
         }
       }
+    },
+    "navBar": {
+      "type": ["object", "null"],
+      "description": "Navigation bar configuration. When omitted or null, the nav bar is generated automatically for multi-page reports using default colors and vertical orientation.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set false to suppress the nav bar entirely (e.g. single-dashboard reports, embedded use-cases)."
+        },
+        "orientation": {
+          "type": "string",
+          "enum": ["vertical", "horizontal"],
+          "default": "vertical",
+          "description": "Layout direction. 'vertical' = left sidebar strip (default). 'horizontal' = side-by-side top-right header bar (matches Tableau goto-sheet button rows)."
+        },
+        "activeColor": {
+          "type": "string",
+          "description": "Hex fill color for the button representing the current page (highlighted/active state). Default: #1F77B4."
+        },
+        "inactiveColor": {
+          "type": "string",
+          "description": "Hex fill color for buttons that navigate to other pages. Default: #2C3E50."
+        },
+        "buttonWidth": {
+          "type": ["integer", "null"],
+          "description": "Override button width in pixels. Derived from Tableau zone width scaled to the PBI canvas (zoneW/100000 * pageW). Auto-computed when omitted."
+        },
+        "buttonHeight": {
+          "type": ["integer", "null"],
+          "description": "Override button height in pixels. Derived from Tableau zone height scaled to the PBI canvas (zoneH/100000 * pageH). Auto-computed when omitted."
+        },
+        "buttonGap": {
+          "type": ["integer", "null"],
+          "description": "Gap in pixels between adjacent buttons. 0 = flush (matching Tableau). Default vertical=2, horizontal=0."
+        },
+        "originX": {
+          "type": ["integer", "null"],
+          "description": "X pixel position of the first button. Derived from Tableau zone x scaled to PBI canvas. Default vertical=2, horizontal=940."
+        },
+        "originY": {
+          "type": ["integer", "null"],
+          "description": "Y pixel position of the first button. Derived from Tableau zone y scaled to PBI canvas. Default vertical=2, horizontal=6."
+        }
+      }
+    },
+    "filterPanel": {
+      "type": ["object", "null"],
+      "description": "Bookmark-driven filter panel (slide-out drawer) configuration. Reproduces the Tableau 'Show/Close Dashboard Filters' toggle. When omitted or null, a panel is generated automatically for any page that has slicer visuals: a dark drawer behind the slicers, a 'FILTERS' header, a hamburger (open) button and an X (close) button, plus a Show/Hide bookmark pair per page.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set false to suppress the filter panel toggle entirely (slicers then remain permanently visible on the page)."
+        },
+        "panelColor": {
+          "type": "string",
+          "description": "Hex background color of the slide-out drawer. Default: #0D2A36 (dark teal, matching the Tableau source)."
+        },
+        "slicerHeaderColor": {
+          "type": "string",
+          "description": "Hex color applied to the slicer header labels inside the drawer (and their backgrounds made transparent) so they read on the dark panel. Default: #FFFFFF (white)."
+        },
+        "sectionLabelColor": {
+          "type": "string",
+          "description": "Hex color of the section group labels (e.g. PRODUCT / LOCATION) inside the container. Default: #24C6FC (cyan, matching the Tableau source)."
+        },
+        "sections": {
+          "type": ["array", "null"],
+          "description": "Ordered group structure for the filter container, mirroring the Tableau 'Vertical Cont. (Filter)' drawer. When supplied, the drawer becomes a full-height right-edge container and the slicers are stacked vertically under their group label. Slicers are matched to groups by their bound field name; any unmatched slicers are appended label-less. When omitted, the panel is a flat backdrop behind the slicers' existing positions.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": ["string", "null"],
+                "description": "Section header text (e.g. 'PRODUCT'). Null renders the group with no header (e.g. a top-of-panel parameter slicer)."
+              },
+              "fields": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Bound field/column names of the slicers that belong to this section, in display order."
+              }
+            },
+            "required": ["fields"]
+          }
+        },
+        "padding": {
+          "type": ["integer", "null"],
+          "description": "Pixels of padding drawn around the slicer bounding box when sizing the drawer rectangle. Default: 16."
+        },
+        "slicerNames": {
+          "type": ["array", "null"],
+          "items": {"type": "string"},
+          "description": "Explicit visual names that make up the drawer contents. When omitted, every visual whose visualType is 'slicer' on a page is auto-detected as drawer content."
+        },
+        "openButton": {
+          "type": ["object", "null"],
+          "description": "Geometry of the hamburger (open) toggle button. Derived from the Tableau toggle-button zone scaled to the PBI canvas. When omitted, placed at the top-right of the page.",
+          "properties": {
+            "x": {"type": "integer", "description": "X pixel position of the open button."},
+            "y": {"type": "integer", "description": "Y pixel position of the open button."},
+            "width": {"type": "integer", "description": "Open button width in pixels."},
+            "height": {"type": "integer", "description": "Open button height in pixels."}
+          }
+        }
+      }
     }
   }
 }

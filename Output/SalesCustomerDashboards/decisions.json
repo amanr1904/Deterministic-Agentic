@@ -529,5 +529,33 @@
         }
       ]
     }
-  ]
+  ],
+  "navBar": {
+    "enabled": true,
+    "orientation": "horizontal",
+    "activeColor": "#004263",
+    "inactiveColor": "#666666",
+    "buttonWidth": 91,
+    "buttonHeight": 70,
+    "buttonGap": 0,
+    "originX": 940,
+    "originY": 6
+  },
+  "filterPanel": {
+    "enabled": true,
+    "panelColor": "#072A35",
+    "sectionLabelColor": "#24C6FC",
+    "padding": 16,
+    "openButton": {
+      "x": 1122,
+      "y": 6,
+      "width": 70,
+      "height": 70
+    },
+    "sections": [
+      { "label": null, "fields": ["SelectYear"] },
+      { "label": "PRODUCT", "fields": ["Category", "Sub-Category"] },
+      { "label": "LOCATION", "fields": ["Region", "State", "City"] }
+    ]
+  }
 }

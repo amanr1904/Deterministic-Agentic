@@ -48,8 +48,8 @@
   <datasources>
     <datasource hasconnection='false' inline='true' name='Parameters' version='18.1'>
       <aliases enabled='yes' />
-      <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-        <calculation class='tableau' formula='&quot;Adults&quot;' />
+      <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+        <calculation class='tableau' formula='&quot;(All)&quot;' />
         <aliases>
           <alias key='&quot;Adults&quot;' value='Adults 18+' />
           <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -539,8 +539,8 @@ WHERE 1=1
         <semantic-value key='[Country].[Name]' value='&quot;United States&quot;' />
       </semantic-values>
       <datasource-dependencies datasource='Parameters'>
-        <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-          <calculation class='tableau' formula='&quot;Adults&quot;' />
+        <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+          <calculation class='tableau' formula='&quot;(All)&quot;' />
           <aliases>
             <alias key='&quot;Adults&quot;' value='Adults 18+' />
             <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -886,8 +886,8 @@ WHERE 1=1
         <semantic-value key='[Country].[Name]' value='&quot;United States&quot;' />
       </semantic-values>
       <datasource-dependencies datasource='Parameters'>
-        <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-          <calculation class='tableau' formula='&quot;Adults&quot;' />
+        <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+          <calculation class='tableau' formula='&quot;(All)&quot;' />
           <aliases>
             <alias key='&quot;Adults&quot;' value='Adults 18+' />
             <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -976,8 +976,8 @@ WHERE 1=1
             <datasource name='Parameters' />
           </datasources>
           <datasource-dependencies datasource='Parameters'>
-            <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-              <calculation class='tableau' formula='&quot;Adults&quot;' />
+            <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+              <calculation class='tableau' formula='&quot;(All)&quot;' />
               <aliases>
                 <alias key='&quot;Adults&quot;' value='Adults 18+' />
                 <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -1115,8 +1115,8 @@ WHERE 1=1
             <datasource name='Parameters' />
           </datasources>
           <datasource-dependencies datasource='Parameters'>
-            <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-              <calculation class='tableau' formula='&quot;Adults&quot;' />
+            <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+              <calculation class='tableau' formula='&quot;(All)&quot;' />
               <aliases>
                 <alias key='&quot;Adults&quot;' value='Adults 18+' />
                 <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -1371,8 +1371,8 @@ WHERE 1=1
             <datasource name='Parameters' />
           </datasources>
           <datasource-dependencies datasource='Parameters'>
-            <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-              <calculation class='tableau' formula='&quot;Adults&quot;' />
+            <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+              <calculation class='tableau' formula='&quot;(All)&quot;' />
               <aliases>
                 <alias key='&quot;Adults&quot;' value='Adults 18+' />
                 <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -1586,8 +1586,8 @@ WHERE 1=1
             <datasource name='Parameters' />
           </datasources>
           <datasource-dependencies datasource='Parameters'>
-            <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-              <calculation class='tableau' formula='&quot;Adults&quot;' />
+            <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+              <calculation class='tableau' formula='&quot;(All)&quot;' />
               <aliases>
                 <alias key='&quot;Adults&quot;' value='Adults 18+' />
                 <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -1742,8 +1742,8 @@ WHERE 1=1
             <datasource name='Parameters' />
           </datasources>
           <datasource-dependencies datasource='Parameters'>
-            <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-              <calculation class='tableau' formula='&quot;Adults&quot;' />
+            <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+              <calculation class='tableau' formula='&quot;(All)&quot;' />
               <aliases>
                 <alias key='&quot;Adults&quot;' value='Adults 18+' />
                 <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -2482,8 +2482,8 @@ WHERE 1=1
         <datasource caption='Midnight_Census_Template' name='federated.09go31s1b3pn2k1ezewf3027s71v' />
       </datasources>
       <datasource-dependencies datasource='Parameters'>
-        <column alias='Adults 18+' caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;Adults&quot;'>
-          <calculation class='tableau' formula='&quot;Adults&quot;' />
+        <column caption='Filter Adults/Peds' datatype='string' name='[End Date (copy)]' param-domain-type='list' role='measure' type='nominal' value='&quot;(All)&quot;'>
+          <calculation class='tableau' formula='&quot;(All)&quot;' />
           <aliases>
             <alias key='&quot;Adults&quot;' value='Adults 18+' />
             <alias key='&quot;Peds&quot;' value='Peds &lt;18' />
@@ -2657,7 +2657,7 @@ WHERE 1=1
                             </zone>
                             <zone h='70233' id='4309' param='vert' type-v2='layout-flow' w='77598' x='21816' y='28837'>
                               <zone h='62211' id='4263' name='Monthly bar' show-title='false' w='77598' x='21816' y='28837'>
-                                <layout-cache cell-count-w='6' minheight='151' type-h='scalable' type-w='cell' />
+                                <layout-cache minheight='151' type-h='scalable' type-w='cell' />
                                 <zone-style>
                                   <format attr='border-color' value='#000000' />
                                   <format attr='border-style' value='none' />
@@ -2665,8 +2665,8 @@ WHERE 1=1
                                   <format attr='margin' value='4' />
                                 </zone-style>
                               </zone>
-                              <zone h='1046' id='4310' name='Monthly table' show-title='false' w='77598' x='21816' y='91048'>
-                                <layout-cache fixed-size-h='1' fixed-size-w='1' type-h='fixed' type-w='fixed' />
+                              <zone fixed-size='42' h='5814' id='4336' is-fixed='true' name='Filters Applied Caption' show-caption='true' show-title='false' w='77598' x='21816' y='91048'>
+                                <layout-cache type-h='cell' type-w='cell' />
                                 <zone-style>
                                   <format attr='border-color' value='#000000' />
                                   <format attr='border-style' value='none' />
@@ -2674,8 +2674,8 @@ WHERE 1=1
                                   <format attr='margin' value='4' />
                                 </zone-style>
                               </zone>
-                              <zone h='1046' id='4317' name='Daily table' show-title='false' w='77598' x='21816' y='92094'>
-                                <layout-cache fixed-size-h='1' fixed-size-w='1' type-h='fixed' type-w='fixed' />
+                              <zone h='1046' id='4310' name='Monthly table' show-title='false' w='77598' x='21816' y='96862'>
+                                <layout-cache fixed-size-h='1' type-h='fixed' type-w='fixed' />
                                 <zone-style>
                                   <format attr='border-color' value='#000000' />
                                   <format attr='border-style' value='none' />
@@ -2683,17 +2683,17 @@ WHERE 1=1
                                   <format attr='margin' value='4' />
                                 </zone-style>
                               </zone>
-                              <zone h='116' id='4312' name='Daily bar' show-title='false' w='77598' x='21816' y='93140'>
+                              <zone h='1046' id='4317' name='Daily table' show-title='false' w='77598' x='21816' y='97908'>
+                                <layout-cache fixed-size-h='1' type-h='fixed' type-w='fixed' />
+                                <zone-style>
+                                  <format attr='border-color' value='#000000' />
+                                  <format attr='border-style' value='none' />
+                                  <format attr='border-width' value='0' />
+                                  <format attr='margin' value='4' />
+                                </zone-style>
+                              </zone>
+                              <zone h='116' id='4312' name='Daily bar' show-title='false' w='77598' x='21816' y='98954'>
                                 <layout-cache has-max-size-h='true' maxheight='1' minheight='1' type-h='scalable' type-w='cell' />
-                                <zone-style>
-                                  <format attr='border-color' value='#000000' />
-                                  <format attr='border-style' value='none' />
-                                  <format attr='border-width' value='0' />
-                                  <format attr='margin' value='4' />
-                                </zone-style>
-                              </zone>
-                              <zone fixed-size='42' h='5814' id='4336' is-fixed='true' name='Filters Applied Caption' show-caption='true' show-title='false' w='77598' x='21816' y='93256'>
-                                <layout-cache non-cell-size-w='1051' type-h='cell' type-w='cell' />
                                 <zone-style>
                                   <format attr='border-color' value='#000000' />
                                   <format attr='border-style' value='none' />
@@ -2986,7 +2986,7 @@ WHERE 1=1
           <zoom type='entire-view' />
         </viewpoint>
       </viewpoints>
-      <active id='4264' />
+      <active id='4336' />
       <simple-id uuid='{A8CB6040-B19A-49ED-9AEE-F4A63134A853}' />
     </window>
     <window class='worksheet' name='Monthly bar'>

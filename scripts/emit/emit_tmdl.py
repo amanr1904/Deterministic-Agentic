@@ -76,6 +76,45 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         lines.append(f"{B.TAB}dataCategory: Time")
     lines.append("")
     measures = [m for m in decisions.get("measures", []) if m["table"] == name]
+    # Auto-inject rankMeasure declared on visual tableColumns in decisions.json.
+    # "rankMeasure": {"by": "CY Profit", "over": "DimCustomer", "overCol": "Customer Name"}
+    # Generates: RANKX(ALLSELECTED(DimCustomer[Customer Name]), [CY Profit], , DESC, Dense)
+    _rank_specs = [
+        tc for vd in decisions.get("visualDecisions", []) if vd
+        for tc in (vd.get("tableColumns") or [])
+        if tc.get("isMeasure") and tc.get("rankMeasure") and tc["table"] == name
+    ]
+    for rs in _rank_specs:
+        rm = rs["rankMeasure"]
+        by_m, over_t, over_c = rm["by"], rm["over"], rm["overCol"]
+        measures.append({
+            "name": rs["prop"],
+            "table": name,
+            "dax": (
+                f"VAR _v = [{by_m}] "
+                f"RETURN IF(ISBLANK(_v), BLANK(), "
+                f"RANKX(ALLSELECTED({over_t}[{over_c}]), [{by_m}], , DESC, Dense))"
+            ),
+            "formatString": "#,0",
+            "displayFolder": "Customers",
+        })
+    # Auto-inject lastOrderMeasure declared on visual tableColumns in decisions.json.
+    # "lastOrderMeasure": {"dateColumn": "Order Date"} -> MAX(TableName[dateColumn])
+    _last_specs = [
+        tc for vd in decisions.get("visualDecisions", []) if vd
+        for tc in (vd.get("tableColumns") or [])
+        if tc.get("isMeasure") and tc.get("lastOrderMeasure") and tc["table"] == name
+    ]
+    for ls in _last_specs:
+        lm = ls["lastOrderMeasure"]
+        date_col = lm["dateColumn"]
+        measures.append({
+            "name": ls["prop"],
+            "table": name,
+            "dax": f"MAX({name}[{date_col}])",
+            "formatString": "dd-mm-yyyy",
+            "displayFolder": "Customers",
+        })
     cols = _columns_for(table, ir, decisions)
     col_names = {c["name"].lower() for c in cols}
     clash = sorted(m["name"] for m in measures if m["name"].lower() in col_names)

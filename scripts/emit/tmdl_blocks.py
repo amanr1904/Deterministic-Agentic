@@ -28,6 +28,22 @@ def quote(name: str) -> str:
     return name
 
 
+def partition_name(table: str) -> str:
+    """Return an M partition name that is DISTINCT from the table name.
+
+    Power BI's engine treats a Power Query/partition whose name equals its
+    table name (when that table is a relationship target / one-side) as a
+    self-reference, raising "A cyclic reference was encountered during
+    evaluation." on load. Naming the partition differently (clean alphanumeric
+    ``<Table>Source``) breaks the cycle while leaving column/relationship refs
+    (which use table.column) unaffected. Hyphens are avoided — they are risky
+    Power Query identifiers even though tmdl-validate accepts them.
+    """
+    import re
+    safe = re.sub(r"[^0-9A-Za-z]+", "", table) or "Table"
+    return f"{safe}Source"
+
+
 def lineage(seq: int) -> str:
     """Deterministic lineage tag from a sequence number."""
     return f"a1000000-0000-4000-9000-{seq:012x}"
@@ -103,7 +119,7 @@ def csv_partition(table: str, path: str, columns: List[Dict], delimiter: str = "
         for c in columns
     )
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"
@@ -176,7 +192,7 @@ def robust_csv_partition(
         prev = "Typed"
     steps += f"\n{TAB}{TAB}{TAB}in\n{TAB}{TAB}{TAB}{TAB}{prev}\n"
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{steps}"
@@ -192,7 +208,7 @@ def raw_partition(table: str, m_body: str) -> str:
     """
     body = "\n".join(f"{TAB}{TAB}{TAB}{ln}" for ln in m_body.strip("\n").splitlines())
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{body}\n"
@@ -267,7 +283,7 @@ def dim_partition(
         else f"[{logical_key}]"
     )
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"

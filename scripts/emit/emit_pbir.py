@@ -282,10 +282,15 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         sec_bind = {"entity": entity, "prop": sec_v, "isMeasure": True} if sec_v and sec_v in mset else None
         add_binds = [{"entity": entity, "prop": av, "isMeasure": True}
                      for av in (vd.get("additionalValues") or []) if av in mset]
+        # y2Values: measures bound to the secondary (right) Y axis — dual-axis charts
+        # e.g. {"y2Values": ["CY Profit", "PY Profit"]} in decisions.json
+        y2_binds = [{"entity": entity, "prop": yv, "isMeasure": True}
+                    for yv in (vd.get("y2Values") or []) if yv in mset] or None
         return P.chart_visual(name, pos, mapped, catbind, valbind, ws_name, theme=theme,
                               series=seriesbind, series_colors=vd.get("seriesColors"),
                               single_color=vd.get("color"), sort=sort,
                               secondary_value=sec_bind, additional_values=add_binds or None,
+                              y2_values=y2_binds,
                               hide_value_axis=bool(vd.get("hideValueAxis")),
                               hide_labels=bool(vd.get("hideLabels")))
     # tableColumns override from decisions.json (for Top N / custom column sets)
@@ -344,15 +349,252 @@ def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
     })
 
     page_names: List[str] = []
+    page_display: Dict[str, str] = {}
     for dashboard in ir.get("dashboards", []):
-        page_names.append(build_page(dashboard, ir, decisions, pages_dir))
+        pn = build_page(dashboard, ir, decisions, pages_dir)
+        page_names.append(pn)
+        page_display[pn] = dashboard.get("name", pn)
     if not page_names:
         page_names = ["Page1"]
+        page_display = {"Page1": "Page 1"}
         write_json(os.path.join(pages_dir, "Page1", "page.json"),
                    P.page_json("Page1", "Page 1", 1280, 720))
     write_json(os.path.join(pages_dir, "pages.json"),
                P.pages_json(page_names, page_names[0]))
+
+    # Inject navigation bar — controlled by decisions["navBar"]["enabled"].
+    # Defaults to enabled when 2+ pages exist; agents can disable per-report
+    # by setting navBar.enabled = false in decisions.json.
+    nav_cfg = decisions.get("navBar") or {}
+    if nav_cfg.get("enabled", True):
+        theme = decisions.get("theme") or {}
+        _inject_nav_bar(pages_dir, page_names, page_display,
+                        active_color=nav_cfg.get("activeColor")
+                                     or theme.get("navActiveColor", "#1F77B4"),
+                        inactive_color=nav_cfg.get("inactiveColor")
+                                       or theme.get("navInactiveColor", "#2C3E50"),
+                        orientation=nav_cfg.get("orientation", "vertical"),
+                        btn_w=nav_cfg.get("buttonWidth"),
+                        btn_h=nav_cfg.get("buttonHeight"),
+                        btn_gap=nav_cfg.get("buttonGap"),
+                        origin_x=nav_cfg.get("originX"),
+                        origin_y=nav_cfg.get("originY"))
+
+    # Inject filter panel toggle — controlled by decisions["filterPanel"].
+    # Reproduces the Tableau show/close-filters slide-out drawer with native
+    # bookmarks. Opt out per-report via filterPanel.enabled = false.
+    fp_cfg = decisions.get("filterPanel") or {}
+    if fp_cfg.get("enabled", True):
+        _inject_filter_panel(os.path.dirname(pages_dir), page_names, fp_cfg)
+
     return report_dir
+
+
+def _inject_filter_panel(definition_dir: str, page_names: List[str],
+                         fp_cfg: Dict) -> None:
+    """Write the filter-panel drawer visuals + show/hide bookmarks.
+
+    Generic: for every page that has slicer visuals it draws a drawer behind
+    them, adds the open/close toggle buttons, and emits a Show/Hide bookmark
+    pair. Slicers are auto-detected (visualType == 'slicer') unless
+    filterPanel.slicerNames lists them explicitly. The two bookmarks toggle the
+    drawer via visualLink type='Bookmark'. Nothing is written for pages without
+    slicers, so single-table reports are unaffected.
+    """
+    pages_dir   = os.path.join(definition_dir, "pages")
+    panel_color = fp_cfg.get("panelColor", "#0D2A36")
+    padding     = int(fp_cfg.get("padding", 16))
+    explicit    = fp_cfg.get("slicerNames")
+    open_btn    = fp_cfg.get("openButton") or {}
+    header_color = fp_cfg.get("slicerHeaderColor", "#FFFFFF")
+    sections_cfg = fp_cfg.get("sections")
+    section_color = fp_cfg.get("sectionLabelColor", "#24C6FC")
+
+    all_ids: List[str] = []
+    for pn in page_names:
+        visuals_dir = os.path.join(pages_dir, pn, "visuals")
+        slicers = _collect_slicers(visuals_dir, explicit)
+        if not slicers:
+            continue
+
+        page_w, page_h = 1280, 720
+        pj_path = os.path.join(pages_dir, pn, "page.json")
+        if os.path.isfile(pj_path):
+            try:
+                pj = load_json(pj_path)
+                page_w = pj.get("width", page_w)
+                page_h = pj.get("height", page_h)
+            except Exception:
+                pass
+
+        section_layout = _build_section_layout(slicers, sections_cfg)
+
+        if section_layout:
+            # Tableau-style container: full-height right drawer, slicers stacked.
+            pw = max(240, int(page_w * 0.214))
+            px, py, ph = page_w - pw, 0, page_h
+        else:
+            xs0 = min(s["pos"].get("x", 0) for s in slicers)
+            ys0 = min(s["pos"].get("y", 0) for s in slicers)
+            xs1 = max(s["pos"].get("x", 0) + s["pos"].get("width", 0) for s in slicers)
+            ys1 = max(s["pos"].get("y", 0) + s["pos"].get("height", 0) for s in slicers)
+            header_room = 52
+            px = max(0, int(xs0 - padding))
+            py = max(0, int(ys0 - header_room))
+            pw = int((xs1 - xs0) + padding * 2)
+            ph = int((ys1 - ys0) + header_room + padding)
+
+        open_btn_pos = {
+            "x": int(open_btn.get("x", page_w - 78)),
+            "y": int(open_btn.get("y", 6)), "z": 9600,
+            "height": int(open_btn.get("height", 70)),
+            "width": int(open_btn.get("width", 70)), "tabOrder": 9600}
+
+        chrome = P.filter_panel_chrome(
+            pn, [s["name"] for s in slicers],
+            panel_x=px, panel_y=py, panel_w=pw, panel_h=ph,
+            open_btn_pos=open_btn_pos, bg_color=panel_color,
+            section_layout=section_layout or None,
+            section_label_color=section_color)
+        if not chrome:
+            continue
+
+        for vis in chrome["visuals"]:
+            write_json(os.path.join(visuals_dir, vis["name"], "visual.json"), vis)
+        for bm in chrome["bookmarks"]:
+            write_json(os.path.join(definition_dir, "bookmarks",
+                                    f"{bm['name']}.bookmark.json"), bm)
+            all_ids.append(bm["name"])
+
+        # Restyle the drawer's slicer headers (white + transparent bg) so they
+        # read on the dark panel, and reposition them into the container stack.
+        new_positions = chrome.get("slicer_positions") or {}
+        for s in slicers:
+            spath = os.path.join(visuals_dir, s["name"], "visual.json")
+            try:
+                sj = load_json(spath)
+            except Exception:
+                continue
+            sj = P.restyle_slicer_for_panel(sj, header_color)
+            if s["name"] in new_positions:
+                sj["position"] = new_positions[s["name"]]
+            write_json(spath, sj)
+
+    if all_ids:
+        write_json(os.path.join(definition_dir, "bookmarks", "bookmarks.json"),
+                   P.bookmarks_metadata(all_ids))
+
+
+def _build_section_layout(slicers: List[Dict],
+                          sections_cfg: Optional[List[Dict]]) -> List[Dict]:
+    """Map detected slicers to ordered sections by bound field name.
+
+    *sections_cfg* is filterPanel.sections: ``[{"label", "fields": [...]}]``.
+    Returns ``[{"label", "slicers": [name, …]}]`` ordered per the config with
+    any unmatched slicers appended label-less. ``[]`` when no config (flat panel).
+    """
+    if not sections_cfg:
+        return []
+    by_field = {s["field"]: s["name"] for s in slicers if s.get("field")}
+    used: set = set()
+    layout: List[Dict] = []
+    for sec in sections_cfg:
+        names: List[str] = []
+        for f in sec.get("fields", []):
+            nm = by_field.get(f)
+            if nm and nm not in used:
+                names.append(nm)
+                used.add(nm)
+        if names:
+            layout.append({"label": sec.get("label"), "slicers": names})
+    leftover = [s["name"] for s in slicers if s["name"] not in used]
+    if leftover:
+        layout.append({"label": None, "slicers": leftover})
+    return layout
+
+
+def _collect_slicers(visuals_dir: str, explicit: Optional[List[str]]) -> List[Dict]:
+    """Return [{name, pos, field}] for slicer visuals in *visuals_dir*."""
+    out: List[Dict] = []
+    if not os.path.isdir(visuals_dir):
+        return out
+    for vname in sorted(os.listdir(visuals_dir)):
+        vpath = os.path.join(visuals_dir, vname, "visual.json")
+        if not os.path.isfile(vpath):
+            continue
+        try:
+            vj = load_json(vpath)
+        except Exception:
+            continue
+        name  = vj.get("name", vname)
+        vtype = (vj.get("visual") or {}).get("visualType", "")
+        if explicit:
+            if name in explicit:
+                out.append({"name": name, "pos": vj.get("position", {}),
+                            "field": _slicer_field(vj)})
+        elif vtype == "slicer":
+            out.append({"name": name, "pos": vj.get("position", {}),
+                        "field": _slicer_field(vj)})
+    return out
+
+
+def _slicer_field(vj: Dict) -> str:
+    """Return the column/measure Property a slicer is bound to (or "")."""
+    try:
+        proj = (vj["visual"]["query"]["queryState"]["Values"]["projections"][0]
+                ["field"])
+        node = proj.get("Column") or proj.get("Measure") or {}
+        return node.get("Property", "")
+    except Exception:
+        return ""
+
+
+def _inject_nav_bar(pages_dir: str, page_names: List[str],
+                    page_display: Dict[str, str],
+                    active_color: str = "#1F77B4",
+                    inactive_color: str = "#2C3E50",
+                    orientation: str = "vertical",
+                    btn_w: Optional[int] = None,
+                    btn_h: Optional[int] = None,
+                    btn_gap: Optional[int] = None,
+                    origin_x: Optional[int] = None,
+                    origin_y: Optional[int] = None) -> None:
+    """Write nav-bar actionButton visual.json files into every page's visuals/ folder.
+
+    Generic: works on any report. orientation='horizontal' matches a top-bar
+    Tableau layout; 'vertical' (default) places buttons in a left sidebar.
+    Geometry params (btn_w/btn_h/btn_gap/origin_x/origin_y) are passed from
+    decisions["navBar"] to faithfully reproduce Tableau button positions.
+    """
+    if len(page_names) < 2:
+        return
+    all_pages = []
+    for pn in page_names:
+        page_json_path = os.path.join(pages_dir, pn, "page.json")
+        display = page_display.get(pn, pn)
+        if os.path.isfile(page_json_path):
+            try:
+                pj = load_json(page_json_path)
+                display = pj.get("displayName", display)
+            except Exception:
+                pass
+        all_pages.append({"name": pn, "displayName": display})
+
+    for pg in all_pages:
+        visuals = P.nav_bar_visuals(
+            pg["name"], all_pages,
+            active_color=active_color,
+            inactive_color=inactive_color,
+            orientation=orientation,
+            btn_w=btn_w,
+            btn_h=btn_h,
+            btn_gap=btn_gap,
+            origin_x=origin_x,
+            origin_y=origin_y,
+        )
+        visuals_dir = os.path.join(pages_dir, pg["name"], "visuals")
+        for v in visuals:
+            write_json(os.path.join(visuals_dir, v["name"], "visual.json"), v)
 
 
 def main(argv=None) -> int:
