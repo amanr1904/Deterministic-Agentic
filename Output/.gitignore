@@ -1,2 +1,5 @@
-**/.pbi/localSettings.json
-**/.pbi/cache.abf
+# Ignore all generated pipeline output (machine-specific artifacts).
+# The folder is kept in the repo via this .gitignore so the pipeline
+# always has a destination directory to write into.
+*
+!.gitignore
