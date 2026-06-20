@@ -109,6 +109,52 @@ def merge_partial_measures(decisions: Dict, analysis_path: str) -> Dict:
     return decisions
 
 
+def reassign_orphan_measures(decisions: Dict) -> Dict:
+    """Guarantee every measure lands on an emitted table (no silent drops).
+
+    ``build_table_file`` writes a measure into a table only when ``m["table"]``
+    EXACTLY equals that table's name. A measure whose ``table`` does not match any
+    emitted table — wrong case/spacing, a stale or guessed name, or a multi-
+    datasource naming mismatch (e.g. Midnight Census exposes both
+    "Midnight Census NEW" and "Midnight_Census_Template") — would otherwise be
+    dropped from the model with no error. This normalizes each measure's ``table``
+    to the matching emitted table, and routes any still-unmatched measure to the
+    fact table (else the first table) with a warning, so a measure can never
+    vanish without a trace.
+    """
+    tables = decisions.get("tables", [])
+    measures = decisions.get("measures", [])
+    if not measures:
+        return decisions
+    # Valid hosts: regular tables + calculated tables (real tables that can carry
+    # measures). Field-parameter tables are intentionally excluded as hosts.
+    host_names = [t["name"] for t in tables]
+    host_names += [ct["name"] for ct in decisions.get("calculatedTables", [])]
+    if not host_names:
+        raise ValueError(
+            "decisions.json defines measures but no tables to host them; "
+            "cannot emit measures.")
+    by_norm = {_norm_name(n): n for n in host_names}
+    fact = next((t["name"] for t in tables if t.get("role") == "fact"), None)
+    fallback = fact or host_names[0]
+    reassigned = 0
+    for m in measures:
+        want = m.get("table", "")
+        if want in host_names:
+            continue  # already an exact, valid host
+        match = by_norm.get(_norm_name(want))
+        if match:
+            m["table"] = match  # fix case/spacing/punctuation mismatch
+            continue
+        print(f"  WARNING: measure '{m.get('name')}' targets unknown table "
+              f"'{want}' -> routed to '{fallback}'")
+        m["table"] = fallback
+        reassigned += 1
+    if reassigned:
+        print(f"  reassigned {reassigned} orphan measure(s) to '{fallback}'")
+    return decisions
+
+
 def model_dir(analysis_path: str, model_name: str) -> str:
     base = os.path.dirname(os.path.abspath(analysis_path))
     path = os.path.join(base, f"{model_name}.SemanticModel")
@@ -233,6 +279,19 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
             continue
         seen.add(key)
         deduped.append(c)
+    # Federated multi-CSV datasource: every column shares ONE datasource name
+    # (e.g. "Sales DataSource" spanning Orders/Customers/Location/Products CSVs),
+    # so a fact backed by a single CSV would otherwise DECLARE the dimensions'
+    # columns too (they exist in the IR but not in the fact's CSV) and refresh
+    # would fail. Restrict a CSV-backed fact's declared columns to those actually
+    # present in its backing CSV, mirroring the partition's probe filtering.
+    if role == "fact":
+        probe = _probe_for_table(table, ir)
+        if probe and probe["columns"]:
+            csv_norm = {_normalize_name(c["csv_name"]) for c in probe["columns"]}
+            scoped = [c for c in deduped if _normalize_name(c["name"]) in csv_norm]
+            if scoped:
+                deduped = scoped
     return deduped
 
 
@@ -462,6 +521,7 @@ def main(argv=None) -> int:
             print(f"ERROR: file not found: {p}", file=sys.stderr); return 2
     ir, decisions = load_json(args.analysis), load_json(args.decisions)
     decisions = merge_partial_measures(decisions, args.analysis)
+    decisions = reassign_orphan_measures(decisions)
     root = emit(ir, decisions, args.analysis)
     print(f"Wrote semantic model: {root}\n  tables: {len(decisions.get('tables', []))}  "
           f"measures: {len(decisions.get('measures', []))}  "

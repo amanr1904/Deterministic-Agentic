@@ -405,6 +405,49 @@ class TestMergePartialMeasures(unittest.TestCase):
         self.assertEqual(out["measures"][0]["dax"], "AGENT")
 
 
+class TestReassignOrphanMeasures(unittest.TestCase):
+    """No measure may be silently dropped by build_table_file's exact match."""
+
+    def test_exact_match_unchanged(self):
+        decisions = {"measures": [{"table": "Orders", "name": "M"}],
+                     "tables": [{"name": "Orders", "role": "fact"}]}
+        out = ET.reassign_orphan_measures(decisions)
+        self.assertEqual(out["measures"][0]["table"], "Orders")
+
+    def test_case_or_punctuation_mismatch_is_fixed(self):
+        # Agent wrote 'midnightcensus'; real table is 'Midnight_Census_Template'.
+        decisions = {"measures": [{"table": "midnightcensus", "name": "M"}],
+                     "tables": [{"name": "Midnight_Census_Template", "role": "fact"}]}
+        out = ET.reassign_orphan_measures(decisions)
+        self.assertEqual(out["measures"][0]["table"], "Midnight_Census_Template")
+
+    def test_unknown_table_routed_to_fact(self):
+        decisions = {"measures": [{"table": "Nonexistent", "name": "M"}],
+                     "tables": [{"name": "DimDate", "role": "date"},
+                                {"name": "Census", "role": "fact"}]}
+        out = ET.reassign_orphan_measures(decisions)
+        self.assertEqual(out["measures"][0]["table"], "Census")
+
+    def test_unknown_table_routed_to_first_when_no_fact(self):
+        decisions = {"measures": [{"table": "X", "name": "M"}],
+                     "tables": [{"name": "A", "role": "dim"},
+                                {"name": "B", "role": "dim"}]}
+        out = ET.reassign_orphan_measures(decisions)
+        self.assertEqual(out["measures"][0]["table"], "A")
+
+    def test_calculated_table_is_valid_host(self):
+        decisions = {"measures": [{"table": "CalcTbl", "name": "M"}],
+                     "tables": [{"name": "Fact", "role": "fact"}],
+                     "calculatedTables": [{"name": "CalcTbl"}]}
+        out = ET.reassign_orphan_measures(decisions)
+        self.assertEqual(out["measures"][0]["table"], "CalcTbl")
+
+    def test_measures_but_no_tables_raises(self):
+        decisions = {"measures": [{"table": "X", "name": "M"}], "tables": []}
+        with self.assertRaises(ValueError):
+            ET.reassign_orphan_measures(decisions)
+
+
 @unittest.skipUnless(os.path.isfile(MIDNIGHT_TWB), "Midnight Census workbook not present")
 class TestGoldenMidnightCensus(unittest.TestCase):
     """The deterministic path must reproduce the committed Output/ artifacts."""

@@ -65,7 +65,8 @@
           "role": { "type": ["string", "null"] },
           "formula": { "type": "string", "description": "entity-decoded Tableau formula" },
           "isTableCalc": { "type": "boolean" },
-          "complexity": { "type": "string", "enum": ["trivial", "complex"], "description": "trivial = map_dax can translate; complex = route to LLM" },
+          "complexity": { "type": "string", "enum": ["trivial", "complex"], "description": "legacy hint kept for back-compat; classify.py supersedes it with a binary route" },
+          "route": { "type": "string", "enum": ["deterministic", "agent"], "description": "optional binary route stamped by classify.py: deterministic = map_dax translated it, agent = needs the batched agent call" },
           "suggestedDaxKind": { "type": "string", "enum": ["measure", "column"] }
         }
       }
