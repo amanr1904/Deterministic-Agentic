@@ -194,6 +194,26 @@ class TestDaxExpression(unittest.TestCase):
         self.assertEqual(
             dax, "DATEDIFF ( MIN ( T[Order Date] ), MAX ( T[Order Date] ), DAY )")
 
+    def test_trig_functions(self):
+        """Trig functions map 1:1 to the same-named DAX functions."""
+        self.assertEqual(
+            self.t("SIN(SUM([Qty]))"), ("SIN ( SUM ( T[Qty] ) )", None))
+        self.assertEqual(
+            self.t("DEGREES(SUM([Qty]))"), ("DEGREES ( SUM ( T[Qty] ) )", None))
+        self.assertEqual(
+            self.t("RADIANS(SUM([Qty]))"), ("RADIANS ( SUM ( T[Qty] ) )", None))
+
+    def test_pi_constant_with_field(self):
+        """PI() translates only when the formula also references a base column."""
+        self.assertEqual(
+            self.t("SUM([Qty]) * PI()"), ("( SUM ( T[Qty] ) * PI ( ) )", None))
+
+    def test_makedate(self):
+        """MAKEDATE(y, m, d) becomes DATE(y, m, d) with identical arg order."""
+        self.assertEqual(
+            self.t("MAKEDATE(YEAR(MAX([Order Date])), 1, 1)"),
+            ("DATE ( YEAR ( MAX ( T[Order Date] ) ), 1, 1 )", None))
+
     def test_conversion_and_null(self):
         self.assertEqual(self.t("INT(SUM([Sales]))"), ("INT ( SUM ( T[Sales] ) )", None))
         self.assertEqual(

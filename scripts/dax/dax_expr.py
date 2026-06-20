@@ -375,6 +375,15 @@ class _Parser:
             return f"ROUND ( {a[0]}, {a[1] if n == 2 else '0'} )", False
         if name == "POWER" and n == 2:
             return f"POWER ( {a[0]}, {a[1]} )", False
+        # Trigonometry: Tableau and DAX share identical function names and
+        # single-argument semantics, so each maps 1:1. The False flag marks a
+        # numeric (non-text) result for the surrounding concatenation logic.
+        if name in ("SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN",
+                    "COT", "DEGREES", "RADIANS") and n == 1:
+            return f"{name} ( {a[0]} )", False
+        # PI() is a zero-argument numeric constant, identical in both dialects.
+        if name == "PI" and n == 0:
+            return "PI ( )", False
         # string
         if name in ("UPPER", "LOWER", "TRIM") and n == 1:
             return f"{name} ( {a[0]} )", True
@@ -403,6 +412,10 @@ class _Parser:
             if part not in _DATEDIFF_PART:
                 raise Untranslatable("DATEDIFF part")
             return f"DATEDIFF ( {a[1]}, {a[2]}, {_DATEDIFF_PART[part]} )", False
+        # MAKEDATE(year, month, day) -> DATE(year, month, day): the argument
+        # order is identical, so the rename is a safe 1:1 date construction.
+        if name == "MAKEDATE" and n == 3:
+            return f"DATE ( {a[0]}, {a[1]}, {a[2]} )", False
         raise Untranslatable(f"unsupported function {name}/{n}")
 
 
