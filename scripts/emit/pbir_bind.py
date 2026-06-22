@@ -15,32 +15,7 @@ from typing import Dict, List, Optional, Set
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import date_levels as D  # noqa: E402
 import field_param as FP  # noqa: E402
-import tmdl_blocks as TB  # noqa: E402
-
-# Cache of physical CSV headers so we read each file at most once.
-_HEADER_CACHE: Dict[str, Set[str]] = {}
-
-
-def _table_columns(table: Dict, ir: Dict) -> Set[str]:
-    """Return the set of column names a table actually owns.
-
-    Prefers the physical CSV header (for csv-backed dims defined with
-    sourceFile), then IR columns scoped by sourceDatasource, and only falls
-    back to ALL IR columns when neither is available. Without this, a star
-    schema dim defined with sourceFile (src=None) would match EVERY IR column
-    and wrongly claim fact fields like grade/loan_status -> broken slicers.
-    """
-    src_file = table.get("sourceFile")
-    if src_file and str(src_file).lower().endswith(".csv"):
-        key = os.path.abspath(src_file)
-        if key not in _HEADER_CACHE:
-            _HEADER_CACHE[key] = set(TB.read_csv_header(src_file))
-        if _HEADER_CACHE[key]:
-            return _HEADER_CACHE[key]
-    src = table.get("sourceDatasource")
-    if src is not None:
-        return {c["name"] for c in ir.get("columns", []) if c.get("datasource") == src}
-    return {c["name"] for c in ir.get("columns", [])}
+import emit_tmdl as ET  # noqa: E402  (reuse the same CSV probe the model emitter uses)
 
 
 def fact_entity(decisions: Dict) -> str:
@@ -172,6 +147,47 @@ def suppressed_worksheets(decisions: Dict) -> set:
     return FP.suppressed_worksheets(decisions.get("fieldParameters", []))
 
 
+def _owned_columns(table: Dict, ir: Dict) -> Set[str]:
+    """Logical column names a dim/date table actually owns.
+
+    A synthetic table (calendar / datatable, ``sourceDatasource`` is None) owns
+    only its declared key/datatable columns — without this guard a calendar
+    DimDate would claim every IR column and mis-bind their slicers.
+
+    A real source-backed dim is normally scoped by its datasource, but a
+    *federated multi-CSV* datasource exposes every CSV's columns under ONE
+    datasource name (e.g. "Sales DataSource" spanning Orders/Customers/Location/
+    Products). In that case the dim's ``sourceFile`` is probed so each dim claims
+    only its own CSV's columns, matching exactly what emit_tmdl declares.
+    """
+    src = table.get("sourceDatasource")
+    if src is None:
+        own = set(table.get("keyColumns", []))
+        dt = table.get("datatable") or {}
+        own |= {c["name"] for c in dt.get("columns", [])}
+        return own
+    if table.get("sourceFile"):
+        probe = ET._probe_for_table(table, ir)
+        if probe and probe.get("columns"):
+            return {c["name"] for c in probe["columns"]}
+    return {c["name"] for c in ir.get("columns", []) if c.get("datasource") == src}
+
+
+def entity_for_field(field: Optional[str], default_entity: str,
+                     decisions: Dict, ir: Dict) -> str:
+    """Resolve a category/table column field to its owning dim/date table.
+
+    Falls back to ``default_entity`` (typically the fact) when the field is not
+    owned by any dimension — e.g. fact columns or date-part derived columns.
+    """
+    if not field:
+        return default_entity
+    for table in decisions.get("tables", []):
+        if table.get("role") in ("dim", "date") and field in _owned_columns(table, ir):
+            return table["name"]
+    return default_entity
+
+
 def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
     """Return the correct entity (table name) for a slicer field.
 
@@ -185,7 +201,7 @@ def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
     # the fact entity.
     for table in decisions.get("tables", []):
         if table.get("role") in ("dim", "date"):
-            if field in _table_columns(table, ir):
+            if field in _owned_columns(table, ir):
                 return table["name"]
     # Check param tables
     for t in decisions.get("tables", []):
@@ -239,18 +255,24 @@ def _is_date_param(field: Optional[str], decisions: Dict) -> bool:
 
 
 def category_binding(ws: Optional[Dict], entity: str, cols: Set[str],
-                     ir: Dict) -> Dict:
+                     ir: Dict, decisions: Optional[Dict] = None) -> Dict:
     """Resolve a chart category, aggregating dates to the Tableau date level."""
     catf = ws.get("categoryField") if ws else None
     level = ws.get("categoryDateLevel") if ws else None
     dcols = date_cols(ir)
     prop = part_prop(catf, level, dcols)
+
+    def _ent(p: str) -> str:
+        return entity_for_field(p, entity, decisions, ir) if decisions else entity
+
     if prop and (prop in cols or (catf in dcols)):
+        # date-part columns live on the fact table that owns the base date column
         return {"entity": entity, "prop": prop}
     if catf and catf in cols:
-        return {"entity": entity, "prop": catf}
+        return {"entity": _ent(catf), "prop": catf}
     dim = first_dim_col(ir)
-    return {"entity": entity, "prop": dim or (next(iter(cols)) if cols else "Column")}
+    return {"entity": _ent(dim) if dim else entity,
+            "prop": dim or (next(iter(cols)) if cols else "Column")}
 
 
 def value_binding(valf: Optional[str], entity: str, mset: Set[str],
@@ -266,23 +288,28 @@ def value_binding(valf: Optional[str], entity: str, mset: Set[str],
 
 
 def table_columns(ws: Optional[Dict], ir: Dict, entity: str,
-                  mset: Set[str], cols: Set[str]) -> List[Dict]:
+                  mset: Set[str], cols: Set[str],
+                  decisions: Optional[Dict] = None) -> List[Dict]:
     out: List[Dict] = []
     dcols = date_cols(ir)
     level = ws.get("categoryDateLevel") if ws else None
+
+    def _ent(prop: str) -> str:
+        return entity_for_field(prop, entity, decisions, ir) if decisions else entity
+
     if ws:
         for d in ws.get("dimensions", []) or []:
             if d in dcols and D.needs_part(level):
                 out.append({"entity": entity, "prop": D.part_column_name(d, level),
                             "isMeasure": False})
             elif d in cols:
-                out.append({"entity": entity, "prop": d, "isMeasure": False})
+                out.append({"entity": _ent(d), "prop": d, "isMeasure": False})
         for v in ws.get("values", []) or []:
             if v in mset:
                 out.append({"entity": entity, "prop": v, "isMeasure": True})
             elif v in cols:
-                out.append({"entity": entity, "prop": v, "isMeasure": False})
+                out.append({"entity": _ent(v), "prop": v, "isMeasure": False})
     if not out:
-        out = [{"entity": entity, "prop": c["name"], "isMeasure": False}
+        out = [{"entity": _ent(c["name"]), "prop": c["name"], "isMeasure": False}
                for c in ir.get("columns", [])[:6]]
     return out or [{"entity": entity, "prop": "Column", "isMeasure": False}]

@@ -1,8 +1,16 @@
 **/.pbi/localSettings.json
 **/.pbi/cache.abf
 
+# Python bytecode / caches (never tracked)
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.pytest_cache/
+
 # Generated PBIP output (machine-specific absolute paths in M queries)
 # Run the tableau-analysis agent to regenerate for your machine
+Output/
 *.pbip
 *.Report/
 *.SemanticModel/

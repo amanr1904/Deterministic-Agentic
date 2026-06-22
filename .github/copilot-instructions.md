@@ -51,8 +51,7 @@ The `migration-constitution` agent is a self-contained orchestrator that runs al
 3. Create feature branch & speckit directory
 4. Write specification (via `speckit.specify` subagent)
 5. Clarify ambiguities (via `speckit.clarify` subagent)
-6. Generate DAX measures (via `dax-measures` subagent)
-7. Design star schema (via `star-schema` subagent)
+6. Generate DAX measures + design star schema (ONE combined `dax-measures` subagent call — fused because Copilot Chat cannot parallelize subagents)
 8. Write plan (via `speckit.plan` subagent)
 9. Write tasks (via `speckit.tasks` subagent)
 10. Generate PBIP semantic model (via `pbip-generator` subagent) — **read `plugins/pbip/skills/tmdl/SKILL.md` for syntax rules**
@@ -72,7 +71,7 @@ The `migration-constitution` agent is a self-contained orchestrator that runs al
 - Runs ALL stages automatically without user interaction
 - **ALL designated agents MUST be called via `runSubagent()` — NEVER do an agent's work inline**
 - Creates speckit feature branch + `feature.json` for path resolution
-- Calls 9 subagents via `runSubagent()`: speckit.specify, speckit.clarify, dax-measures, star-schema, speckit.plan, speckit.tasks, pbip-generator, speckit.analyze, report-visual-migration
+- Calls 8 subagents via `runSubagent()`: speckit.specify, speckit.clarify, dax-measures (combined DAX + star schema), speckit.plan, speckit.tasks, pbip-generator, speckit.analyze, report-visual-migration
 - Saves all generated PBIP artifacts to the `Output/{WorkbookName}/` folder
 - **Reads plugin skills** (`plugins/pbip/skills/tmdl/SKILL.md`, `plugins/pbip/skills/pbir-format/SKILL.md`) before generating files
 - **Runs plugin validators** (`tmdl-validate`, `validate_pbip.py`) after generation — errors must be fixed before presenting output to user
@@ -340,14 +339,13 @@ Every subagent call MUST use the `runSubagent` tool with these parameters:
 - `prompt`: detailed instructions with ALL file paths and context the agent needs
 - `description`: 2-5 word summary
 
-### Designated Subagents (9 total, called by migration-constitution)
+### Designated Subagents (8 total, called by migration-constitution)
 
 | Stage | Agent | Purpose |
 |-------|-------|---------|
 | 4 | `speckit.specify` | Write migration specification |
 | 5 | `speckit.clarify` | Clarify migration spec |
-| 6 | `dax-measures` | Generate DAX measures |
-| 7 | `star-schema` | Design star schema |
+| 6 | `dax-measures` | Generate DAX measures **and** design the star schema (ONE combined call) |
 | 8 | `speckit.plan` | Write implementation plan |
 | 9 | `speckit.tasks` | Generate implementation tasks |
 | 10 | `pbip-generator` | Generate PBIP semantic model |
