@@ -1,0 +1,128 @@
+{
+  "decisionsVersion": "1.0",
+  "modelName": "NetfixWorkbook",
+  "tableStrategy": "single-flat",
+  "tables": [
+    {
+      "name": "netflix_titles",
+      "role": "fact",
+      "sourceType": "csv",
+      "sourceFile": "C:\\Users\\BoghraJeelKishorbhai\\Deterministic-Agentic\\Data\\Netflix\\netflix_titles.csv"
+    }
+  ],
+  "relationships": [],
+  "calculatedColumns": [],
+  "measures": [
+    {
+      "table": "netflix_titles",
+      "name": "Total Titles",
+      "dax": "DISTINCTCOUNT('netflix_titles'[show_id])",
+      "formatString": "#,##0",
+      "displayFolder": "Base Measures",
+      "source": "llm"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "Total Movies",
+      "dax": "CALCULATE([Total Titles], 'netflix_titles'[type] = \"Movie\")",
+      "formatString": "#,##0",
+      "displayFolder": "Base Measures",
+      "source": "llm"
+    },
+    {
+      "table": "netflix_titles",
+      "name": "Total TV Shows",
+      "dax": "CALCULATE([Total Titles], 'netflix_titles'[type] = \"TV Show\")",
+      "formatString": "#,##0",
+      "displayFolder": "Base Measures",
+      "source": "llm"
+    }
+  ],
+  "visualDecisions": [
+    {
+      "worksheet": "Country wise distribution",
+      "visualType": "filledMap",
+      "location": "country",
+      "value": "Total Titles",
+      "reason": "Tableau Multipolygon map of CountD(show_id) by country => choropleth"
+    },
+    {
+      "worksheet": "Movies and TV Shows distribution",
+      "visualType": "pieChart",
+      "category": "type",
+      "value": "Total Titles",
+      "seriesColors": { "Movie": "#4e79a7", "TV Show": "#f28e2b" },
+      "reason": "Circle mark sized by CountD(show_id), colored by type => share pie"
+    },
+    {
+      "worksheet": "Ratings",
+      "visualType": "clusteredColumnChart",
+      "category": "rating",
+      "value": "Total Titles",
+      "color": "#aa0000",
+      "sort": "valueDesc",
+      "reason": "count of titles by rating, vertical bars, Netflix red"
+    },
+    {
+      "worksheet": "Top 10 Genre",
+      "visualType": "clusteredBarChart",
+      "category": "listed_in",
+      "value": "Total Titles",
+      "color": "#aa0000",
+      "sort": "valueDesc",
+      "reason": "top genres by CountD(show_id), horizontal bars, Netflix red (add Top 10 visual filter in Desktop)"
+    },
+    {
+      "worksheet": "Total Movies and TV Shows by Years",
+      "visualType": "stackedAreaChart",
+      "category": "date_added (Year)",
+      "value": "Total Titles",
+      "series": "type",
+      "seriesColors": { "Movie": "#4e79a7", "TV Show": "#f28e2b" },
+      "sort": "categoryAsc",
+      "reason": "area of CountD(show_id) over year of date_added, stacked by type"
+    },
+    {
+      "worksheet": "Description",
+      "visualType": "tableEx",
+      "tableColumns": [
+        { "entity": "netflix_titles", "prop": "title" },
+        { "entity": "netflix_titles", "prop": "description" }
+      ],
+      "reason": "Tableau text table of description (filter title in Desktop)"
+    },
+    {
+      "worksheet": "Duration",
+      "visualType": "tableEx",
+      "tableColumns": [
+        { "entity": "netflix_titles", "prop": "title" },
+        { "entity": "netflix_titles", "prop": "duration" }
+      ],
+      "reason": "Tableau text table of duration"
+    },
+    {
+      "worksheet": "Genre",
+      "visualType": "tableEx",
+      "tableColumns": [
+        { "entity": "netflix_titles", "prop": "title" },
+        { "entity": "netflix_titles", "prop": "listed_in" }
+      ],
+      "reason": "Tableau text table of genre (listed_in)"
+    },
+    {
+      "worksheet": "Rating",
+      "visualType": "tableEx",
+      "tableColumns": [
+        { "entity": "netflix_titles", "prop": "title" },
+        { "entity": "netflix_titles", "prop": "rating" }
+      ],
+      "reason": "Tableau text table of rating"
+    }
+  ],
+  "theme": {
+    "pageBackground": "#000000",
+    "foreground": "#ffffff",
+    "titleColor": "#ffffff",
+    "titleFont": "Segoe UI Semibold"
+  }
+}

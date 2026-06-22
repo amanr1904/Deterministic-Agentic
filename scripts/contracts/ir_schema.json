@@ -98,10 +98,7 @@
           "formula": { "type": "string", "description": "entity-decoded Tableau formula; inter-calc references ([Calculation_<id>] and [Name (copy)_<hash>], incl. ds-qualified) are inlined to [Caption] for readability" },
           "isTableCalc": { "type": "boolean", "description": "true when the <calculation> carries a <table-calc> element (verbatim XML fact)" },
           "isLOD": { "type": "boolean", "description": "true when the formula is a Level-of-Detail expression ({FIXED|INCLUDE|EXCLUDE ...}); maps to CALCULATE+ALLEXCEPT-style DAX" },
-          "dependsOn": { "type": "array", "items": { "type": "string" }, "description": "distinct field/column names this formula references (which columns the logic uses)" },
-          "complexity": { "type": "string", "enum": ["trivial", "complex"], "description": "legacy hint kept for back-compat; classify.py supersedes it with a binary route" },
-          "route": { "type": "string", "enum": ["deterministic", "agent"], "description": "optional binary route stamped by classify.py: deterministic = map_dax translated it, agent = needs the batched agent call" },
-          "suggestedDaxKind": { "type": "string", "enum": ["measure", "column"] }
+          "dependsOn": { "type": "array", "items": { "type": "string" }, "description": "distinct field/column names this formula references (which columns the logic uses)" }
         }
       }
     },

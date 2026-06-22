@@ -45,29 +45,6 @@ COORD_SPACE = 100000.0
 # so it does not overlap the active visual. A genuine visual is never this short.
 MIN_VISUAL_PX = 16
 
-# Many Tableau dashboards float a filter/parameter panel over the right edge of a
-# full-width content grid. Scaling content across the whole canvas then slides it
-# UNDER that rail. We instead compress content into the area left of the rail and
-# keep the rail at its real right-hand position, leaving this pixel gap between.
-RAIL_GAP = 16
-# A zone counts as part of the rail only if its left edge sits within this many
-# Tableau coordinate units of the rail column's x (so content labels that merely
-# happen to start at a large x — e.g. table header captions — stay with content).
-RAIL_X_TOL = 2000
-
-
-def _rail_left_tableau(dashboard: Dict) -> Optional[float]:
-    """Detect a right-edge floating filter rail; return its Tableau x or None.
-
-    Heuristic: two or more filter/paramctrl zones whose left edges align on the
-    right third of the dashboard indicate a dedicated filter column.
-    """
-    xs = [z.get("x", 0) for z in dashboard.get("zones", [])
-          if z.get("type") in ("filter", "paramctrl")]
-    if len(xs) >= 2 and min(xs) > 0.6 * COORD_SPACE:
-        return min(xs)
-    return None
-
 
 def _logical_id(seed: str) -> str:
     import hashlib
@@ -309,16 +286,12 @@ def _tooltip_binds(ws: Optional[Dict], vd: Dict, decisions: Dict, ir: Dict,
     return out
 
 
-def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optional[Dict]:
-    """Build one visual.json dict from a classified dashboard zone.
-
-    ``geom`` is the pre-scaled pixel rectangle ``(x, y, w, h, raw_h)`` computed by
-    ``build_page`` (which compresses content to the left of any floating filter
-    rail and clamps it on-canvas). ``raw_h`` is the unclamped scaled height, used
-    only for the collapsed-sliver test.
-    """
-    x, y, w, h, raw_h = geom
+def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Optional[Dict]:
+    """Build one visual.json dict from a classified dashboard zone."""
+    sx, sy = scale
     theme = decisions.get("theme")
+    x, y = round(zone["x"] * sx), round(zone["y"] * sy)
+    w, h = max(round(zone["w"] * sx), 80), max(round(zone["h"] * sy), 40)
     pos = P.position(x, y, w, h, z)
     entity = primary_entity(decisions)
     ztype = zone.get("type")
@@ -347,7 +320,7 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optiona
         return None
     # Suppress Tableau show/hide collapsed slivers (inactive parameter states)
     # so they never overlap the active visual. Generic across workbooks.
-    if raw_h < MIN_VISUAL_PX:
+    if round(zone.get("h", 0) * sy) < MIN_VISUAL_PX:
         return None
     ws = B.ws_by_name(ir, ws_name)
     # Overlay this worksheet's own Tableau title/text formatting (red title, font,
@@ -389,11 +362,10 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optiona
     # Pie / donut: category from color encoding, value measure, branded slices.
     if vtype in ("pieChart", "donutChart"):
         cat = vd.get("category") or B.color_field(ws, ir, cols)
-        cprop = cat or B.first_dim_col(ir)
-        catbind = {"entity": B.entity_for_field(cprop, entity, decisions, ir), "prop": cprop}
+        catbind = {"entity": entity, "prop": cat or B.first_dim_col(ir)}
         vb = value_bind()
         tips = _tooltip_binds(ws, vd, decisions, ir, entity, mset, cols,
-                              vb.get("prop"), {cprop})
+                              vb.get("prop"), {catbind["prop"]})
         return P.pie_visual(name, pos, catbind, vb, ws_name, theme=theme,
                             donut=(vtype == "donutChart"),
                             series_colors=vd.get("seriesColors"),
@@ -415,7 +387,7 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optiona
     # Filled choropleth map: location column + measure-driven saturation.
     if vtype in ("filledMap", "map"):
         loc = vd.get("location") or B.geo_column(ir) or B.first_dim_col(ir)
-        locbind = {"entity": B.entity_for_field(loc, entity, decisions, ir), "prop": loc}
+        locbind = {"entity": entity, "prop": loc}
         vb = value_bind()
         tips = _tooltip_binds(ws, vd, decisions, ir, entity, mset, cols,
                               vb.get("prop"), {loc})
@@ -437,8 +409,7 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optiona
         if vd.get("category") and vd.get("categoryIsMeasure"):
             catbind = {"entity": entity, "prop": vd["category"], "isMeasure": True}
         elif vd.get("category"):
-            catbind = {"entity": B.entity_for_field(vd["category"], entity, decisions, ir),
-                       "prop": vd["category"]}
+            catbind = {"entity": entity, "prop": vd["category"]}
         else:
             catbind = None  # resolved below
         valbind = value_bind()
@@ -447,10 +418,9 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optiona
             if fp is not None:
                 catbind = {"entity": fp["name"], "prop": fp["name"]}
             else:
-                catbind = B.category_binding(ws, entity, cols, ir, decisions)
+                catbind = B.category_binding(ws, entity, cols, ir)
         series = vd.get("series")
-        seriesbind = ({"entity": B.entity_for_field(series, entity, decisions, ir),
-                       "prop": series} if series else None)
+        seriesbind = {"entity": entity, "prop": series} if series else None
         sort = None
         sd = vd.get("sort")
         if sd == "valueDesc":
@@ -503,7 +473,7 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optiona
                   "isMeasure": tc.get("isMeasure", False)}
                  for tc in vd["tableColumns"]]
     else:
-        tcols = B.table_columns(ws, ir, entity, mset, cols, decisions)
+        tcols = B.table_columns(ws, ir, entity, mset, cols)
     return P.table_visual(name, pos, tcols, ws_name, theme=theme)
 
 
@@ -517,28 +487,7 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
                P.page_json(page_name, dashboard["name"], pw, ph,
                            background=theme.get("pageBackground"),
                            outspace=theme.get("outspace")))
-    sx, sy = pw / COORD_SPACE, ph / COORD_SPACE
-    rail = _rail_left_tableau(dashboard)
-    # Content (non-rail) zones are compressed into the area LEFT of the floating
-    # filter rail so they never slide underneath it; rail zones keep their real
-    # right-hand position. With no rail, content spans the full canvas width.
-    content_sx = ((round(rail * sx) - RAIL_GAP) / COORD_SPACE) if rail else sx
-
-    def _geom(zone: Dict):
-        """Pre-scaled, rail-aware, on-canvas-clamped pixel rect for a zone."""
-        in_rail = rail is not None and abs(zone.get("x", 0) - rail) <= RAIL_X_TOL
-        zsx = sx if in_rail else content_sx
-        raw_h = zone.get("h", 0) * sy
-        gx = round(zone.get("x", 0) * zsx)
-        gy = round(zone.get("y", 0) * sy)
-        gw = max(round(zone.get("w", 0) * zsx), 80)
-        gh = max(round(raw_h), 40)
-        # Clamp fully on-canvas so nothing renders off the page edge.
-        gx = max(0, min(gx, pw - 1))
-        gy = max(0, min(gy, ph - 1))
-        gw = min(gw, pw - gx)
-        gh = min(gh, ph - gy)
-        return (gx, gy, gw, gh, raw_h)
+    scale = (pw / COORD_SPACE, ph / COORD_SPACE)
 
     # Tableau show/hide toggle groups: several worksheets stacked in the same spot
     # whose visibility is driven by a parameter. In Power BI we overlay all members
@@ -554,7 +503,7 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
     for zone in dashboard.get("zones", []):
         if zone.get("type") == "viz" and zone.get("worksheet") in overlay_members:
             continue  # emitted by the overlay pass below
-        result = build_visual(zone, ir, decisions, z, _geom(zone))
+        result = build_visual(zone, ir, decisions, z, scale)
         if result is None:
             continue
         # kpiStack returns a list of 3 visuals: [card, pct_card, sparkline]
@@ -569,7 +518,7 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
             continue
         for member in ov.get("members", []):
             synth = dict(pos_zone, worksheet=member["worksheet"], type="viz")
-            result = build_visual(synth, ir, decisions, z, _geom(synth))
+            result = build_visual(synth, ir, decisions, z, scale)
             if result is None:
                 continue
             visuals = result if isinstance(result, list) else [result]
