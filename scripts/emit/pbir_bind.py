@@ -216,6 +216,52 @@ def _param_value_column(table_name: str, decisions: Dict) -> str:
     return table_name
 
 
+def _param_candidates(t: Dict) -> Set[str]:
+    """All slugs a param table can be matched against (name, value column,
+    key columns and any declared sourceFields/aliases). The value column often
+    carries the real Tableau parameter caption (e.g. 'Filter Adults/Peds')."""
+    cands = {slug(t.get("name", ""))}
+    dt = t.get("datatable") or {}
+    for c in dt.get("columns") or []:
+        cands.add(slug(c.get("name", "")))
+    for k in t.get("keyColumns") or []:
+        cands.add(slug(k))
+    for a in (t.get("sourceFields") or t.get("aliases") or []):
+        cands.add(slug(a))
+    return {c for c in cands if c}
+
+
+def param_table_for_field(field: Optional[str], decisions: Dict,
+                          zone_type: Optional[str] = None) -> Optional[str]:
+    """Resolve the disconnected param table a Tableau zone field maps to.
+
+    The decisions.json param table is frequently RENAMED (e.g. ViewMode,
+    AdultsPeds) while the dashboard zone keeps the original Tableau parameter
+    caption ('View', 'Filter Adults/Peds'). Match on table name slug, value
+    column slug and aliases (any zone); for paramctrl zones also allow a safe
+    containment match (>=4 chars) so 'View'->'ViewMode' and
+    'Filter Adults/Peds'->'AdultsPeds' resolve instead of falling back to the
+    fact date column. Containment is gated to paramctrl so real data filters
+    (type='filter') are never redirected to a parameter table."""
+    if not field:
+        return None
+    fs = slug(field)
+    params = [t for t in decisions.get("tables", []) if t.get("role") == "param"]
+    for t in params:
+        if fs in _param_candidates(t):
+            return t["name"]
+    if zone_type == "paramctrl":
+        best: Optional[tuple] = None
+        for t in params:
+            for cand in _param_candidates(t):
+                if len(fs) >= 4 and len(cand) >= 4 and (fs in cand or cand in fs):
+                    if best is None or len(cand) > best[1]:
+                        best = (t["name"], len(cand))
+        if best:
+            return best[0]
+    return None
+
+
 def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
     """Return (entity, prop, title, mode) for a filter / parameter-control zone.
 
@@ -224,7 +270,6 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
     """
     field = zone.get("field")
     cols = column_names(ir)
-    ptables = param_tables(decisions)
     title = field or zone.get("worksheet") or "Filter"
     # Date-range parameter (e.g. 'Start Date' / 'End Date') -> Between slicer on
     # the fact date column, so Start and End are independent bounds.
@@ -234,11 +279,12 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
         if dcol:
             return entity, dcol, title, "Between"
     # Parameter list-slicers bind to a disconnected table on its value column
-    # (e.g. SelectYear[Year]), NOT the table name.
-    pmap = {slug(t): t for t in ptables}
-    if field and slug(field) in pmap:
-        tbl = pmap[slug(field)]
-        return tbl, _param_value_column(tbl, decisions), title, "Dropdown"
+    # (e.g. SelectYear[Year]), NOT the table name. Match by table name, value
+    # column or alias so a RENAMED param table (ViewMode, AdultsPeds) still
+    # resolves the original Tableau zone caption ('View', 'Filter Adults/Peds').
+    pname = param_table_for_field(field, decisions, zone.get("type"))
+    if pname:
+        return pname, _param_value_column(pname, decisions), title, "Dropdown"
     # Resolve the correct entity (dim table or fact) for this field via the
     # CSV-header owner map so Category/Sub-Category -> DimProduct,
     # Region/State/City -> DimLocation, etc. (single denormalized IR datasource
