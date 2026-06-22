@@ -282,16 +282,17 @@ def build_measures(ir: Dict, host_table: str) -> Dict[str, List[Dict]]:
         formula = field["formula"]
         result = translate(formula, host_table, ctx)
         if result is None:
+            kind = "measure" if (field.get("role") or "measure") == "measure" else "column"
             pending.append({
                 "caption": field["caption"],
                 "formula": formula,
-                "complexity": field["complexity"],
-                "suggestedDaxKind": field.get("suggestedDaxKind", "measure"),
+                "complexity": "complex",
+                "suggestedDaxKind": kind,
                 "reason": "complex-token",
             })
             continue
         dax, fmt = result
-        if field.get("suggestedDaxKind", "measure") == "measure":
+        if (field.get("role") or "measure") == "measure":
             translated.append({
                 "table": host_table,
                 "name": measure_name(field["caption"]),

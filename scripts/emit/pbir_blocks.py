@@ -48,8 +48,8 @@ def container_objects(title: Optional[str], theme: Optional[Dict],
         title_props["text"] = literal(title)
         if t.get("titleColor"):
             title_props["fontColor"] = color(t["titleColor"])
-            title_props["fontSize"] = _num(title_size)
-            title_props["alignment"] = literal("center")
+            title_props["fontSize"] = _num(t.get("titleFontSize", title_size))
+            title_props["alignment"] = literal(t.get("titleAlignment", "center"))
             title_props["fontFamily"] = literal(t.get("titleFont", "Segoe UI Semibold"))
     obj: Dict = {"title": [{"properties": title_props}]}
     if t.get("visualBackground"):
@@ -163,12 +163,18 @@ def slicer_visual(name: str, pos: Dict, entity: str, prop: str,
     t = theme or {}
     hdr_color = t.get("titleColor", header_color)
     data_props = {"mode": literal(mode)}
+    hdr_props = {
+        "show": literal(True), "text": literal(title),
+        "fontColor": color(hdr_color),
+    }
+    # Match the Tableau filter card: bold red header in the worksheet title font.
+    if t.get("titleFont"):
+        hdr_props["fontFamily"] = literal(t["titleFont"])
+    if t.get("titleFontSize"):
+        hdr_props["textSize"] = _num(t["titleFontSize"])
     objects = {
         "data": [{"properties": data_props}],
-        "header": [{"properties": {
-            "show": literal(True), "text": literal(title),
-            "fontColor": color(hdr_color),
-        }}],
+        "header": [{"properties": hdr_props}],
     }
     if t.get("foreground"):
         objects["items"] = [{"properties": {"fontColor": color(t["foreground"])}}]
@@ -217,11 +223,14 @@ def chart_visual(name: str, pos: Dict, visual_type: str, category: Dict,
                  secondary_value: Optional[Dict] = None,
                  additional_values: Optional[List[Dict]] = None,
                  hide_value_axis: bool = False,
-                 hide_labels: bool = False) -> Dict:
+                 hide_labels: bool = False,
+                 tooltips: Optional[List[Dict]] = None) -> Dict:
     """Build a cartesian chart (bar/column/line/area) visual.json dict.
 
     secondary_value / additional_values add more Y projections (e.g. PY lines on
     KPI sparklines, Profit lines on trend charts).
+    tooltips add extra fields to the hover tooltip (e.g. Tableau's mark-card
+    measures like YoY Growth %), without plotting them on the axis.
     hide_value_axis hides the Y axis (clean sparkline look).
     hide_labels suppresses data point labels.
     """
@@ -234,6 +243,8 @@ def chart_visual(name: str, pos: Dict, visual_type: str, category: Dict,
           "Y": {"projections": all_values}}
     if series:
         qs["Series"] = {"projections": [binding_projection(series)]}
+    if tooltips:
+        qs["Tooltips"] = {"projections": [binding_projection(t) for t in tooltips]}
     query: Dict = {"queryState": qs}
     if sort:
         query["sortDefinition"] = sort
@@ -273,11 +284,15 @@ def chart_visual(name: str, pos: Dict, visual_type: str, category: Dict,
 
 def pie_visual(name: str, pos: Dict, category: Dict, value: Dict,
                title: Optional[str] = None, theme: Optional[Dict] = None,
-               donut: bool = False, series_colors: Optional[Dict] = None) -> Dict:
+               donut: bool = False, series_colors: Optional[Dict] = None,
+               tooltips: Optional[List[Dict]] = None) -> Dict:
     """Build a pie/donut visual.json dict (Category legend + Y values)."""
-    query = {"queryState": {
+    qs = {
         "Category": {"projections": [binding_projection(category)]},
-        "Y": {"projections": [binding_projection(value)]}}}
+        "Y": {"projections": [binding_projection(value)]}}
+    if tooltips:
+        qs["Tooltips"] = {"projections": [binding_projection(t) for t in tooltips]}
+    query = {"queryState": qs}
     objects: Dict = {}
     if series_colors:
         objects["dataPoint"] = [_series_datapoint(category, lbl, clr)
@@ -299,15 +314,19 @@ def pie_visual(name: str, pos: Dict, category: Dict, value: Dict,
 
 def map_visual(name: str, pos: Dict, location: Dict, value: Dict,
                title: Optional[str] = None, theme: Optional[Dict] = None,
-               gradient: Optional[List[str]] = None) -> Dict:
+               gradient: Optional[List[str]] = None,
+               tooltips: Optional[List[Dict]] = None) -> Dict:
     """Build a filledMap visual.json dict (Location category + Size measure).
 
     gradient=[minHex, maxHex] shades the choropleth by the measure via a
     linearGradient2 FillRule (light -> brand red for title density).
     """
-    query = {"queryState": {
+    qs = {
         "Category": {"projections": [binding_projection(location)]},
-        "Size": {"projections": [binding_projection(value)]}}}
+        "Size": {"projections": [binding_projection(value)]}}
+    if tooltips:
+        qs["Tooltips"] = {"projections": [binding_projection(t) for t in tooltips]}
+    query = {"queryState": qs}
     objects: Dict = {}
     if gradient:
         fill_hex = gradient[-1] if isinstance(gradient, list) and gradient else "#E50914"
@@ -326,6 +345,56 @@ def table_visual(name: str, pos: Dict, columns: List[Dict],
     projections = [binding_projection(c) for c in columns]
     visual = {"visualType": "tableEx",
               "query": {"queryState": {"Values": {"projections": projections}}},
+              "visualContainerObjects": container_objects(title, theme)}
+    return {"$schema": VC_SCHEMA, "name": name, "position": pos, "visual": visual}
+
+
+def treemap_visual(name: str, pos: Dict, group: Dict, value: Dict,
+                   title: Optional[str] = None, theme: Optional[Dict] = None,
+                   series_colors: Optional[Dict] = None,
+                   single_color: Optional[str] = None,
+                   tooltips: Optional[List[Dict]] = None) -> Dict:
+    """Build a treemap visual.json dict (Group category + Values measure).
+
+    Reproduces Tableau's color+size+text 'Square' marks where rectangle area is
+    the measure. Group is the categorical field, Values the sized measure.
+    """
+    qs = {
+        "Group": {"projections": [binding_projection(group)]},
+        "Values": {"projections": [binding_projection(value)]}}
+    if tooltips:
+        qs["Tooltips"] = {"projections": [binding_projection(t) for t in tooltips]}
+    query = {"queryState": qs}
+    objects: Dict = {}
+    if series_colors:
+        objects["dataPoint"] = [_series_datapoint(group, lbl, clr)
+                                for lbl, clr in series_colors.items()]
+    elif single_color:
+        objects["dataPoint"] = [{"properties": {
+            "fill": color(single_color), "showAllDataPoints": literal(True)}}]
+    fg = (theme or {}).get("foreground")
+    labels = {"show": literal(True)}
+    if fg:
+        labels["labelColor"] = color(fg)
+    objects["dataLabels"] = [{"properties": labels}]
+    visual = {"visualType": "treemap", "query": query, "objects": objects,
+              "visualContainerObjects": container_objects(title, theme)}
+    return {"$schema": VC_SCHEMA, "name": name, "position": pos, "visual": visual}
+
+
+def matrix_visual(name: str, pos: Dict, rows: List[Dict],
+                  columns: Optional[List[Dict]], values: List[Dict],
+                  title: Optional[str] = None, theme: Optional[Dict] = None) -> Dict:
+    """Build a matrix (pivotTable) visual.json dict.
+
+    Reproduces a Tableau cross-tab / highlight table: row dimensions down the
+    side, optional column dimensions across the top, measures in the cells.
+    """
+    qs: Dict = {"Rows": {"projections": [binding_projection(r) for r in rows]}}
+    if columns:
+        qs["Columns"] = {"projections": [binding_projection(c) for c in columns]}
+    qs["Values"] = {"projections": [binding_projection(v) for v in values]}
+    visual = {"visualType": "pivotTable", "query": {"queryState": qs},
               "visualContainerObjects": container_objects(title, theme)}
     return {"$schema": VC_SCHEMA, "name": name, "position": pos, "visual": visual}
 

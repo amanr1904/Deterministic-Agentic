@@ -85,6 +85,14 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         lines += [B.measure_block(m, seq * 100 + i + 1), ""]
     for i, col in enumerate(cols):
         lines += [B.column_block(col, seq * 1000 + i + 1), ""]
+    # Author-supplied calculated columns (decisions.calculatedColumns) for this
+    # table — e.g. a Peak/Normal flag used as a chart legend.
+    calc_cols = [c for c in decisions.get("calculatedColumns", [])
+                 if c.get("table") == name]
+    for j, c in enumerate(calc_cols):
+        lines += [B.calc_column_block(c["name"], c["dax"],
+                                      c.get("dataType", "string"),
+                                      c.get("formatString"), seq * 1000 + 700 + j), ""]
     # Calendar date table: Date key column + date intelligence calculated columns
     if table.get("role") == "date" and table.get("sourceType") == "calendar":
         lines += [B.date_key_column_block(seq * 1000 + 1), ""]

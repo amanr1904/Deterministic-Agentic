@@ -20,6 +20,11 @@ TABLE_CALC_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Level-of-Detail expressions ({FIXED|INCLUDE|EXCLUDE ...}). These are NOT table
+# calcs (different Tableau concept, no <table-calc> element) but the LLM needs to
+# know about them to write CALCULATE + ALLEXCEPT-style DAX.
+LOD_RE = re.compile(r"\{\s*(FIXED|INCLUDE|EXCLUDE)\b", re.IGNORECASE)
+
 
 def extract_datasources(root: ET.Element, active_names: set) -> List[Dict]:
     """Return IR dataSources list (excluding the inline Parameters store)."""
@@ -196,9 +201,20 @@ def _relation_tables(ds: ET.Element) -> List[str]:
 
 
 def extract_columns(root: ET.Element) -> List[Dict]:
-    """Return non-calc <column> IR records, deduped per (datasource, name)."""
-    cols: List[Dict] = []
-    seen = set()
+    """Return non-calc <column> IR records, one per (datasource, name).
+
+    A column appears several times in a .twb: a bare definition inside the
+    physical ``<relation><columns>`` (and again in ``<object-graph>``) carrying
+    only name/datatype, plus a richer definition in the datasource body that adds
+    the friendly ``caption``, ``semantic-role`` (geo role) and number ``format``.
+    Earlier this kept the FIRST occurrence and silently dropped the richer one,
+    losing every caption and geo role. We now MERGE occurrences: the first seen
+    record is the base and any later one fills fields it left empty (never
+    overwriting real data). Lookup stays O(1) via a dict, so this is no slower
+    than the previous set-based dedupe.
+    """
+    by_key: Dict[tuple, Dict] = {}
+    order: List[tuple] = []
     for ds in X.iter_datasources(root):
         if X.attr(ds, "name") == "Parameters":
             continue
@@ -212,10 +228,28 @@ def extract_columns(root: ET.Element) -> List[Dict]:
                 continue
             record = _column_record(col, ds_caption, ordinal)
             key = (record["datasource"], record["name"])
-            if key not in seen:
-                seen.add(key)
-                cols.append(record)
-    return cols
+            existing = by_key.get(key)
+            if existing is None:
+                by_key[key] = record
+                order.append(key)
+            else:
+                _merge_column(existing, record)
+    return [by_key[k] for k in order]
+
+
+def _merge_column(base: Dict, extra: Dict) -> None:
+    """Fold a duplicate column occurrence into ``base`` without losing data.
+
+    Fills caption/semanticRole/format/ordinal only when the base left them empty
+    (the datasource-body definition enriches the bare relation column), and lets a
+    later definition upgrade the role to 'measure'. Existing non-empty values are
+    never overwritten, so the merge is strictly additive.
+    """
+    for field in ("caption", "semanticRole", "format", "ordinal"):
+        if base.get(field) in (None, "") and extra.get(field) not in (None, ""):
+            base[field] = extra[field]
+    if extra.get("role") == "measure":
+        base["role"] = "measure"
 
 
 def _ordinal_map(ds: ET.Element) -> Dict[str, int]:
@@ -260,11 +294,22 @@ def _format_string(col: ET.Element) -> Optional[str]:
 
 
 def extract_calculated_fields(root: ET.Element) -> List[Dict]:
-    """Return IR calculatedFields with verbatim decoded formulas."""
+    """Return IR calculatedFields with verbatim decoded formulas.
+
+    Parameters are NOT calculated fields. The inline 'Parameters' datasource and
+    any column carrying a 'param-domain-type' are skipped so a parameter never
+    appears twice in the IR (once here as a constant-formula calc and again in
+    parameters[]). Without this skip every Start Date/End Date/list parameter is
+    duplicated and can collide with a parameter table in the emitted model.
+    """
     fields: List[Dict] = []
     seen = set()
     for ds in X.iter_datasources(root):
+        if X.attr(ds, "name") == "Parameters":
+            continue
         for col in ds.iter("column"):
+            if col.get("param-domain-type") is not None:
+                continue
             calc = col.find("calculation")
             if calc is None or calc.get("formula") is None:
                 continue
@@ -273,7 +318,14 @@ def extract_calculated_fields(root: ET.Element) -> List[Dict]:
                 continue
             seen.add(caption)
             formula = X.decode_entities(calc.get("formula"))
-            is_tc = bool(TABLE_CALC_RE.search(formula))
+            # Faithful XML fact: Tableau records a table-calc with a real
+            # <table-calc> element inside <calculation>. Prefer that element;
+            # only fall back to a formula token scan when it is absent. We do NOT
+            # judge 'complexity' or a DAX kind here -- those are Power BI decisions
+            # made downstream (map_dax / the model emitter), not XML translation.
+            is_tc = (calc.find("table-calc") is not None
+                     or bool(TABLE_CALC_RE.search(formula)))
+            is_lod = bool(LOD_RE.search(formula))
             fields.append({
                 "caption": caption,
                 "fieldName": X.attr(col, "name"),
@@ -281,8 +333,7 @@ def extract_calculated_fields(root: ET.Element) -> List[Dict]:
                 "role": X.attr(col, "role"),
                 "formula": formula,
                 "isTableCalc": is_tc,
-                "complexity": "complex" if is_tc else "trivial",
-                "suggestedDaxKind": "measure" if X.attr(col, "role") == "measure" else "column",
+                "isLOD": is_lod,
             })
     return fields
 
@@ -296,7 +347,8 @@ def extract_parameters(root: ET.Element) -> List[Dict]:
         for col in ds.iter("column"):
             if col.get("param-domain-type") is None:
                 continue
-            members = [X.attr(m, "value") for m in col.findall("members/member")]
+            member_els = col.findall("members/member")
+            members = [X.attr(m, "value") for m in member_els]
             params.append({
                 "name": X.attr(col, "caption") or X.strip_brackets(X.attr(col, "name")),
                 "internalName": X.attr(col, "name"),
@@ -304,10 +356,32 @@ def extract_parameters(root: ET.Element) -> List[Dict]:
                 "domainType": X.attr(col, "param-domain-type", "any"),
                 "default": X.attr(col, "value"),
                 "values": [v for v in members if v],
+                "valueLabels": _param_value_labels(col, member_els) or None,
                 "range": _param_range(col),
                 "format": X.attr(col, "default-format") or _format_string(col),
             })
     return params
+
+
+def _param_value_labels(col: ET.Element, member_els) -> Dict[str, str]:
+    """Map a parameter's raw value -> friendly display alias.
+
+    Two XML sources carry the alias and are merged: each
+    ``<member alias='Adults 18+' value='\"Adults\"'/>`` and a sibling
+    ``<aliases><alias key='\"Adults\"' value='Adults 18+'/></aliases>``. Keys are
+    kept in the same quoted form as the ``values`` array so they line up, letting
+    the Power BI slicer show 'Adults 18+' instead of the raw code '\"Adults\"'.
+    """
+    labels: Dict[str, str] = {}
+    for m in member_els:
+        val, alias = X.attr(m, "value"), X.attr(m, "alias")
+        if val and alias:
+            labels[val] = alias
+    for al in col.findall("aliases/alias"):
+        key, value = X.attr(al, "key"), X.attr(al, "value")
+        if key and value:
+            labels.setdefault(key, value)
+    return labels
 
 
 def _param_range(col: ET.Element) -> Optional[Dict]:

@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from typing import Dict, List
 
@@ -86,7 +87,7 @@ def build_ir(twb_path: str) -> Dict:
         "bins": M.extract_bins(root),
         "theme": M.extract_theme(root),
         "blending": _detect_blending(root),
-        "rls": _detect_rls(root),
+        "rls": _detect_rls(root, calc_fields, column_table_map),
     }
 
 
@@ -125,18 +126,65 @@ def _detect_blending(root) -> Dict:
     return {"blended": False, "datasources": [ds for ds in active]} if real else None
 
 
-def _detect_rls(root) -> Dict:
-    """Scan calculated-field formulas for Tableau RLS user functions."""
-    signals = ("USERNAME(", "FULLNAME(", "ISMEMBEROF(", "ISUSERNAME(", "ISFULLNAME(")
-    for field in DS.extract_calculated_fields(root):
-        upper = field["formula"].upper()
-        if any(sig in upper for sig in signals):
+def _detect_rls(root, calc_fields=None, column_table_map=None) -> Dict:
+    """Detect Tableau row-level security and surface it for a Power BI RLS role.
+
+    Two patterns are recognised (additively, cheapest first):
+
+    * **Dynamic user functions** -- a calc whose formula calls a Tableau identity
+      function (USERNAME/FULLNAME/ISMEMBEROF/...). This is the canonical RLS calc.
+    * **Mapping-table user filter** -- a security/mapping table (e.g. User_Access
+      with a Username column) joined to the data, where a calc field references a
+      user-identity column (Username/Email/Login). The formula may compare that
+      column to a literal instead of calling USERNAME().
+
+    ``calc_fields`` and ``column_table_map`` are passed in from build_ir to avoid
+    re-extracting calculated fields here (the previous version re-parsed them).
+
+    NOTE: a Tableau ``derivation='User'`` column-instance is NOT a reliable RLS
+    signal -- it merely marks an ad-hoc user-created pill and appears in most
+    ordinary workbooks, so it is deliberately not used here.
+    """
+    fields = calc_fields if calc_fields is not None else DS.extract_calculated_fields(root)
+
+    # Pattern 1: explicit Tableau RLS identity functions.
+    func_signals = ("USERNAME(", "FULLNAME(", "ISMEMBEROF(", "ISUSERNAME(",
+                    "ISFULLNAME(", "USERDOMAIN(")
+    for field in fields:
+        upper = (field.get("formula") or "").upper()
+        if any(sig in upper for sig in func_signals):
             rtype = "Group-based" if "ISMEMBEROF(" in upper else "Dynamic"
             return {
                 "detected": True, "type": rtype,
                 "securedTable": None, "mappingTable": None, "userColumn": None,
                 "signalField": field["caption"],
             }
+
+    # Pattern 2: a calc references a user-identity column from a mapping table.
+    # Requiring an actual calc dependency (not just the column's presence) keeps
+    # ordinary workbooks that merely have an 'email'/'account' column from being
+    # misflagged.
+    user_re = re.compile(r"(user\s?name|user[_ ]?id|e-?mail|login\s?name|\bupn\b)",
+                         re.IGNORECASE)
+    ctm = column_table_map if column_table_map is not None else M.extract_column_table_map(root)
+    user_cols = [name for name in ctm if user_re.search(name)]
+    if user_cols:
+        for field in fields:
+            deps = field.get("dependsOn") or []
+            hit = next((u for u in user_cols if u in deps), None)
+            if hit:
+                mapping_table = ctm.get(hit)
+                secured_table = next(
+                    (t for t in dict.fromkeys(ctm.values()) if t != mapping_table), None)
+                return {
+                    "detected": True,
+                    "type": "Mapping-table",
+                    "securedTable": secured_table,
+                    "mappingTable": mapping_table,
+                    "userColumn": hit,
+                    "signalField": field["caption"],
+                }
+
     return {"detected": False, "type": None, "securedTable": None,
             "mappingTable": None, "userColumn": None, "signalField": None}
 
@@ -162,10 +210,10 @@ def _summary(ir: Dict) -> str:
         f"  dataSources    : {len(ir['dataSources'])}\n"
         f"  columns        : {len(ir['columns'])}\n"
         f"  calcFields     : {len(ir['calculatedFields'])} "
-        f"({sum(1 for c in ir['calculatedFields'] if c['complexity'] == 'complex')} complex)\n"
+        f"({sum(1 for c in ir['calculatedFields'] if c.get('isTableCalc'))} table-calc)\n"
         f"  parameters     : {len(ir['parameters'])}\n"
         f"  worksheets     : {len(ir['worksheets'])} "
-        f"({sum(1 for w in ir['worksheets'] if w['inferredVisualType'] is None)} ambiguous)\n"
+        f"({sum(1 for w in ir['worksheets'] if (w.get('markClass') or 'Automatic') == 'Automatic')} automatic-mark)\n"
         f"  dashboards     : {len(ir['dashboards'])}\n"
         f"  physTables     : {len(ir['physicalTables'])}\n"
         f"  relationships  : {len(ir['relationships'])}\n"
@@ -210,6 +258,12 @@ def main(argv=None) -> int:
     if not os.path.isfile(args.twb):
         print(f"ERROR: file not found: {args.twb}", file=sys.stderr)
         return 2
+
+    base = os.path.basename(args.twb)
+    if base.startswith("~") or os.path.splitext(base)[1].lower() in (".twbr", ".twbm"):
+        print(f"SKIP: backup/temporary workbook (not a real .twb): {args.twb}",
+              file=sys.stderr)
+        return 0
 
     ir = build_ir(args.twb)
     out_dir = resolve_output_dir(ir, args.output_root)

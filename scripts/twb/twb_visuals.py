@@ -16,16 +16,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import twb_xml as X  # noqa: E402
 import twb_fields as F  # noqa: E402
 
-# Unambiguous Tableau mark class -> Power BI visualType
-MARK_MAP = {
-    "Bar": "barChart", "Line": "lineChart", "Area": "areaChart", "Pie": "pieChart",
-    "Square": "treemap", "Circle": "scatterChart", "Text": "tableEx",
-    "Gantt": "ganttChart", "Map": "map",
-}
-
-# Mark classes that draw geographic shapes -> Power BI map.
-MAP_MARKS = {"Map", "Multipolygon", "Polygon", "Filled Map"}
-
 # Tableau <column-instance> derivation -> DAX aggregation. The derivation is the
 # AUTHORITATIVE signal that a field is used as a measure (value) on a sheet, even
 # when the underlying column is dimension-typed (e.g. CountD of an id column).
@@ -89,6 +79,32 @@ def _column_instances(ws: ET.Element, calc_map: Dict) -> List[Dict]:
     return out
 
 
+def _tooltip_fields(instances: List[Dict], fmt_map: Dict[str, str]) -> List[Dict]:
+    """All marks-card fields = Tableau's DEFAULT tooltip set (every pill on hover).
+
+    Tableau's automatic tooltip lists every field placed on the worksheet (rows,
+    cols and the marks card: Color/Size/Detail/Label/Text/Tooltip). The parser
+    already resolves them in <column-instance>; this returns the full ordered,
+    de-duplicated set (dimensions AND measures) so the Power BI visual can project
+    EVERY one into its hover tooltip — matching Tableau, where the report showed 4
+    fields but Power BI only carried the 2 plotted measures before.
+    """
+    out: List[Dict] = []
+    seen = set()
+    for ci in instances:
+        f = ci.get("field")
+        if not f or f in seen or f.endswith("(generated)"):
+            continue
+        seen.add(f)
+        out.append({
+            "field": f,
+            "agg": ci.get("agg"),
+            "isMeasure": bool(ci.get("isMeasure")),
+            "format": fmt_map.get(f),
+        })
+    return out
+
+
 def _topn_filter(ws: ET.Element, calc_map: Dict) -> Optional[Dict]:
     """Extract a Tableau Top-N filter (groupfilter count/end='top') if present."""
     for filt in ws.findall(".//filter"):
@@ -132,14 +148,15 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
     calc_map = calc_map or {}
     measures = measures or set()
     param_map = param_map or {}
+    color_maps = _discrete_color_maps(root, calc_map)
     sheets: List[Dict] = []
     for ws in root.iter("worksheet"):
         name = X.attr(ws, "name", "")
         pane = ws.find(".//panes/pane")
         mark = pane.find("mark") if pane is not None else None
         mark_class = X.attr(mark, "class", "Automatic")
-        rows = _shelf_fields(ws, "rows")
-        cols = _shelf_fields(ws, "cols")
+        rows = _shelf_fields(ws, "rows", calc_map)
+        cols = _shelf_fields(ws, "cols", calc_map)
         encodings = _encodings(pane)
         instances = _column_instances(ws, calc_map)
         fields = _resolve_fields(instances, rows, cols, encodings, calc_map, measures)
@@ -147,6 +164,18 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
         cols_text = (ws.findtext(".//cols") or "")
         orientation = _orientation(
             [ci for ci in instances if ci["isMeasure"]], rows_text, cols_text)
+        # Attach each measure's Tableau number-format mask (%, currency, K/M).
+        fmt_map = _field_formats(ws, calc_map)
+        for m in fields["measures"]:
+            m["format"] = fmt_map.get(m["field"])
+        formatting = _worksheet_formatting(ws)
+        # Attach this sheet's discrete colour rule (e.g. 'Peak' -> orange) so the
+        # mark keeps its Tableau colour in Power BI instead of a default palette.
+        color_field = _sheet_color_field(instances, encodings)
+        if color_field and color_field in color_maps:
+            formatting = formatting or {}
+            formatting["colorMap"] = {"field": color_field,
+                                      "values": color_maps[color_field]}
         sheets.append({
             "name": name, "datasource": _primary_ds(ws), "markClass": mark_class,
             "rows": rows, "cols": cols, "encodings": encodings,
@@ -158,13 +187,14 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
             "orientation": orientation,
             "caption": _worksheet_caption(ws, calc_map, param_map),
             "title": _worksheet_title(ws, calc_map, param_map),
+            "tooltip": _customized_tooltip(ws, calc_map, param_map),
+            "tooltipFields": _tooltip_fields(instances, fmt_map),
             "filters": _worksheet_filters(ws, calc_map),
             "filterDetails": _worksheet_filter_details(ws, calc_map),
             "topN": _topn_filter(ws, calc_map),
             "sort": _worksheet_sort(ws, calc_map),
-            "formatting": _worksheet_formatting(ws),
-            "inferredVisualType": _infer_type(
-                mark_class, fields, encodings, orientation),
+            "referenceLines": _reference_lines(ws, calc_map),
+            "formatting": formatting,
         })
     return sheets
 
@@ -186,8 +216,31 @@ def _resolve_fields(instances: List[Dict], rows: List[str], cols: List[str],
         date_level = next(
             (ci["dateLevel"] for ci in instances
              if not ci["isMeasure"] and ci["dateLevel"]), None)
+        # Category axis = the sheet's OWN shelf field (the first non-measure field
+        # actually placed on Columns/Rows), NOT dims[0]. dims[] also contains the
+        # dashboard slicer fields (from <slices>), which otherwise hijack the axis
+        # so every sheet wrongly reported the first slicer (e.g. 'grade'). Scanning
+        # cols-then-rows yields the primary axis (X for vertical, Y for horizontal),
+        # matching Tableau. If no field sits on a shelf (pie/bubble/treemap put the
+        # category on a color/text encoding), fall back to the first dimension that
+        # is actually referenced by an encoding. Still nothing => KPI card => None.
+        # Skip measures AND Tableau's auto '(generated)' geo coords (Latitude/
+        # Longitude generated) -- on a map the real category is the geo field on
+        # the detail encoding (e.g. country), picked up by the encoding fallback.
+        meas_set = set(meas)
+        category = next((f for f in (cols + rows)
+                         if f and f not in meas_set
+                         and "(generated)" not in f.lower()), None)
+        if category is None:
+            enc_blob = " ".join(str(v) for v in enc.values() if v)
+            category = next(
+                (ci["field"] for ci in instances
+                 if not ci["isMeasure"]
+                 and (ci.get("instanceName") or "").strip("[]")
+                 and (ci.get("instanceName") or "").strip("[]") in enc_blob),
+                None)
         return {
-            "category": dims[0] if dims else None,
+            "category": category,
             "value": meas[0] if meas else None,
             "dimensions": dims, "values": meas,
             "measures": measures_detail, "categoryDateLevel": date_level,
@@ -394,6 +447,94 @@ def _worksheet_sort(ws: ET.Element, calc_map: Dict) -> Optional[Dict]:
     return {"field": field, "direction": direction}
 
 
+def _field_formats(ws: ET.Element, calc_map: Dict) -> Dict[str, str]:
+    """Map a sheet field -> its Tableau number-format mask (verbatim).
+
+    Reads ``<format attr='text-format' field='[ds].[agg:Field:qk]' value='p0.00%'/>``
+    from the worksheet <style>. The mask is kept EXACTLY as Tableau wrote it (the
+    emitter/LLM converts ``p0.00%`` -> percent, ``c"$"#,##0,,M`` -> $ millions,
+    ``n#,##0,.00K`` -> thousands). This is what makes a measure shown as a percent /
+    currency / K-M in Tableau keep that format in Power BI instead of a raw number.
+    """
+    out: Dict[str, str] = {}
+    for f in ws.findall(".//style//format"):
+        if X.attr(f, "attr") != "text-format":
+            continue
+        field, val = X.attr(f, "field"), X.attr(f, "value")
+        if field and val:
+            name = _clean_pill(field, calc_map)
+            if name and name not in out:
+                out[name] = val
+    return out
+
+
+def _discrete_color_maps(root: ET.Element, calc_map: Dict) -> Dict[str, Dict[str, str]]:
+    """Global field -> {member value: #hex} from ``<encoding attr='color'>`` palettes.
+
+    Captures Tableau's discrete colour assignment -- the literal "this category is
+    orange" rule: ``<encoding attr='color' field=...><map to='#f28e2b'><bucket>
+    "Peak"</bucket>``. Built once across the workbook and attached to each sheet
+    whose colour encoding uses that field, so an orange bar in Tableau stays orange
+    in Power BI. Never invents a colour: an absent map yields no entry.
+    """
+    out: Dict[str, Dict[str, str]] = {}
+    for enc in root.findall(".//style-rule[@element='mark']/encoding"):
+        if X.attr(enc, "attr") != "color":
+            continue
+        raw = X.attr(enc, "field")
+        field = _clean_pill(raw, calc_map) if raw else None
+        if not field:
+            continue
+        cmap: Dict[str, str] = {}
+        for mp in enc.findall("map"):
+            hexv, bucket = X.attr(mp, "to"), mp.findtext("bucket")
+            if hexv and bucket:
+                cmap[bucket.strip().strip('"')] = hexv
+        if cmap:
+            out.setdefault(field, {}).update(cmap)
+    return out
+
+
+def _sheet_color_field(instances: List[Dict], enc: Dict) -> Optional[str]:
+    """Return the clean field name placed on the colour encoding of a sheet."""
+    blob = str(enc.get("color") or "")
+    if not blob:
+        return None
+    for ci in instances:
+        tok = (ci.get("instanceName") or "").strip("[]")
+        if tok and tok in blob:
+            return ci["field"]
+    return None
+
+
+def _reference_lines(ws: ET.Element, calc_map: Dict) -> List[Dict]:
+    """Capture ``<reference-line>`` definitions (constant / average / median bands).
+
+    Best-effort and None-safe: reads the referenced field, aggregation, value and
+    scope from any ``<reference-line>`` element. Returns ``[]`` when the sheet has
+    none -- it never fabricates a line.
+    """
+    out: List[Dict] = []
+    for rl in ws.findall(".//reference-line"):
+        field = (X.attr(rl, "column") or X.attr(rl, "field")
+                 or X.attr(rl, "value-field"))
+        out.append({
+            "field": F.resolve_ref(field, calc_map) if field else None,
+            "aggregation": X.attr(rl, "aggregation") or X.attr(rl, "agg"),
+            "value": X.attr(rl, "value"),
+            "scope": X.attr(rl, "scope"),
+        })
+    return out
+
+
+def _customized_tooltip(ws: ET.Element, calc_map: Dict,
+                        param_map: Dict) -> Optional[str]:
+    """Resolve a worksheet's custom tooltip ``<formatted-text>`` to a label skeleton."""
+    return _formatted_text_skeleton(
+        ws.find(".//customized-tooltip/formatted-text"), calc_map, param_map)
+
+
+
 def _worksheet_formatting(ws: ET.Element) -> Optional[Dict]:
     """Extract a compact formatting summary for the worksheet's visual.
 
@@ -404,10 +545,31 @@ def _worksheet_formatting(ws: ET.Element) -> Optional[Dict]:
     fmt: Dict[str, object] = {
         "colorPalette": None, "gridlines": None, "showFieldLabels": None,
         "markStroke": None, "showMarkLabels": None,
-        "markColor": None, "background": None,
+        "markColor": None, "markSize": None, "background": None,
         "fontName": None, "fontSize": None, "fontColor": None,
         "alignment": None, "titleColor": None, "titleFontSize": None,
+        "titleFontName": None, "titleAlignment": None,
     }
+    # The worksheet title's font (colour/family/size/alignment) is carried as
+    # attributes on the <run> inside <layout-options><title><formatted-text>, NOT
+    # in a style-rule. Tableau's Netflix titles are red 'Tableau Bold' 12pt —
+    # capture them so the Power BI visual title matches instead of defaulting.
+    trun = ws.find(".//layout-options/title/formatted-text/run")
+    if trun is not None:
+        tcolor = X.attr(trun, "fontcolor")
+        if tcolor:
+            fmt["titleColor"] = tcolor
+        tsize = X.attr(trun, "fontsize")
+        if tsize:
+            fmt["titleFontSize"] = tsize
+        tfname = X.attr(trun, "fontname")
+        if tfname:
+            fmt["titleFontName"] = tfname
+        talign = X.attr(trun, "fontalignment")
+        if talign:
+            # Tableau fontalignment: 0=left, 1=center, 2=right.
+            fmt["titleAlignment"] = {"0": "left", "1": "center",
+                                     "2": "right"}.get(talign)
     palette = [c.text for c in ws.findall(".//table/style//color-palette/color") if c.text]
     if palette:
         fmt["colorPalette"] = palette
@@ -446,6 +608,8 @@ def _worksheet_formatting(ws: ET.Element) -> Optional[Dict]:
             fmt["showMarkLabels"] = (val == "true")
         elif attr == "mark-color" and val:
             fmt["markColor"] = val
+        elif attr == "size" and val:
+            fmt["markSize"] = val
     if all(v is None for v in fmt.values()):
         return None
     return fmt
@@ -456,12 +620,53 @@ def _primary_ds(ws: ET.Element) -> Optional[str]:
     return X.attr(ds, "caption") or X.attr(ds, "name") if ds is not None else None
 
 
-def _shelf_fields(ws: ET.Element, shelf: str) -> List[str]:
+def _clean_pill(token: str, calc_map: Dict) -> Optional[str]:
+    """Resolve a raw Tableau shelf pill to a friendly field name.
+
+    A shelf pill looks like ``[ds].[deriv:Field Name:typesuffix]`` (e.g.
+    ``[federated.x].[usr:Min/Max Quantity (copy)_123:qk]``). We drop the
+    datasource qualifier, the derivation prefix (yr/mn/sum/usr/none/...) and the
+    :qk/:ok/:nk type suffix, keep the field name verbatim (so 'Min/Max' is NOT
+    split), and resolve internal Calculation_<id> names to their caption. The
+    Tableau pseudo-fields 'Multiple Values' and ':Measure Names' are preserved
+    as readable labels so the LLM knows the sheet stacks several measures.
+    """
+    refs = re.findall(r"\[([^\]]*)\]", token)
+    if not refs:
+        return None
+    inner = refs[-1].strip()
+    if inner == "Multiple Values":
+        return "Multiple Values"
+    if inner.lstrip(":") == "Measure Names":
+        return "Measure Names"
+    parts = inner.split(":")
+    if len(parts) >= 3:          # deriv : Field Name : suffix
+        name = ":".join(parts[1:-1])
+    elif len(parts) == 2:        # deriv : Field Name
+        name = parts[1]
+    else:
+        name = inner
+    return _clean_field(name, calc_map)
+
+
+def _shelf_fields(ws: ET.Element, shelf: str, calc_map: Dict) -> List[str]:
+    """Return the ordered, de-noised field names placed on a shelf (rows/cols).
+
+    Extracts every bracketed pill reference (ignoring the +,/ layout operators
+    and parentheses) and cleans each one. This fixes the old splitter that broke
+    field names containing '/' (e.g. 'Min/Max') and left raw 'usr:...:qk' tokens.
+    """
     node = ws.find(f".//{shelf}")
     if node is None or not node.text:
         return []
-    parts = [p.strip() for p in node.text.split("/")]
-    return [X.strip_brackets(p) for p in parts if p.strip()]
+    out: List[str] = []
+    seen = set()
+    for tok in re.findall(r"\[[^\]]*\](?:\.\[[^\]]*\])?", node.text):
+        name = _clean_pill(tok, calc_map)
+        if name and name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out
 
 
 def _encodings(pane: Optional[ET.Element]) -> Dict[str, Optional[str]]:
@@ -484,40 +689,6 @@ def _encodings(pane: Optional[ET.Element]) -> Dict[str, Optional[str]]:
         if child is not None:
             enc[key] = X.strip_brackets(X.attr(child, "column"))
     return enc
-
-
-def _infer_type(mark_class: str, fields: Dict,
-                enc: Dict[str, Optional[str]], orientation: Optional[str]) -> Optional[str]:
-    """Return a Power BI visualType, or None when still genuinely ambiguous.
-
-    Driven by the resolved field counts (from column-instances) instead of raw
-    shelf text, so count/distinct measures and KPI cards are now classified.
-    """
-    if mark_class in MAP_MARKS:
-        return "map"
-    if mark_class == "Text":
-        return "tableEx"
-    if mark_class in MARK_MAP:
-        return MARK_MAP[mark_class]
-    n_dim = len(fields.get("dimensions") or [])
-    n_val = len(fields.get("values") or [])
-    has_date = fields.get("categoryDateLevel") is not None
-    if mark_class == "Automatic":
-        if n_dim == 0 and n_val == 0:
-            return "card"
-        if enc.get("color") and enc.get("size") and enc.get("text"):
-            return "treemap"
-        if n_dim == 0 and n_val >= 1:
-            return "card"                      # single-number KPI
-        if n_val >= 2 and n_dim >= 1:
-            return "tableEx"                   # multi-measure summary table
-        if has_date and n_val >= 1:
-            return "lineChart"                 # measure over a date axis
-        if n_dim >= 1 and n_val >= 1:
-            return "columnChart" if orientation == "vertical" else "barChart"
-        if n_dim >= 1 and n_val == 0:
-            return "tableEx"
-    return None  # leave for the LLM to resolve via decisions.json
 
 
 def extract_dashboards(root: ET.Element, calc_map: Optional[Dict] = None,
@@ -630,11 +801,19 @@ def _classify_zone(zone: ET.Element, ws_names: set, calc_map: Dict,
         return {"type": "filter", "worksheet": name, "field": F.resolve_ref(param, calc_map), **rect}
     if "paramctrl" in ztype or "parameter" in ztype:
         return {"type": "paramctrl", "worksheet": None, "field": F.resolve_param(param, param_map), **rect}
+    # Encoding legend zones (color/size/shape) carry a worksheet name but are NOT
+    # separate data visuals; rendering them duplicates the real worksheet visual.
+    if ztype in ("color", "size", "shape", "legend", "measure-names"):
+        return None
     if name and name in ws_names:
         return {"type": "viz", "worksheet": name, "field": None, **rect}
     if ztype == "text":
         return {"type": "text", "worksheet": None, "field": None, "text": _zone_text(zone), **rect}
-    return None  # layout-basic/flow, empty, bitmap -> not a data visual
+    if "bitmap" in ztype or "image" in ztype:
+        # Logo / picture object: keep the source path so the report can re-embed it.
+        return {"type": "image", "worksheet": None, "field": None,
+                "path": X.attr(zone, "param"), **rect}
+    return None  # layout-basic/flow container or empty spacer -> not a data visual
 
 
 def _zone_text(zone: ET.Element) -> str:

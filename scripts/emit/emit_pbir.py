@@ -87,14 +87,62 @@ def _rmtree_robust(path: str) -> None:
             shutil.rmtree(path, onexc=lambda f, p, e: _onerror(f, p, e))
 
 
+# Unambiguous Tableau mark class -> Power BI visualType. Choosing a Power BI
+# visual is a Power-BI-stage decision (NOT XML translation), so this mapping
+# lives here, in the report emitter, rather than in the parser.
+MARK_MAP = {
+    "Bar": "barChart", "Line": "lineChart", "Area": "areaChart", "Pie": "pieChart",
+    "Square": "treemap", "Circle": "scatterChart", "Text": "tableEx",
+    "Gantt": "ganttChart", "Map": "map",
+}
+MAP_MARKS = {"Map", "Multipolygon", "Polygon", "Filled Map"}
+
+
+def mark_to_visual(ws: Dict) -> Optional[str]:
+    """Derive a Power BI visualType from the worksheet's Tableau mark FACTS.
+
+    Uses only verbatim parser facts (markClass, resolved field counts, encodings,
+    orientation). Returns None when the mark is 'Automatic' and the shape is still
+    ambiguous, so the LLM/decisions layer can choose.
+    """
+    mark_class = ws.get("markClass") or "Automatic"
+    if mark_class in MAP_MARKS:
+        return "map"
+    if mark_class == "Text":
+        return "tableEx"
+    if mark_class in MARK_MAP:
+        return MARK_MAP[mark_class]
+    enc = ws.get("encodings") or {}
+    n_dim = len(ws.get("dimensions") or [])
+    n_val = len(ws.get("values") or [])
+    has_date = ws.get("categoryDateLevel") is not None
+    orientation = ws.get("orientation")
+    if mark_class == "Automatic":
+        if n_dim == 0 and n_val == 0:
+            return "card"
+        if enc.get("color") and enc.get("size") and enc.get("text"):
+            return "treemap"
+        if n_dim == 0 and n_val >= 1:
+            return "card"
+        if n_val >= 2 and n_dim >= 1:
+            return "tableEx"
+        if has_date and n_val >= 1:
+            return "lineChart"
+        if n_dim >= 1 and n_val >= 1:
+            return "columnChart" if orientation == "vertical" else "barChart"
+        if n_dim >= 1 and n_val == 0:
+            return "tableEx"
+    return None
+
+
 def resolve_visual_type(ws_name: str, ir: Dict, decisions: Dict) -> str:
-    """Prefer LLM decision; else IR inference; else default to table."""
+    """Prefer LLM decision; else derive from Tableau mark facts; else table."""
     for vd in decisions.get("visualDecisions", []):
         if vd["worksheet"] == ws_name:
             return vd["visualType"]
     for ws in ir.get("worksheets", []):
-        if ws["name"] == ws_name and ws.get("inferredVisualType"):
-            return ws["inferredVisualType"]
+        if ws["name"] == ws_name:
+            return mark_to_visual(ws) or "tableEx"
     return "tableEx"
 
 
@@ -165,6 +213,79 @@ def _build_kpi_stack(name: str, pos: Dict, x: int, y: int, w: int, h: int,
     return [card, pct, spark]
 
 
+def _col_caption(ir: Dict, prop: str) -> Optional[str]:
+    """Friendly caption for a column name ('type' -> 'Type'), else None."""
+    for c in ir.get("columns", []):
+        if c.get("name") == prop and c.get("caption"):
+            return c["caption"]
+    return None
+
+
+def _ws_theme(base: Optional[Dict], ws: Optional[Dict]) -> Optional[Dict]:
+    """Overlay a worksheet's own Tableau formatting onto the dashboard theme.
+
+    The dashboard-wide ``decisions.theme`` sets the baseline (page background,
+    foreground). Each Tableau worksheet, however, carries its OWN title colour /
+    font / size and text colour (the Netflix sheets use red 'Tableau Bold' titles
+    on a black card). Those are parsed into ``ws.formatting`` — overlay them here
+    so every visual's title and text match its source sheet instead of a single
+    global colour. Returns the base unchanged when the sheet has no formatting.
+    """
+    if not ws:
+        return base
+    fmt = ws.get("formatting") or {}
+    t = dict(base or {})
+    if fmt.get("titleColor"):
+        t["titleColor"] = fmt["titleColor"]
+    if fmt.get("titleFontName"):
+        # 'Tableau Bold'/'Tableau Book' are Tableau-only fonts not installed in
+        # Power BI — map to the closest Segoe face so the title still renders bold.
+        fn = str(fmt["titleFontName"]).lower()
+        t["titleFont"] = "Segoe UI Bold" if "bold" in fn else "Segoe UI Semibold"
+    if fmt.get("titleFontSize"):
+        try:
+            t["titleFontSize"] = int(round(float(fmt["titleFontSize"])))
+        except (TypeError, ValueError):
+            pass
+    if fmt.get("fontColor"):
+        t["foreground"] = fmt["fontColor"]
+    if fmt.get("background"):
+        t.setdefault("visualBackground", fmt["background"])
+    return t
+
+
+def _tooltip_binds(ws: Optional[Dict], vd: Dict, decisions: Dict, ir: Dict,
+                   entity: str, mset: set, cols, primary: Optional[str],
+                   exclude: set) -> List[Dict]:
+    """Tableau's default tooltip = every marks-card field. Build the projections.
+
+    Returns the extra measures (the worksheet's values beyond the plotted Y, plus
+    any explicit decisions.tooltips) AND every marks-card DIMENSION not already on
+    an axis/legend/location. So the Power BI hover lists the same fields Tableau
+    shows, instead of only the plotted measure(s).
+    """
+    out: List[Dict] = []
+    seen: set = set()
+    for v in ((ws.get("values") if ws else []) or []):
+        if v in mset and v != primary and v not in seen:
+            seen.add(v)
+            out.append({"entity": entity, "prop": v, "isMeasure": True})
+    for t in (vd.get("tooltips") or []):
+        if t in mset and t != primary and t not in seen:
+            seen.add(t)
+            out.append({"entity": entity, "prop": t, "isMeasure": True})
+    for tf in ((ws.get("tooltipFields") if ws else []) or []):
+        if tf.get("isMeasure"):
+            continue
+        fld = tf.get("field")
+        if not fld or fld in exclude or fld in seen or fld not in cols:
+            continue
+        seen.add(fld)
+        out.append({"entity": B._field_entity(fld, decisions, ir),
+                    "prop": fld, "isMeasure": False})
+    return out
+
+
 def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Optional[Dict]:
     """Build one visual.json dict from a classified dashboard zone."""
     sx, sy = scale
@@ -178,15 +299,20 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         txt = zone.get("text") or ""
         return P.textbox_visual(f"text_{z}", pos, txt) if txt else None
     if ztype in ("filter", "paramctrl"):
+        # Slicers inherit the referenced worksheet's title formatting (Tableau
+        # filter cards use the same red bold header as the sheet titles).
+        sl_theme = _ws_theme(theme, B.ws_by_name(ir, zone.get("worksheet")))
         fp = B.field_param_by_field(zone.get("field"), decisions)
         if fp is not None:
             default = (fp.get("fields") or [{}])[0].get("label")
             return P.slicer_visual(f"slicer_{B.slug(fp['name'])}_{z}", pos,
                                    fp["name"], fp["name"], fp["name"],
-                                   default_value=default, theme=theme)
+                                   default_value=default, theme=sl_theme)
         ent, prop, title, mode = B.resolve_slicer(zone, ir, decisions)
+        # Prefer the column's friendly caption ('type' -> 'Type') for the header.
+        title = _col_caption(ir, prop) or title
         return P.slicer_visual(f"slicer_{B.slug(prop)}_{z}", pos, ent, prop, title,
-                               mode=mode, theme=theme)
+                               mode=mode, theme=sl_theme)
     ws_name = zone.get("worksheet") or ""
     # A field parameter collapses several toggle worksheets into one chart; the
     # non-primary ones (e.g. the Daily duplicate) are suppressed here.
@@ -197,6 +323,9 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     if round(zone.get("h", 0) * sy) < MIN_VISUAL_PX:
         return None
     ws = B.ws_by_name(ir, ws_name)
+    # Overlay this worksheet's own Tableau title/text formatting (red title, font,
+    # text colour) onto the dashboard theme so each visual matches its source sheet.
+    theme = _ws_theme(theme, ws)
     name = f"visual_{sanitize(ws_name or 'zone')}_{z}".lower()
     vd = visual_decision(ws_name, decisions)
     vtype = resolve_visual_type(ws_name, ir, decisions)
@@ -234,16 +363,36 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     if vtype in ("pieChart", "donutChart"):
         cat = vd.get("category") or B.color_field(ws, ir, cols)
         catbind = {"entity": entity, "prop": cat or B.first_dim_col(ir)}
-        return P.pie_visual(name, pos, catbind, value_bind(), ws_name, theme=theme,
+        vb = value_bind()
+        tips = _tooltip_binds(ws, vd, decisions, ir, entity, mset, cols,
+                              vb.get("prop"), {catbind["prop"]})
+        return P.pie_visual(name, pos, catbind, vb, ws_name, theme=theme,
                             donut=(vtype == "donutChart"),
-                            series_colors=vd.get("seriesColors"))
+                            series_colors=vd.get("seriesColors"),
+                            tooltips=tips or None)
+
+    # Treemap: category area sized by a measure (Tableau color+size+text squares).
+    if vtype == "treemap":
+        cat = vd.get("category") or B.color_field(ws, ir, cols)
+        catbind = {"entity": entity, "prop": cat or B.first_dim_col(ir)}
+        vb = value_bind()
+        tips = _tooltip_binds(ws, vd, decisions, ir, entity, mset, cols,
+                              vb.get("prop"), {catbind["prop"]})
+        return P.treemap_visual(name, pos, catbind, vb, ws_name, theme=theme,
+                                series_colors=vd.get("seriesColors"),
+                                single_color=vd.get("color"),
+                                tooltips=tips or None)
+
 
     # Filled choropleth map: location column + measure-driven saturation.
     if vtype in ("filledMap", "map"):
         loc = vd.get("location") or B.geo_column(ir) or B.first_dim_col(ir)
         locbind = {"entity": entity, "prop": loc}
-        return P.map_visual(name, pos, locbind, value_bind(), ws_name, theme=theme,
-                            gradient=vd.get("gradient"))
+        vb = value_bind()
+        tips = _tooltip_binds(ws, vd, decisions, ir, entity, mset, cols,
+                              vb.get("prop"), {loc})
+        return P.map_visual(name, pos, locbind, vb, ws_name, theme=theme,
+                            gradient=vd.get("gradient"), tooltips=tips or None)
 
     # Skip empty worksheets (no dims/values/caption) so they don't become cards.
     has_data = bool(ws and (ws.get("dimensions") or ws.get("values")))
@@ -283,12 +432,41 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         sec_bind = {"entity": entity, "prop": sec_v, "isMeasure": True} if sec_v and sec_v in mset else None
         add_binds = [{"entity": entity, "prop": av, "isMeasure": True}
                      for av in (vd.get("additionalValues") or []) if av in mset]
+        # Tooltip fields: Tableau shows the mark-card measures on hover. Auto-add
+        # the worksheet's extra measures (beyond the plotted Y) plus any explicit
+        # decisions.tooltips, so the PBI hover matches Tableau's tooltip.
+        # Tooltip fields: Tableau shows the mark-card measures AND dimensions on
+        # hover. _tooltip_binds returns the extra measures (ws.values beyond the
+        # plotted Y + decisions.tooltips) plus every marks-card dimension not on
+        # the axis/series, so the PBI tooltip matches Tableau field-for-field.
+        cat_prop = catbind.get("prop") if catbind else None
+        ser_prop = series if series else None
+        primary = valbind.get("prop")
+        tooltips = _tooltip_binds(ws, vd, decisions, ir, entity, mset, cols,
+                                  primary, {cat_prop, ser_prop})
         return P.chart_visual(name, pos, mapped, catbind, valbind, ws_name, theme=theme,
                               series=seriesbind, series_colors=vd.get("seriesColors"),
                               single_color=vd.get("color"), sort=sort,
                               secondary_value=sec_bind, additional_values=add_binds or None,
                               hide_value_axis=bool(vd.get("hideValueAxis")),
-                              hide_labels=bool(vd.get("hideLabels")))
+                              hide_labels=bool(vd.get("hideLabels")),
+                              tooltips=tooltips or None)
+    # Matrix (pivotTable): Tableau cross-tab / highlight table with row + column
+    # dimensions and measure cells. Resolves each field to its owning entity.
+    if vtype in ("matrix", "pivotTable"):
+        def _bind(spec):
+            if isinstance(spec, dict):
+                ent = spec.get("entity") or B._field_entity(spec.get("prop"), decisions, ir)
+                return {"entity": ent, "prop": spec["prop"],
+                        "isMeasure": spec.get("isMeasure", spec.get("prop") in mset)}
+            ent = entity if spec in mset else B._field_entity(spec, decisions, ir)
+            return {"entity": ent, "prop": spec, "isMeasure": spec in mset}
+        rows = [_bind(r) for r in (vd.get("rows") or [])]
+        cols_m = [_bind(c) for c in (vd.get("columns") or [])]
+        vals = [_bind(v) for v in (vd.get("values") or [])]
+        if rows and vals:
+            return P.matrix_visual(name, pos, rows, cols_m or None, vals, ws_name, theme=theme)
+
     # tableColumns override from decisions.json (for Top N / custom column sets)
     if vd.get("tableColumns"):
         tcols = [{"entity": tc["entity"], "prop": tc["prop"],

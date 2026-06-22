@@ -15,6 +15,32 @@ from typing import Dict, List, Optional, Set
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import date_levels as D  # noqa: E402
 import field_param as FP  # noqa: E402
+import tmdl_blocks as TB  # noqa: E402
+
+# Cache of physical CSV headers so we read each file at most once.
+_HEADER_CACHE: Dict[str, Set[str]] = {}
+
+
+def _table_columns(table: Dict, ir: Dict) -> Set[str]:
+    """Return the set of column names a table actually owns.
+
+    Prefers the physical CSV header (for csv-backed dims defined with
+    sourceFile), then IR columns scoped by sourceDatasource, and only falls
+    back to ALL IR columns when neither is available. Without this, a star
+    schema dim defined with sourceFile (src=None) would match EVERY IR column
+    and wrongly claim fact fields like grade/loan_status -> broken slicers.
+    """
+    src_file = table.get("sourceFile")
+    if src_file and str(src_file).lower().endswith(".csv"):
+        key = os.path.abspath(src_file)
+        if key not in _HEADER_CACHE:
+            _HEADER_CACHE[key] = set(TB.read_csv_header(src_file))
+        if _HEADER_CACHE[key]:
+            return _HEADER_CACHE[key]
+    src = table.get("sourceDatasource")
+    if src is not None:
+        return {c["name"] for c in ir.get("columns", []) if c.get("datasource") == src}
+    return {c["name"] for c in ir.get("columns", [])}
 
 
 def fact_entity(decisions: Dict) -> str:
@@ -154,16 +180,13 @@ def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
     """
     if not field:
         return fact_entity(decisions)
-    # Check each dim/date table's columns in the IR
+    # Check each dim/date table's REAL columns (physical CSV header), so a field
+    # only resolves to a dim that actually contains it; otherwise fall through to
+    # the fact entity.
     for table in decisions.get("tables", []):
         if table.get("role") in ("dim", "date"):
-            tname = table["name"]
-            # Check IR columns scoped to this table's sourceFile / sourceDatasource
-            src = table.get("sourceDatasource")
-            t_cols = {c["name"] for c in ir.get("columns", [])
-                      if src is None or c.get("datasource") == src}
-            if field in t_cols:
-                return tname
+            if field in _table_columns(table, ir):
+                return table["name"]
     # Check param tables
     for t in decisions.get("tables", []):
         if t.get("role") == "param" and t["name"] == field:

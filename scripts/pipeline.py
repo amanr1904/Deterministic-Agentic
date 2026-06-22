@@ -106,9 +106,12 @@ def _print_gaps(analysis: str) -> None:
     with open(analysis, encoding="utf-8-sig") as fh:
         ir = json.load(fh)
     ambiguous = [w["name"] for w in ir.get("worksheets", [])
-                 if w.get("inferredVisualType") is None]
-    complex_calcs = [c["caption"] for c in ir.get("calculatedFields", [])
-                     if c["complexity"] == "complex"]
+                 if (w.get("markClass") or "Automatic") == "Automatic"]
+    partial_path = os.path.join(os.path.dirname(analysis), "dax-partial.json")
+    complex_calcs = []
+    if os.path.isfile(partial_path):
+        with open(partial_path, encoding="utf-8-sig") as fh:
+            complex_calcs = [p["caption"] for p in json.load(fh).get("pending", [])]
     out_dir = os.path.dirname(analysis)
     print("\n=== AGENT GAP-FILL REQUIRED (write decisions.json here) ===")
     print(f"  folder              : {out_dir}")

@@ -14,9 +14,16 @@ TAB = "\t"
 # IR dataType -> (TMDL dataType, summarizeBy, isDateTime)
 TYPE_MAP = {
     "string": ("string", "none", False),
+    "text": ("string", "none", False),
     "integer": ("int64", "sum", False),
+    "int": ("int64", "sum", False),
+    "int64": ("int64", "sum", False),
     "real": ("double", "sum", False),
+    "double": ("double", "sum", False),
+    "float": ("double", "sum", False),
+    "decimal": ("double", "sum", False),
     "boolean": ("boolean", "none", False),
+    "bool": ("boolean", "none", False),
     "date": ("dateTime", "none", True),
     "datetime": ("dateTime", "none", True),
 }
@@ -60,10 +67,21 @@ def column_block(col: Dict, seq: int) -> str:
 
 def calc_column_block(name: str, dax: str, data_type: str,
                       fmt: Optional[str], seq: int) -> str:
-    """Build a TMDL calculated-column block (column Name = <DAX>)."""
+    """Build a TMDL calculated-column block (column Name = <DAX>).
+
+    Multi-line DAX (VAR/RETURN) must be written as an indented body on its own
+    lines, exactly like a measure — otherwise the continuation lines land at
+    column 0 and Power BI Desktop rejects them ("VAR is not a supported property
+    in the current context"). tmdl-validate does NOT catch this; only Desktop.
+    """
     tmdl_type, _summ, is_date = TYPE_MAP.get(data_type, ("string", "none", False))
     fmt = fmt or ("m/d/yyyy" if is_date else None)
-    lines = [f"{TAB}column {quote(name)} = {dax}"]
+    dax = dax.strip()
+    if "\n" in dax:
+        body = "\n".join(f"{TAB}{TAB}{TAB}{ln}" for ln in dax.splitlines())
+        lines = [f"{TAB}column {quote(name)} =", body]
+    else:
+        lines = [f"{TAB}column {quote(name)} = {dax}"]
     lines.append(f"{TAB}{TAB}dataType: {tmdl_type}")
     if fmt:
         lines.append(f"{TAB}{TAB}formatString: {fmt}")
