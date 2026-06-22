@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tmdl_blocks as B  # noqa: E402
 import date_levels as D  # noqa: E402
 import field_param as FP  # noqa: E402
+import topn as T  # noqa: E402
 
 _TWB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "twb")
 sys.path.insert(0, os.path.normpath(_TWB_DIR))
@@ -115,9 +116,35 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
             "formatString": "dd-mm-yyyy",
             "displayFolder": "Customers",
         })
+    # Auto-inject Top-N rank measures from the IR (Tableau groupfilter count=N).
+    # The category column lives on the fact table, so rank measures land here.
+    if table.get("role") == "fact":
+        _seen_rank = {m["name"] for m in measures}
+        for ws in ir.get("worksheets", []):
+            tn = ws.get("topN")
+            if not tn or not tn.get("field"):
+                continue
+            rname, rdax, _count = T.spec(tn, name)
+            if rname in _seen_rank:
+                continue
+            _seen_rank.add(rname)
+            measures.append({
+                "name": rname,
+                "table": name,
+                "dax": rdax,
+                "formatString": "#,0",
+                "displayFolder": "Helper",
+                "description": (f"Rank of {tn['field']} for the Top-{_count} "
+                                f"filter (mirrors the Tableau Top-N groupfilter)."),
+            })
     cols = _columns_for(table, ir, decisions)
     col_names = {c["name"].lower() for c in cols}
-    clash = sorted(m["name"] for m in measures if m["name"].lower() in col_names)
+    # Agent-authored calculated columns also share the table namespace with
+    # measures — fold them in so a name collision is caught here, not in Desktop.
+    cc_names = {c["name"].lower() for c in decisions.get("calculatedColumns", [])
+                if c.get("table") == name}
+    clash = sorted(m["name"] for m in measures
+                   if m["name"].lower() in col_names or m["name"].lower() in cc_names)
     if clash:
         raise ValueError(f"table '{name}': measure name(s) collide with columns: {clash}")
     for i, m in enumerate(measures):
@@ -133,6 +160,14 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         dax = D.part_dax(part["baseColumn"], name, part["level"])
         lines += [B.calc_column_block(part["name"], dax, part["dataType"],
                                       part["format"], seq * 1000 + 500 + j), ""]
+    # Agent-authored calculated columns from decisions.json (e.g. Tableau FIXED
+    # LOD buckets that must be materialized as a column). Hosted on table.name.
+    cc_cols = [c for c in decisions.get("calculatedColumns", [])
+               if c.get("table") == name]
+    for j, cc in enumerate(cc_cols):
+        lines += [B.calc_column_block(cc["name"], cc["dax"],
+                                      cc.get("dataType") or "string",
+                                      cc.get("formatString"), seq * 1000 + 700 + j), ""]
     lines.append(_partition_for(table, ir, cols, decisions))
     return "\n".join(lines)
 
@@ -167,7 +202,7 @@ def _dim_source_column(table_name: str, key_col: str, decisions: Dict) -> str:
     return key_col  # fallback: same name as key
 
 
-def _date_source_column(table_name: str, decisions: Dict):
+def _date_source_column(table_name: str, decisions: Dict, ir: Dict = None):
     """Return (fact_table, date_col) for a DimDate calendar table via relationships."""
     for rel in decisions.get("relationships", []):
         to_t, _to_c = rel["toColumn"].split(".", 1)
@@ -176,7 +211,11 @@ def _date_source_column(table_name: str, decisions: Dict):
             return from_t, from_c
     tables = decisions.get("tables", [])
     fact = next((t["name"] for t in tables if t.get("role") == "fact"), "Table")
-    return fact, "date_added"
+    # No relationship to resolve the source date: fall back to the first
+    # date/datetime column in the IR (generic, not a workbook-specific name).
+    date_col = next((c["name"] for c in (ir or {}).get("columns", [])
+                     if c.get("dataType") in ("date", "datetime")), "Date")
+    return fact, date_col
 
 
 def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
@@ -198,7 +237,27 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
                 for c in table["datatable"]["columns"]]
     ds = table.get("sourceDatasource")
     cols = [c for c in ir["columns"] if ds is None or c["datasource"] == ds]
-    return cols or ir["columns"]
+    cols = cols or ir["columns"]
+    return _dedupe_columns(cols, ir)
+
+
+def _dedupe_columns(cols: List[Dict], ir: Dict) -> List[Dict]:
+    """Collapse duplicate column names (Power BI rejects a table that declares the
+    same column twice — "TMDL objects cannot be merged ... same property: dataType").
+    Duplicates arise when several datasources (e.g. an inactive Hyper extract plus the
+    active CSV) each expose a same-named field and they flatten into one table.
+    Keep the first occurrence per normalized name, but prefer a column sourced from an
+    ACTIVE datasource over an inactive one. Insertion order is preserved.
+    """
+    active_ds = {d.get("name") for d in ir.get("dataSources", []) if d.get("active")}
+    seen: "dict[str, Dict]" = {}
+    for c in cols:
+        key = _normalize_name(c.get("name", ""))
+        if key not in seen:
+            seen[key] = c
+        elif c.get("datasource") in active_ds and seen[key].get("datasource") not in active_ds:
+            seen[key] = c  # replace inactive-source duplicate with the active-source one
+    return list(seen.values())
 
 
 def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> str:
@@ -217,7 +276,7 @@ def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> 
         return B.dim_partition(table["name"], path, ",", key, all_cols)
     # Calendar date table: DAX CALENDAR calculated partition
     if role == "date" and table.get("sourceType") == "calendar":
-        fact_tbl, date_col = _date_source_column(table["name"], decisions)
+        fact_tbl, date_col = _date_source_column(table["name"], decisions, ir)
         return B.calendar_partition(table["name"], fact_tbl, date_col)
     if role == "param" and table.get("datatable"):
         dt = table["datatable"]

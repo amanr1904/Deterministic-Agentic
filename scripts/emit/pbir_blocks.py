@@ -190,7 +190,8 @@ def chart_visual(name: str, pos: Dict, visual_type: str, category: Dict,
                  additional_values: Optional[List[Dict]] = None,
                  y2_values: Optional[List[Dict]] = None,
                  hide_value_axis: bool = False,
-                 hide_labels: bool = False) -> Dict:
+                 hide_labels: bool = False,
+                 visual_filter: Optional[Dict] = None) -> Dict:
     """Build a cartesian chart (bar/column/line/area) visual.json dict.
 
     secondary_value / additional_values add more Y projections (e.g. PY lines on
@@ -251,7 +252,72 @@ def chart_visual(name: str, pos: Dict, visual_type: str, category: Dict,
     objects["labels"] = [{"properties": labels}]
     visual = {"visualType": visual_type, "query": query, "objects": objects,
               "visualContainerObjects": container_objects(title, theme)}
-    return {"$schema": VC_SCHEMA, "name": name, "position": pos, "visual": visual}
+    out = {"$schema": VC_SCHEMA, "name": name, "position": pos, "visual": visual}
+    if visual_filter:
+        out["filterConfig"] = visual_filter
+    return out
+
+
+def measure_le_filter(entity: str, measure: str, count: int,
+                      name: Optional[str] = None) -> Dict:
+    """One Advanced filter entry keeping rows where [measure] <= count.
+
+    Reproduces a Tableau Top-N groupfilter via a RANKX rank measure (rank <= N).
+    Advanced/Comparison measure filters are valid PBIR, unlike a hand-authored
+    VisualTopN filterConfig (which the schema rejects and crashes the report).
+    """
+    fname = name or f"f{re.sub(r'[^0-9a-z]+', '', measure.lower())}"
+    return {
+        "name": fname,
+        "field": {"Measure": {
+            "Expression": {"SourceRef": {"Entity": entity}}, "Property": measure}},
+        "type": "Advanced",
+        "filter": {
+            "Version": 2,
+            "From": [{"Name": "f", "Entity": entity, "Type": 0}],
+            "Where": [{"Condition": {"Comparison": {
+                "ComparisonKind": 3,
+                "Left": {"Measure": {
+                    "Expression": {"SourceRef": {"Source": "f"}},
+                    "Property": measure}},
+                "Right": {"Literal": {"Value": f"{int(count)}L"}}}}}],
+        },
+        "howCreated": "User",
+    }
+
+
+def column_not_blank_filter(entity: str, column: str,
+                            name: Optional[str] = None) -> Dict:
+    """One Advanced filter entry dropping rows where [column] is blank.
+
+    Used on derived date-part categories (e.g. 'date_added (Year)') so null-date
+    rows do not create a phantom blank bucket — mirroring Tableau, which omits
+    null dates from a continuous date axis.
+    """
+    fname = name or f"f{re.sub(r'[^0-9a-z]+', '', column.lower())}nb"
+    return {
+        "name": fname,
+        "field": {"Column": {
+            "Expression": {"SourceRef": {"Entity": entity}}, "Property": column}},
+        "type": "Advanced",
+        "filter": {
+            "Version": 2,
+            "From": [{"Name": "f", "Entity": entity, "Type": 0}],
+            "Where": [{"Condition": {"Not": {"Expression": {"Comparison": {
+                "ComparisonKind": 0,
+                "Left": {"Column": {
+                    "Expression": {"SourceRef": {"Source": "f"}},
+                    "Property": column}},
+                "Right": {"Literal": {"Value": "null"}}}}}}}],
+        },
+        "howCreated": "User",
+    }
+
+
+def filter_config(*entries: Optional[Dict]) -> Optional[Dict]:
+    """Wrap filter entries into a visual filterConfig (None if all empty)."""
+    kept = [e for e in entries if e]
+    return {"filters": kept} if kept else None
 
 
 def pie_visual(name: str, pos: Dict, category: Dict, value: Dict,
@@ -304,13 +370,26 @@ def map_visual(name: str, pos: Dict, location: Dict, value: Dict,
 
 def table_visual(name: str, pos: Dict, columns: List[Dict],
                  title: Optional[str] = None,
-                 theme: Optional[Dict] = None) -> Dict:
-    """Build a tableEx visual.json dict from a list of {entity, prop} columns."""
+                 theme: Optional[Dict] = None,
+                 sort: Optional[Dict] = None,
+                 visual_filter: Optional[Dict] = None) -> Dict:
+    """Build a tableEx visual.json dict from a list of {entity, prop} columns.
+
+    *sort* optionally adds a sortDefinition (e.g. order a Top-N table by its rank
+    column). *visual_filter* optionally adds a root filterConfig (e.g. a
+    'rank <= N' Advanced filter that limits the table to the Top-N rows).
+    """
     projections = [binding_projection(c) for c in columns]
+    query: Dict = {"queryState": {"Values": {"projections": projections}}}
+    if sort:
+        query["sortDefinition"] = sort
     visual = {"visualType": "tableEx",
-              "query": {"queryState": {"Values": {"projections": projections}}},
+              "query": query,
               "visualContainerObjects": container_objects(title, theme)}
-    return {"$schema": VC_SCHEMA, "name": name, "position": pos, "visual": visual}
+    out = {"$schema": VC_SCHEMA, "name": name, "position": pos, "visual": visual}
+    if visual_filter:
+        out["filterConfig"] = visual_filter
+    return out
 
 
 def textbox_visual(name: str, pos: Dict, text: str, size: int = 18,

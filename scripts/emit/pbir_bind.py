@@ -16,6 +16,58 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import date_levels as D  # noqa: E402
 import field_param as FP  # noqa: E402
 
+_TWB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "twb")
+sys.path.insert(0, os.path.normpath(_TWB_DIR))
+import csv_probe as CP  # noqa: E402
+
+
+def _norm(s: Optional[str]) -> str:
+    """Normalize a column name (underscores/slashes/hyphens/spaces -> space)."""
+    return re.sub(r"[_/\-\s]+", " ", s or "").strip().lower()
+
+
+_COL_ENTITY_CACHE: Dict[int, Dict[str, str]] = {}
+
+
+def column_entity_map(decisions: Dict) -> Dict[str, str]:
+    """Map each normalized column name to its owning table (entity).
+
+    Probes every fact/dim/date table's CSV headers (mirrors emit_tmdl's column
+    assignment) so a chart category like 'Sub-Category' resolves to DimProduct,
+    'Region' -> DimLocation, etc. Dim/date tables override the fact on shared
+    names (keys) so dimension attributes bind to their dimension. Calculated
+    columns map to their declared table.
+    """
+    key = id(decisions)
+    cached = _COL_ENTITY_CACHE.get(key)
+    if cached is not None:
+        return cached
+    tables = decisions.get("tables", [])
+    ordered = ([t for t in tables if t.get("role") == "fact"]
+               + [t for t in tables if t.get("role") in ("dim", "date")])
+    mapping: Dict[str, str] = {}
+    for t in ordered:
+        src = t.get("sourceFile")
+        if not src:
+            continue
+        probe = CP.probe(src)
+        if not probe:
+            continue
+        for h in probe.get("headers", []):
+            mapping[_norm(h)] = t["name"]
+    for cc in decisions.get("calculatedColumns", []):
+        if cc.get("table") and cc.get("name"):
+            mapping[_norm(cc["name"])] = cc["table"]
+    _COL_ENTITY_CACHE[key] = mapping
+    return mapping
+
+
+def column_entity(prop: Optional[str], decisions: Dict, default_entity: str) -> str:
+    """Resolve the owning table for a non-measure category/column field."""
+    if not prop:
+        return default_entity
+    return column_entity_map(decisions).get(_norm(prop), default_entity)
+
 
 def fact_entity(decisions: Dict) -> str:
     for t in decisions.get("tables", []):
@@ -146,29 +198,22 @@ def suppressed_worksheets(decisions: Dict) -> set:
     return FP.suppressed_worksheets(decisions.get("fieldParameters", []))
 
 
-def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
-    """Return the correct entity (table name) for a slicer field.
+def _param_value_column(table_name: str, decisions: Dict) -> str:
+    """The value column a disconnected parameter slicer binds to (e.g. 'Year').
 
-    Looks up the field in dim tables first; falls back to the fact entity.
-    This ensures Category/Sub-Category → DimProduct, Region/State/City → DimLocation, etc.
+    Falls back to the table name only if no datatable/key column is declared.
     """
-    if not field:
-        return fact_entity(decisions)
-    # Check each dim/date table's columns in the IR
-    for table in decisions.get("tables", []):
-        if table.get("role") in ("dim", "date"):
-            tname = table["name"]
-            # Check IR columns scoped to this table's sourceFile / sourceDatasource
-            src = table.get("sourceDatasource")
-            t_cols = {c["name"] for c in ir.get("columns", [])
-                      if src is None or c.get("datasource") == src}
-            if field in t_cols:
-                return tname
-    # Check param tables
     for t in decisions.get("tables", []):
-        if t.get("role") == "param" and t["name"] == field:
-            return field
-    return fact_entity(decisions)
+        if t["name"] != table_name:
+            continue
+        dt = t.get("datatable") or {}
+        cols = dt.get("columns") or []
+        if cols:
+            return cols[0]["name"]
+        keys = t.get("keyColumns") or []
+        if keys:
+            return keys[0]
+    return table_name
 
 
 def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
@@ -188,13 +233,17 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
         dcol = first_date_col(ir)
         if dcol:
             return entity, dcol, title, "Between"
-    # Parameter list-slicers bind to a disconnected table (column shares name).
+    # Parameter list-slicers bind to a disconnected table on its value column
+    # (e.g. SelectYear[Year]), NOT the table name.
     pmap = {slug(t): t for t in ptables}
     if field and slug(field) in pmap:
         tbl = pmap[slug(field)]
-        return tbl, tbl, title, "Dropdown"
-    # Resolve the correct entity (dim table or fact) for this field
-    entity = _field_entity(field, decisions, ir)
+        return tbl, _param_value_column(tbl, decisions), title, "Dropdown"
+    # Resolve the correct entity (dim table or fact) for this field via the
+    # CSV-header owner map so Category/Sub-Category -> DimProduct,
+    # Region/State/City -> DimLocation, etc. (single denormalized IR datasource
+    # means the field cannot be attributed by datasource alone).
+    entity = column_entity(field, decisions, fact_entity(decisions))
     if field and field in cols:
         return entity, field, title, "Dropdown"
     if zone.get("type") == "paramctrl":

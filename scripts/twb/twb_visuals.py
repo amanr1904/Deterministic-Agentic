@@ -37,11 +37,13 @@ def worksheet_datasources(root: ET.Element) -> set:
 
 def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
                        measures: Optional[set] = None,
-                       param_map: Optional[Dict] = None) -> List[Dict]:
+                       param_map: Optional[Dict] = None,
+                       passthrough: Optional[Dict] = None) -> List[Dict]:
     """Return IR worksheets with mark type, shelves, encodings and resolved fields."""
     calc_map = calc_map or {}
     measures = measures or set()
     param_map = param_map or {}
+    passthrough = passthrough or {}
     sheets: List[Dict] = []
     for ws in root.iter("worksheet"):
         name = X.attr(ws, "name", "")
@@ -51,7 +53,7 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
         rows = _shelf_fields(ws, "rows")
         cols = _shelf_fields(ws, "cols")
         encodings = _encodings(pane)
-        fields = F.summarize(rows, cols, encodings, calc_map, measures)
+        fields = F.summarize(rows, cols, encodings, calc_map, measures, passthrough)
         sheets.append({
             "name": name, "datasource": _primary_ds(ws), "markClass": mark_class,
             "rows": rows, "cols": cols, "encodings": encodings,
@@ -59,9 +61,45 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
             "categoryDateLevel": fields["categoryDateLevel"],
             "dimensions": fields["dimensions"], "values": fields["values"],
             "caption": _worksheet_caption(ws, calc_map, param_map),
+            "topN": _extract_topn(ws, calc_map, passthrough),
             "inferredVisualType": _infer_type(mark_class, rows, cols, encodings),
         })
     return sheets
+
+
+def _extract_topn(ws: ET.Element, calc_map: Dict,
+                  passthrough: Dict) -> Optional[Dict]:
+    """Extract a Tableau Top-N groupfilter (count=N end=top/bottom) for a worksheet.
+
+    Tableau nests: <filter><groupfilter count='10' end='top' function='end'>
+    <groupfilter direction='DESC' expression='COUNTD([show_id])' function='order'>
+    <groupfilter level='[none:listed_in:nk]'/></groupfilter></groupfilter></filter>.
+    Returns {field, count, end, direction, byExpr} or None.
+    """
+    for filt in ws.iter("filter"):
+        top = next((g for g in filt.iter("groupfilter") if g.get("count")), None)
+        if top is None:
+            continue
+        try:
+            count = int(top.get("count"))
+        except (TypeError, ValueError):
+            continue
+        end = (top.get("end") or "top").lower()
+        order = next((g for g in top.iter("groupfilter")
+                      if g.get("expression")), None)
+        by_expr = (X.decode_entities(order.get("expression"))
+                   if order is not None else None)
+        direction = (order.get("direction") if order is not None else "DESC") or "DESC"
+        field = F.resolve_ref(filt.get("column"), calc_map, passthrough)
+        if not field:
+            lvl = next((g for g in top.iter("groupfilter") if g.get("level")), None)
+            if lvl is not None:
+                field = F.resolve_ref(lvl.get("level"), calc_map, passthrough)
+        if not field:
+            continue
+        return {"field": field, "count": count, "end": end,
+                "direction": direction.upper(), "byExpr": by_expr}
+    return None
 
 
 def _worksheet_caption(ws: ET.Element, calc_map: Dict, param_map: Dict) -> Optional[str]:

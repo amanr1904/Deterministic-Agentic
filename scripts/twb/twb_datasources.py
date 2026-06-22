@@ -159,6 +159,42 @@ def extract_calculated_fields(root: ET.Element) -> List[Dict]:
     return fields
 
 
+# A "passthrough" calc just re-types or re-labels one physical column, e.g.
+# Year = DATETIME([date_added]) or City = [city]. Tableau frequently wraps a
+# date column in such a calc and then truncates THAT (yr:/mn:) on a shelf, which
+# hides the underlying physical column from the date-part detector. We map the
+# calc's internal id back to its base column so callers can resolve to the real
+# column (and so the date-part column is emitted on it).
+_PASSTHROUGH_RE = re.compile(r"^\s*(?:([A-Za-z_]+)\s*\(\s*)?\[([^\]\[]+)\]\s*\)?\s*$")
+# Functions that merely cast/relabel (identity for our purposes); anything else
+# (YEAR, SUM, LEFT, ...) is a real derivation and must NOT be treated as passthrough.
+_CAST_FUNCS = {"DATE", "DATETIME", "MAKEDATE", "MAKEDATETIME", "INT", "FLOAT", "STR"}
+
+
+def build_passthrough_map(root: ET.Element) -> Dict[str, str]:
+    """Map passthrough calc internal id -> its base physical column name.
+
+    Scans every <column> with a <calculation> (datasource-level AND the inline
+    worksheet <datasource-dependencies>) so worksheet-local wrappers are caught.
+    """
+    out: Dict[str, str] = {}
+    for col in root.iter("column"):
+        calc = col.find("calculation")
+        if calc is None or calc.get("formula") is None:
+            continue
+        formula = X.decode_entities(calc.get("formula"))
+        m = _PASSTHROUGH_RE.match(formula)
+        if not m:
+            continue
+        func, base = m.group(1), X.strip_brackets(m.group(2).strip())
+        if func and func.upper() not in _CAST_FUNCS:
+            continue  # real derivation (e.g. YEAR/SUM), not a passthrough
+        internal = X.strip_brackets(X.attr(col, "name"))
+        if internal and base and internal != base:
+            out[internal] = base
+    return out
+
+
 def extract_parameters(root: ET.Element) -> List[Dict]:
     """Return IR parameters from the inline Parameters datasource."""
     params: List[Dict] = []

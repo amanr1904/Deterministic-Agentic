@@ -104,7 +104,19 @@
               "text": { "type": ["string", "null"] }
             }
           },
-          "inferredVisualType": { "type": ["string", "null"], "description": "null => ambiguous, route to LLM" }
+          "inferredVisualType": { "type": ["string", "null"], "description": "null => ambiguous, route to LLM" },
+          "topN": {
+            "type": ["object", "null"],
+            "description": "Tableau Top-N groupfilter (count=N end=top/bottom) reproduced via a RANKX measure + Advanced filter",
+            "required": ["field", "count"],
+            "properties": {
+              "field": { "type": "string" },
+              "count": { "type": "integer" },
+              "end": { "type": "string", "enum": ["top", "bottom"] },
+              "direction": { "type": "string" },
+              "byExpr": { "type": ["string", "null"] }
+            }
+          }
         }
       }
     },

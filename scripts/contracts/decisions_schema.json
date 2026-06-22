@@ -8,6 +8,7 @@
     "decisionsVersion": { "type": "string", "const": "1.0" },
     "modelName": { "type": "string", "description": "PascalCase, matches IR workbook.pascalName" },
     "tableStrategy": { "type": "string", "enum": ["single-flat", "star-schema"] },
+    "suppressTextZones": { "type": "boolean", "default": false, "description": "When true, standalone Tableau text tiles (page titles, section labels, floating table-header strips, legend captions) are NOT emitted as textbox visuals. Power BI visuals carry their own titles and the filter panel emits its own group labels, so these tiles are usually redundant clutter." },
     "tables": {
       "type": "array",
       "items": {

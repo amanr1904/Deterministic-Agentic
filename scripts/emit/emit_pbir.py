@@ -13,11 +13,13 @@ import os
 import re
 import shutil
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pbir_blocks as P  # noqa: E402
 import pbir_bind as B  # noqa: E402
+import topn as T  # noqa: E402
+import date_levels as D  # noqa: E402
 
 PBIR = {
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
@@ -127,9 +129,26 @@ def primary_entity(decisions: Dict) -> str:
     return tables[0]["name"] if tables else "Table"
 
 
+def _date_level_prop(prop: Optional[str], level: Optional[str],
+                     date_cols: Set[str]) -> Optional[str]:
+    """Rewrite a base date category column to its truncated-grain part column.
+
+    When a worksheet places a date field on a shelf at a year/quarter/month/week
+    grain, the model (emit_tmdl) emits a derived column named e.g.
+    'Order Date (Week)'. The report must bind to that same derived column, never
+    the raw date. Generic across workbooks; both emitters call D.part_column_name.
+    """
+    if prop and prop in date_cols and D.needs_part(level):
+        return D.part_column_name(prop, level)
+    return prop
+
+
 def _build_kpi_stack(name: str, pos: Dict, x: int, y: int, w: int, h: int,
-                     z: int, vd: Dict, entity: str, theme) -> List[Dict]:
+                     z: int, vd: Dict, entity: str, theme,
+                     ws: Optional[Dict] = None,
+                     date_cols: Optional[Set[str]] = None) -> List[Dict]:
     """Return [card_visual, pct_card_visual, sparkline_visual] for a KPI zone."""
+    date_cols = date_cols or set()
     card_h  = round(h * 0.30)
     pct_h   = round(h * 0.15)
     spark_h = h - card_h - pct_h
@@ -148,18 +167,26 @@ def _build_kpi_stack(name: str, pos: Dict, x: int, y: int, w: int, h: int,
         entity, pct_m, title=None, theme=theme,
     )
     # sparkline — keep original type (lineChart)
-    spark_vd = dict(vd)
-    spark_vd.pop("kpiStack", None)
     sec_bind = ({"entity": entity, "prop": sec_v, "isMeasure": True}) if sec_v else None
     add_binds = [{"entity": entity, "prop": av, "isMeasure": True}
                  for av in (vd.get("additionalValues") or [])]
-    catbind  = {"entity": entity, "prop": vd.get("categoryField", "Order Date")}
+    # Category: prefer the IR base date column at its truncated grain so we bind
+    # the derived part column the model exposes (e.g. 'Order Date (Month)'). A
+    # stale decision categoryField naming a non-existent column is ignored.
+    level = ws.get("categoryDateLevel") if ws else None
+    base = (ws.get("categoryField") if ws and ws.get("categoryField") in date_cols
+            else vd.get("categoryField") or (ws.get("categoryField") if ws else None)
+            or "Order Date")
+    cat_prop = _date_level_prop(base, level, date_cols)
+    catbind  = {"entity": entity, "prop": cat_prop}
     valbind  = {"entity": entity, "prop": total_m, "isMeasure": True}
+    vfilter = (P.filter_config(P.column_not_blank_filter(entity, cat_prop))
+               if D.is_part_column(cat_prop) else None)
     spark = P.chart_visual(
         f"spark_{name}", P.position(x, y + card_h + pct_h, w, spark_h, z + 2),
         "lineChart", catbind, valbind, title_text, theme=theme,
         secondary_value=sec_bind, additional_values=add_binds or None,
-        hide_value_axis=True, hide_labels=True,
+        hide_value_axis=True, hide_labels=True, visual_filter=vfilter,
     )
     return [card, pct, spark]
 
@@ -174,6 +201,12 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     entity = primary_entity(decisions)
     ztype = zone.get("type")
     if ztype == "text":
+        # suppressTextZones: drop standalone Tableau text tiles (page titles,
+        # section labels, floating table-header strips, legend captions). Power BI
+        # visuals carry their own titles and the filter panel emits its own group
+        # labels, so these tiles are redundant clutter. Generic across workbooks.
+        if decisions.get("suppressTextZones"):
+            return None
         txt = zone.get("text") or ""
         return P.textbox_visual(f"text_{z}", pos, txt) if txt else None
     if ztype in ("filter", "paramctrl"):
@@ -202,6 +235,8 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     mlist = B.measure_list(decisions)
     mset = set(mlist)
     cols = B.column_names(ir)
+    date_cols = {c["name"] for c in ir.get("columns", [])
+                 if c.get("dataType") in ("date", "datetime")}
     valf = ws.get("valueField") if ws else None
 
     def value_bind() -> Dict:
@@ -251,7 +286,8 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
 
     # KPI stack: card (big number) + pct card (% diff) + sparkline
     if vd.get("kpiStack"):
-        return _build_kpi_stack(name, pos, x, y, w, h, z, vd, entity, theme)
+        return _build_kpi_stack(name, pos, x, y, w, h, z, vd, entity, theme,
+                                ws, date_cols)
 
     if vtype in CARTESIAN:
         mapped = CHART_TYPE_MAP.get(vtype, vtype)
@@ -259,7 +295,10 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         if vd.get("category") and vd.get("categoryIsMeasure"):
             catbind = {"entity": entity, "prop": vd["category"], "isMeasure": True}
         elif vd.get("category"):
-            catbind = {"entity": entity, "prop": vd["category"]}
+            # Resolve the owning table so dimension attributes (Sub-Category ->
+            # DimProduct, Region -> DimLocation) don't bind to the fact entity.
+            cat_entity = B.column_entity(vd["category"], decisions, entity)
+            catbind = {"entity": cat_entity, "prop": vd["category"]}
         else:
             catbind = None  # resolved below
         valbind = value_bind()
@@ -269,6 +308,15 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
                 catbind = {"entity": fp["name"], "prop": fp["name"]}
             else:
                 catbind = B.category_binding(ws, entity, cols, ir)
+        # Generic date grain: bind a base date category to its derived part
+        # column (e.g. 'Order Date (Week)') when the worksheet truncates the date
+        # level. Field-parameter and measure categories are left untouched.
+        if (catbind and not catbind.get("isMeasure")
+                and catbind.get("entity") == entity and ws):
+            catbind = {"entity": entity,
+                       "prop": _date_level_prop(catbind["prop"],
+                                                ws.get("categoryDateLevel"),
+                                                date_cols)}
         series = vd.get("series")
         seriesbind = {"entity": entity, "prop": series} if series else None
         sort = None
@@ -286,13 +334,27 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         # e.g. {"y2Values": ["CY Profit", "PY Profit"]} in decisions.json
         y2_binds = [{"entity": entity, "prop": yv, "isMeasure": True}
                     for yv in (vd.get("y2Values") or []) if yv in mset] or None
+        # Top-N: Tableau groupfilter (count=N end=top) -> rank-measure Advanced filter.
+        # Plus drop the null-date bucket for derived date-part categories (mirrors
+        # Tableau omitting nulls from a continuous date axis).
+        filt_entries = []
+        tn = ws.get("topN") if ws else None
+        if tn and tn.get("field"):
+            rank_name, _rdax, rcount = T.spec(tn, entity)
+            filt_entries.append(P.measure_le_filter(entity, rank_name, rcount))
+        if (catbind and not catbind.get("isMeasure")
+                and D.is_part_column(catbind.get("prop"))):
+            filt_entries.append(
+                P.column_not_blank_filter(catbind["entity"], catbind["prop"]))
+        vfilter = P.filter_config(*filt_entries)
         return P.chart_visual(name, pos, mapped, catbind, valbind, ws_name, theme=theme,
                               series=seriesbind, series_colors=vd.get("seriesColors"),
                               single_color=vd.get("color"), sort=sort,
                               secondary_value=sec_bind, additional_values=add_binds or None,
                               y2_values=y2_binds,
                               hide_value_axis=bool(vd.get("hideValueAxis")),
-                              hide_labels=bool(vd.get("hideLabels")))
+                              hide_labels=bool(vd.get("hideLabels")),
+                              visual_filter=vfilter)
     # tableColumns override from decisions.json (for Top N / custom column sets)
     if vd.get("tableColumns"):
         tcols = [{"entity": tc["entity"], "prop": tc["prop"],
@@ -300,7 +362,23 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
                  for tc in vd["tableColumns"]]
     else:
         tcols = B.table_columns(ws, ir, entity, mset, cols)
-    return P.table_visual(name, pos, tcols, ws_name, theme=theme)
+    # Top-N table: limit rows to the top N by a rank measure (mirrors a Tableau
+    # INDEX()/groupfilter on a ranked customer/product table) and sort by rank.
+    tbl_sort = None
+    tbl_filter = None
+    rank_tc = next((tc for tc in (vd.get("tableColumns") or [])
+                    if tc.get("rankMeasure")), None)
+    if rank_tc:
+        rank_entity = rank_tc.get("table") or rank_tc["entity"]
+        rank_prop = rank_tc["prop"]
+        ws_topn = (ws.get("topN") or {}) if ws else {}
+        count = int((vd.get("tableTopN") or {}).get("count")
+                    or ws_topn.get("count") or 10)
+        tbl_filter = P.filter_config(
+            P.measure_le_filter(rank_entity, rank_prop, count))
+        tbl_sort = P.measure_sort(rank_entity, rank_prop, direction="Ascending")
+    return P.table_visual(name, pos, tcols, ws_name, theme=theme,
+                          sort=tbl_sort, visual_filter=tbl_filter)
 
 
 def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> str:
@@ -327,7 +405,141 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
     return page_name
 
 
-def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
+# ---------------------------------------------------------------------------
+# Agent-authored visuals ("--visuals agent"): the deterministic side writes the
+# report shell + per-page _zones.json manifests; an agent then authors each
+# visuals/{name}/visual.json. Positions are pre-computed here and MUST be copied
+# verbatim by the agent so geometry stays identical to the factory output.
+# ---------------------------------------------------------------------------
+
+def _model_summary(ir: Dict, decisions: Dict) -> Dict:
+    """Exact table/column/measure names the agent may bind to (queryRef source)."""
+    measures_by_table: Dict[str, List[str]] = {}
+    for m in decisions.get("measures", []):
+        measures_by_table.setdefault(m["table"], []).append(m["name"])
+    fact = primary_entity(decisions)
+    ir_cols = [c["name"] for c in ir.get("columns", [])]
+    tables: List[Dict] = []
+    for t in decisions.get("tables", []):
+        is_fact = t.get("role") == "fact" or t["name"] == fact
+        tables.append({
+            "name": t["name"],
+            "role": t.get("role"),
+            "columns": ir_cols if is_fact else (t.get("keyColumns") or []),
+            "measures": measures_by_table.get(t["name"], []),
+        })
+    for fp in decisions.get("fieldParameters", []):
+        tables.append({"name": fp["name"], "role": "fieldParameter",
+                       "columns": [fp["name"]], "measures": []})
+    return {"entity": fact, "tables": tables}
+
+
+def _suggest_visual_name(zone: Dict, z: int) -> str:
+    """Deterministic visual/folder name suggestion (matches the page-name regex)."""
+    ztype = zone.get("type")
+    if ztype in ("filter", "paramctrl"):
+        base = f"slicer_{sanitize(zone.get('field') or 'field')}"
+    elif ztype == "text":
+        base = "text"
+    else:
+        base = f"visual_{sanitize(zone.get('worksheet') or 'zone')}"
+    return f"{base}_{z}".lower()
+
+
+def _zone_manifest_entry(zone: Dict, ir: Dict, decisions: Dict, z: int,
+                         scale) -> Optional[Dict]:
+    """One manifest zone: fixed geometry + binding context for the agent.
+
+    Mirrors the suppression rules in build_visual so the agent never authors a
+    visual the factory path would have dropped (collapsed slivers, field-param
+    duplicate worksheets).
+    """
+    sx, sy = scale
+    ztype = zone.get("type")
+    ws_name = zone.get("worksheet") or ""
+    if ws_name and ws_name in B.suppressed_worksheets(decisions):
+        return None
+    if round(zone.get("h", 0) * sy) < MIN_VISUAL_PX:
+        return None
+    x, y = round(zone["x"] * sx), round(zone["y"] * sy)
+    w, h = max(round(zone["w"] * sx), 80), max(round(zone["h"] * sy), 40)
+    entry: Dict = {
+        "name": _suggest_visual_name(zone, z),
+        "zoneType": ztype,
+        "position": P.position(x, y, w, h, z),
+    }
+    if ztype == "text":
+        entry["text"] = zone.get("text") or ""
+        entry["suggestedVisualType"] = "textbox"
+        return entry
+    if ztype in ("filter", "paramctrl"):
+        entry["field"] = zone.get("field")
+        entry["suggestedVisualType"] = "slicer"
+        return entry
+    if ws_name:
+        entry["worksheet"] = ws_name
+        ws = B.ws_by_name(ir, ws_name)
+        if ws:
+            entry["ir"] = {
+                "markClass": ws.get("markClass"),
+                "rows": ws.get("rows"),
+                "cols": ws.get("cols"),
+                "encodings": ws.get("encodings"),
+                "dimensions": ws.get("dimensions"),
+                "values": ws.get("values"),
+                "categoryField": ws.get("categoryField"),
+                "categoryDateLevel": ws.get("categoryDateLevel"),
+                "topN": ws.get("topN"),
+                "inferredVisualType": ws.get("inferredVisualType"),
+                "caption": ws.get("caption"),
+            }
+        vd = visual_decision(ws_name, decisions)
+        if vd:
+            entry["decision"] = vd
+        entry["suggestedVisualType"] = resolve_visual_type(ws_name, ir, decisions)
+    return entry
+
+
+def build_page_shell(dashboard: Dict, ir: Dict, decisions: Dict,
+                     pages_dir: str) -> str:
+    """Write page.json + a _zones.json manifest (no visual bodies). Agent mode."""
+    page_name = sanitize(dashboard["name"])
+    page_dir = os.path.join(pages_dir, page_name)
+    pw, ph = dashboard["size"]["w"], dashboard["size"]["h"]
+    theme = decisions.get("theme") or {}
+    write_json(os.path.join(page_dir, "page.json"),
+               P.page_json(page_name, dashboard["name"], pw, ph,
+                           background=theme.get("pageBackground"),
+                           outspace=theme.get("outspace")))
+    scale = (pw / COORD_SPACE, ph / COORD_SPACE)
+    zones: List[Dict] = []
+    z = 100
+    for zone in dashboard.get("zones", []):
+        entry = _zone_manifest_entry(zone, ir, decisions, z, scale)
+        if entry is None:
+            continue
+        zones.append(entry)
+        z += 1
+    manifest = {
+        "page": page_name,
+        "displayName": dashboard["name"],
+        "pageSize": {"w": pw, "h": ph},
+        "model": _model_summary(ir, decisions),
+        "constraints": {
+            "visualJsonRootKeys": ["$schema", "name", "position", "visual"],
+            "positionIsFixed": True,
+            "visualNameRegex": "^[a-zA-Z0-9_][a-zA-Z0-9_-]*$",
+            "schemaBase": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/",
+        },
+        "outputPattern": "visuals/{name}/visual.json",
+        "zones": zones,
+    }
+    write_json(os.path.join(page_dir, "_zones.json"), manifest)
+    return page_name
+
+
+def emit(ir: Dict, decisions: Dict, analysis_path: str,
+         visuals_mode: str = "agent") -> str:
     model_name = decisions.get("modelName") or ir["workbook"]["pascalName"]
     base = os.path.dirname(os.path.abspath(analysis_path))
     report_dir = os.path.join(base, f"{model_name}.Report")
@@ -351,7 +563,10 @@ def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
     page_names: List[str] = []
     page_display: Dict[str, str] = {}
     for dashboard in ir.get("dashboards", []):
-        pn = build_page(dashboard, ir, decisions, pages_dir)
+        if visuals_mode == "agent":
+            pn = build_page_shell(dashboard, ir, decisions, pages_dir)
+        else:
+            pn = build_page(dashboard, ir, decisions, pages_dir)
         page_names.append(pn)
         page_display[pn] = dashboard.get("name", pn)
     if not page_names:
@@ -382,9 +597,11 @@ def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
 
     # Inject filter panel toggle — controlled by decisions["filterPanel"].
     # Reproduces the Tableau show/close-filters slide-out drawer with native
-    # bookmarks. Opt out per-report via filterPanel.enabled = false.
+    # bookmarks. Opt out per-report via filterPanel.enabled = false. Skipped in
+    # agent mode: the drawer restyles/repositions slicer visual.json files that
+    # the agent has not authored yet.
     fp_cfg = decisions.get("filterPanel") or {}
-    if fp_cfg.get("enabled", True):
+    if visuals_mode != "agent" and fp_cfg.get("enabled", True):
         _inject_filter_panel(os.path.dirname(pages_dir), page_names, fp_cfg)
 
     return report_dir
@@ -601,14 +818,22 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Emit PBIR report from IR + decisions.")
     parser.add_argument("analysis", help="path to analysis.json")
     parser.add_argument("--decisions", required=True, help="path to decisions.json")
+    parser.add_argument("--visuals", choices=["factory", "agent"], default="agent",
+                        help="agent = report shell + per-page _zones.json manifests "
+                             "for an agent to author each visual.json (default); "
+                             "factory = deterministic visual.json")
     args = parser.parse_args(argv)
     for p in (args.analysis, args.decisions):
         if not os.path.isfile(p):
             print(f"ERROR: file not found: {p}", file=sys.stderr)
             return 2
     ir = load_json(args.analysis)
-    report_dir = emit(ir, load_json(args.decisions), args.analysis)
-    print(f"Wrote report: {report_dir}\n  pages: {len(ir.get('dashboards', [])) or 1}")
+    report_dir = emit(ir, load_json(args.decisions), args.analysis,
+                      visuals_mode=args.visuals)
+    note = "  (shell + _zones.json manifests — agent authors visuals)" \
+        if args.visuals == "agent" else ""
+    print(f"Wrote report: {report_dir}{note}\n"
+          f"  pages: {len(ir.get('dashboards', [])) or 1}")
     return 0
 
 

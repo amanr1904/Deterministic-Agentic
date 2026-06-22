@@ -23,18 +23,31 @@ def part_column_name(col: str, level: Optional[str]) -> str:
     return f"{col} ({_SUFFIX[level]})" if needs_part(level) else col
 
 
+def is_part_column(name: Optional[str]) -> bool:
+    """True if a column name is a derived date part, e.g. 'date_added (Year)'."""
+    if not name:
+        return False
+    return any(name.endswith(f" ({s})") for s in _SUFFIX.values())
+
+
 def part_dax(col: str, table: str, level: str) -> str:
-    """DAX expression for a date-part calculated column."""
+    """DAX expression for a date-part calculated column.
+
+    Guarded with ISBLANK so rows with a null source date return BLANK (and drop
+    off the axis) instead of YEAR(BLANK())=1899 phantom buckets.
+    """
     c = f"'{table}'[{col}]"
     if level == "year":
-        return f"YEAR({c})"
-    if level == "quarter":
-        return f'"Q" & ROUNDUP(MONTH({c}) / 3, 0) & " " & YEAR({c})'
-    if level == "month":
-        return f"DATE(YEAR({c}), MONTH({c}), 1)"
-    if level == "week":
-        return f"{c} - WEEKDAY({c}, 2) + 1"
-    return c
+        body = f"YEAR({c})"
+    elif level == "quarter":
+        body = f'"Q" & ROUNDUP(MONTH({c}) / 3, 0) & " " & YEAR({c})'
+    elif level == "month":
+        body = f"DATE(YEAR({c}), MONTH({c}), 1)"
+    elif level == "week":
+        body = f"{c} - WEEKDAY({c}, 2) + 1"
+    else:
+        return c
+    return f"IF(ISBLANK({c}), BLANK(), {body})"
 
 
 def part_format(level: str) -> Optional[str]:
