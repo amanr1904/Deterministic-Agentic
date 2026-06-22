@@ -29,8 +29,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LOAD_CONST = os.path.join(HERE, "load_constitution.py")
 PARSE = os.path.join(HERE, "twb", "parse_twb.py")
 MAPDAX = os.path.join(HERE, "dax", "map_dax.py")
+CLASSIFY = os.path.join(HERE, "classify", "classify.py")
+MERGE = os.path.join(HERE, "merge", "merge_decisions.py")
+RECONCILE = os.path.join(HERE, "dax", "reconcile.py")
 EMIT_TMDL = os.path.join(HERE, "emit", "emit_tmdl.py")
 EMIT_PBIR = os.path.join(HERE, "emit", "emit_pbir.py")
+VALIDATE_BINDINGS = os.path.join(HERE, "emit", "validate_bindings.py")
 VALIDATE = os.path.join(
     HERE, "..", "plugins", "pbip", "skills", "pbip", "scripts", "validate_pbip.py")
 BIN_DIR = os.path.join(HERE, "..", "plugins", "pbip", "hooks", "bin")
@@ -96,29 +100,65 @@ def prepare(args) -> int:
     rc = run([sys.executable, MAPDAX, analysis])
     if rc != 0:
         return rc
+    # Stage 6.5 — binary-route remaining work and emit the agent's self-contained
+    # to-do list (classification.json, schema-easy.json, agent-todo.json).
+    rc = run([sys.executable, CLASSIFY, analysis])
+    if rc != 0:
+        return rc
     _print_gaps(analysis)
     return 0
 
 
 def _print_gaps(analysis: str) -> None:
-    """Tell the agent exactly what decisions.json must still resolve."""
+    """Tell the agent exactly what the batched gap-fill call must author.
+
+    Sources the routing from classification.json (authoritative binary route) and
+    points the agent at agent-todo.json, the self-contained work list it reads.
+    """
     with open(analysis, encoding="utf-8-sig") as fh:
         ir = json.load(fh)
     ambiguous = [w["name"] for w in ir.get("worksheets", [])
                  if w.get("inferredVisualType") is None]
-    complex_calcs = [c["caption"] for c in ir.get("calculatedFields", [])
-                     if c["complexity"] == "complex"]
     out_dir = os.path.dirname(analysis)
-    print("\n=== AGENT GAP-FILL REQUIRED (write decisions.json here) ===")
+    cls_path = os.path.join(out_dir, "classification.json")
+    schema_route, agent_measures = "agent", []
+    if os.path.isfile(cls_path):
+        with open(cls_path, encoding="utf-8-sig") as fh:
+            cls = json.load(fh)
+        schema_route = cls.get("schema", {}).get("route", "agent")
+        agent_measures = [m["caption"] for m in cls.get("measures", [])
+                          if m.get("route") == "agent"]
+    print("\n=== AGENT GAP-FILL REQUIRED (one batched call -> agent-fragment.json) ===")
     print(f"  folder              : {out_dir}")
-    print(f"  complex DAX (LLM)   : {len(complex_calcs)} -> {complex_calcs}")
+    print(f"  schema route        : {schema_route}")
+    print(f"  agent DAX measures  : {len(agent_measures)} -> {agent_measures}")
     print(f"  ambiguous visuals   : {len(ambiguous)} -> {ambiguous}")
-    print("  read: analysis.json + dax-partial.json")
-    print("  write: decisions.json (see scripts/contracts/decisions_schema.json)")
+    print("  read: agent-todo.json (self-contained work list)")
+    print("  write: agent-fragment.json (see scripts/contracts/fragment_schema.json)")
+    print("  then: python pipeline.py merge <analysis>  -> assembles decisions.json")
+
+
+def merge_cmd(args) -> int:
+    """Stage 6.9: assemble dax-partial + schema-easy + agent-fragment -> decisions.json.
+
+    Deterministic merge done by script (not the agent). Exit 4 means a pending
+    measure is still missing -> the orchestrator escalates to the Opus fallback.
+    """
+    cmd = [sys.executable, MERGE, args.analysis]
+    if args.agent_fragment:
+        cmd += ["--agent-fragment", args.agent_fragment]
+    if args.out:
+        cmd += ["--out", args.out]
+    return run(cmd)
 
 
 def generate(args) -> int:
     """Stage 10 + 13 + validation: emit model and report, then validate."""
+    # Guard: no pending measure may be silently dropped. If the agent omitted any,
+    # this fails (exit 4) and writes measures-todo.json so the agent re-authors them.
+    rc = run([sys.executable, RECONCILE, args.analysis, "--decisions", args.decisions])
+    if rc != 0:
+        return rc
     rc = run([sys.executable, EMIT_TMDL, args.analysis, "--decisions", args.decisions])
     if rc != 0:
         return rc
@@ -130,6 +170,11 @@ def generate(args) -> int:
     sm_def = os.path.join(project_dir, f"{model_name}.SemanticModel", "definition")
     if os.path.isfile(TMDL_VALIDATE):
         run([TMDL_VALIDATE, sm_def])
+    # Guard: every report visual field must bind to a column/measure that actually
+    # exists on its table (catches fact columns mis-bound to a synthetic DimDate).
+    rc = run([sys.executable, VALIDATE_BINDINGS, project_dir])
+    if rc != 0:
+        return rc
     return run([sys.executable, VALIDATE, project_dir])
 
 
@@ -146,6 +191,12 @@ def main(argv=None) -> int:
     p_prep.add_argument("twb")
     p_prep.add_argument("--output-root", default="Output")
     p_prep.set_defaults(func=prepare)
+
+    p_merge = sub.add_parser("merge", help="Stage 6.9: assemble decisions.json from fragments")
+    p_merge.add_argument("analysis")
+    p_merge.add_argument("--agent-fragment", help="path to agent-fragment.json")
+    p_merge.add_argument("--out", help="output decisions.json path")
+    p_merge.set_defaults(func=merge_cmd)
 
     p_gen = sub.add_parser("generate", help="Stage 10 + 13 + validation")
     p_gen.add_argument("analysis")
