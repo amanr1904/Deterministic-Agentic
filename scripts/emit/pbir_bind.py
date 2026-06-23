@@ -344,17 +344,31 @@ def table_columns(ws: Optional[Dict], ir: Dict, entity: str,
     level = ws.get("categoryDateLevel") if ws else None
     if ws:
         for d in ws.get("dimensions", []) or []:
+            if _is_pseudo_field(d):
+                continue  # Tableau [:Measure Names]/[:Measure Values] have no model column
             if d in dcols and D.needs_part(level):
                 out.append({"entity": entity, "prop": D.part_column_name(d, level),
                             "isMeasure": False})
             elif d in cols:
                 out.append({"entity": entity, "prop": d, "isMeasure": False})
         for v in ws.get("values", []) or []:
+            if _is_pseudo_field(v):
+                continue
             if v in mset:
                 out.append({"entity": entity, "prop": v, "isMeasure": True})
             elif v in cols:
                 out.append({"entity": entity, "prop": v, "isMeasure": False})
     if not out:
         out = [{"entity": entity, "prop": c["name"], "isMeasure": False}
-               for c in ir.get("columns", [])[:6]]
+               for c in ir.get("columns", [])[:6] if not _is_pseudo_field(c["name"])]
     return out or [{"entity": entity, "prop": "Column", "isMeasure": False}]
+
+
+def _is_pseudo_field(name: str) -> bool:
+    """Tableau synthetic shelf fields ([:Measure Names], [:Measure Values], etc.)
+    that have no backing model column/measure — binding them errors the visual."""
+    n = (name or "").strip()
+    if n.startswith(":"):
+        return True
+    return n.lower() in {"measure names", "measure values",
+                         "number of records", "multiple values"}

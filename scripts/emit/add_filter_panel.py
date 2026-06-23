@@ -203,6 +203,8 @@ def add_filter_panel(output_dir: str,
     header_color = fp_cfg.get("slicerHeaderColor", "#FFFFFF")
     sections_cfg = fp_cfg.get("sections")
     section_color = fp_cfg.get("sectionLabelColor", "#24C6FC")
+    show_header = fp_cfg.get("showHeader", True)
+    show_section_labels = fp_cfg.get("showSectionLabels", True)
 
     all_bookmark_ids: list[str] = []
     processed = 0
@@ -245,7 +247,9 @@ def add_filter_panel(output_dir: str,
             panel_x=px, panel_y=py, panel_w=pw, panel_h=ph,
             open_btn_pos=open_btn_pos, bg_color=panel_color,
             section_layout=section_layout or None,
-            section_label_color=section_color)
+            section_label_color=section_color,
+            show_header=show_header,
+            show_section_labels=show_section_labels)
         if not chrome:
             continue
 

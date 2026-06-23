@@ -58,11 +58,48 @@ def load_json(path: str) -> Dict:
         return json.load(fh)
 
 
+def _long_path(path: str) -> str:
+    """Return a Windows extended-length path (``\\\\?\\`` prefix) so file ops are
+    not capped at the 260-char MAX_PATH limit. Deeply-nested PBIR visual folders
+    (``...Report/definition/pages/<Page>/visuals/<visual>/visual.json``) easily
+    exceed 260 chars on long workspace roots; without this the writer raises
+    ``WinError 206`` and silently leaves later pages empty. No-op off Windows."""
+    if os.name != "nt":
+        return path
+    abs = os.path.abspath(path)
+    if abs.startswith("\\\\?\\"):
+        return abs
+    if abs.startswith("\\\\"):  # UNC path
+        return "\\\\?\\UNC\\" + abs[2:]
+    return "\\\\?\\" + abs
+
+
 def write_json(path: str, data: Dict) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    target = _long_path(path)
+    os.makedirs(os.path.dirname(target), exist_ok=True)
     # Always write UTF-8 WITHOUT BOM — Power BI Desktop rejects BOM in PBIR files.
-    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+    with open(target, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
+
+
+def _visual_dir(name: str) -> str:
+    """Short, deterministic, collision-free *folder* name for a visual.
+
+    Power BI Desktop enforces the 260-char Windows MAX_PATH when READING a
+    .pbip (PBIProjectUtils.EnsureNotLong) — the ``\\\\?\\`` write trick does not
+    help on open. Deep ``pages/<Page>/visuals/<folder>/visual.json`` paths must
+    therefore stay short on disk. The descriptive logical id lives in
+    visual.json's ``name`` and ALL cross-references (bookmarks, visual groups,
+    page navigation) use that id, NOT the folder — so the folder can be
+    aggressively shortened without breaking anything. Names <=16 chars pass
+    through unchanged (readable); longer ones collapse to
+    ``<prefix7>_<sha1[:8]>`` (16 chars), unique via the full-name hash."""
+    safe = re.sub(r"[^0-9A-Za-z_-]+", "", name) or "v"
+    if len(safe) <= 16:
+        return safe
+    import hashlib
+    h = hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
+    return f"{safe[:7]}_{h}"
 
 
 def sanitize(name: str) -> str:
@@ -83,9 +120,9 @@ def _rmtree_robust(path: str) -> None:
 
     if hasattr(shutil, "rmtree"):
         try:
-            shutil.rmtree(path, onerror=_onerror)
+            shutil.rmtree(_long_path(path), onerror=_onerror)
         except TypeError:  # Python 3.12+ renamed the callback
-            shutil.rmtree(path, onexc=lambda f, p, e: _onerror(f, p, e))
+            shutil.rmtree(_long_path(path), onexc=lambda f, p, e: _onerror(f, p, e))
 
 
 def resolve_visual_type(ws_name: str, ir: Dict, decisions: Dict) -> str:
@@ -229,7 +266,7 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     if round(zone.get("h", 0) * sy) < MIN_VISUAL_PX:
         return None
     ws = B.ws_by_name(ir, ws_name)
-    name = f"visual_{sanitize(ws_name or 'zone')}_{z}".lower()
+    name = f"visual_{sanitize(ws_name or 'zone')[:18]}_{z}".lower()
     vd = visual_decision(ws_name, decisions)
     vtype = resolve_visual_type(ws_name, ir, decisions)
     mlist = B.measure_list(decisions)
@@ -241,6 +278,11 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
 
     def value_bind() -> Dict:
         v = vd.get("value")
+        # Value bound to a plain (non-measure) column, optionally from another
+        # table (e.g. a pre-aggregated calc table that backs a histogram).
+        if v and vd.get("valueColumn"):
+            return {"entity": vd.get("valueEntity") or entity, "prop": v,
+                    "isMeasure": False}
         if v and v in mset:
             return {"entity": entity, "prop": v, "isMeasure": True}
         return B.value_binding(valf, entity, mset, mlist, cols, ir)
@@ -297,7 +339,9 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         elif vd.get("category"):
             # Resolve the owning table so dimension attributes (Sub-Category ->
             # DimProduct, Region -> DimLocation) don't bind to the fact entity.
-            cat_entity = B.column_entity(vd["category"], decisions, entity)
+            # An explicit categoryEntity wins (e.g. a calc table not in any CSV).
+            cat_entity = (vd.get("categoryEntity")
+                          or B.column_entity(vd["category"], decisions, entity))
             catbind = {"entity": cat_entity, "prop": vd["category"]}
         else:
             catbind = None  # resolved below
@@ -400,7 +444,7 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
         # kpiStack returns a list of 3 visuals: [card, pct_card, sparkline]
         visuals = result if isinstance(result, list) else [result]
         for visual in visuals:
-            write_json(os.path.join(page_dir, "visuals", visual["name"], "visual.json"), visual)
+            write_json(os.path.join(page_dir, "visuals", _visual_dir(visual["name"]), "visual.json"), visual)
             z += 1
     return page_name
 
@@ -438,11 +482,11 @@ def _suggest_visual_name(zone: Dict, z: int) -> str:
     """Deterministic visual/folder name suggestion (matches the page-name regex)."""
     ztype = zone.get("type")
     if ztype in ("filter", "paramctrl"):
-        base = f"slicer_{sanitize(zone.get('field') or 'field')}"
+        base = f"slicer_{sanitize(zone.get('field') or 'field')[:18]}"
     elif ztype == "text":
         base = "text"
     else:
-        base = f"visual_{sanitize(zone.get('worksheet') or 'zone')}"
+        base = f"visual_{sanitize(zone.get('worksheet') or 'zone')[:18]}"
     return f"{base}_{z}".lower()
 
 
@@ -626,6 +670,8 @@ def _inject_filter_panel(definition_dir: str, page_names: List[str],
     header_color = fp_cfg.get("slicerHeaderColor", "#FFFFFF")
     sections_cfg = fp_cfg.get("sections")
     section_color = fp_cfg.get("sectionLabelColor", "#24C6FC")
+    show_header = fp_cfg.get("showHeader", True)
+    show_section_labels = fp_cfg.get("showSectionLabels", True)
 
     all_ids: List[str] = []
     for pn in page_names:
@@ -672,12 +718,14 @@ def _inject_filter_panel(definition_dir: str, page_names: List[str],
             panel_x=px, panel_y=py, panel_w=pw, panel_h=ph,
             open_btn_pos=open_btn_pos, bg_color=panel_color,
             section_layout=section_layout or None,
-            section_label_color=section_color)
+            section_label_color=section_color,
+            show_header=show_header,
+            show_section_labels=show_section_labels)
         if not chrome:
             continue
 
         for vis in chrome["visuals"]:
-            write_json(os.path.join(visuals_dir, vis["name"], "visual.json"), vis)
+            write_json(os.path.join(visuals_dir, _visual_dir(vis["name"]), "visual.json"), vis)
         for bm in chrome["bookmarks"]:
             write_json(os.path.join(definition_dir, "bookmarks",
                                     f"{bm['name']}.bookmark.json"), bm)
@@ -687,7 +735,7 @@ def _inject_filter_panel(definition_dir: str, page_names: List[str],
         # read on the dark panel, and reposition them into the container stack.
         new_positions = chrome.get("slicer_positions") or {}
         for s in slicers:
-            spath = os.path.join(visuals_dir, s["name"], "visual.json")
+            spath = os.path.join(visuals_dir, s.get("folder") or _visual_dir(s["name"]), "visual.json")
             try:
                 sj = load_json(spath)
             except Exception:
@@ -747,10 +795,10 @@ def _collect_slicers(visuals_dir: str, explicit: Optional[List[str]]) -> List[Di
         vtype = (vj.get("visual") or {}).get("visualType", "")
         if explicit:
             if name in explicit:
-                out.append({"name": name, "pos": vj.get("position", {}),
+                out.append({"name": name, "folder": vname, "pos": vj.get("position", {}),
                             "field": _slicer_field(vj)})
         elif vtype == "slicer":
-            out.append({"name": name, "pos": vj.get("position", {}),
+            out.append({"name": name, "folder": vname, "pos": vj.get("position", {}),
                         "field": _slicer_field(vj)})
     return out
 
@@ -811,7 +859,7 @@ def _inject_nav_bar(pages_dir: str, page_names: List[str],
         )
         visuals_dir = os.path.join(pages_dir, pg["name"], "visuals")
         for v in visuals:
-            write_json(os.path.join(visuals_dir, v["name"], "visual.json"), v)
+            write_json(os.path.join(visuals_dir, _visual_dir(v["name"]), "visual.json"), v)
 
 
 def main(argv=None) -> int:

@@ -891,7 +891,9 @@ def filter_panel_chrome(page_name: str, slicer_names: List[str],
                         bg_color: str = _PANEL_BG_COLOR,
                         z_base: int = 9000,
                         section_layout: Optional[List[Dict]] = None,
-                        section_label_color: str = _PANEL_SECTION_COLOR) -> Dict:
+                        section_label_color: str = _PANEL_SECTION_COLOR,
+                        show_header: bool = True,
+                        show_section_labels: bool = True) -> Dict:
     """Build the full filter-panel toggle for one page.
 
     Returns a dict with the visuals to add to the page and the two bookmark
@@ -971,15 +973,16 @@ def filter_panel_chrome(page_name: str, slicer_names: List[str],
                 continue
             if label:
                 y += _PANEL_SECTION_GAP
-                lbl_name = f"filter_panel_sec_{_slug(label)}"
-                lbl_pos = {"x": content_x, "y": y, "z": z,
-                           "height": _PANEL_SECTION_LBL_H, "width": content_w,
-                           "tabOrder": z}
-                section_visuals.append(textbox_visual(
-                    lbl_name, lbl_pos, label, size=11, bold=True,
-                    hex_color=section_label_color, align="center"))
-                section_names.append(lbl_name)
-                z += 1
+                if show_section_labels:
+                    lbl_name = f"filter_panel_sec_{_slug(label)}"
+                    lbl_pos = {"x": content_x, "y": y, "z": z,
+                               "height": _PANEL_SECTION_LBL_H, "width": content_w,
+                               "tabOrder": z}
+                    section_visuals.append(textbox_visual(
+                        lbl_name, lbl_pos, label, size=11, bold=True,
+                        hex_color=section_label_color, align="center"))
+                    section_names.append(lbl_name)
+                    z += 1
                 y += _PANEL_SECTION_LBL_H + _PANEL_STACK_GAP
             for sname in members:
                 slicer_positions[sname] = {
@@ -989,7 +992,8 @@ def filter_panel_chrome(page_name: str, slicer_names: List[str],
                 z += 1
                 y += _PANEL_STACK_SLICER_H + _PANEL_STACK_GAP
 
-    drawer_visuals = ([bg_name, header_name, close_name]
+    drawer_visuals = ([bg_name, close_name]
+                      + ([header_name] if show_header else [])
                       + section_names + list(slicer_names))
     all_targets = drawer_visuals + [open_name]
 
@@ -1003,7 +1007,9 @@ def filter_panel_chrome(page_name: str, slicer_names: List[str],
         hidden_visuals=[open_name], target_visuals=all_targets)
 
     return {
-        "visuals": [panel_bg, panel_header, btn_open, btn_close] + section_visuals,
+        "visuals": ([panel_bg, btn_open, btn_close]
+                    + ([panel_header] if show_header else [])
+                    + section_visuals),
         "bookmarks": [bm_shown, bm_hidden],
         "ids": {"shown": shown_id, "hidden": hidden_id},
         "slicer_positions": slicer_positions,

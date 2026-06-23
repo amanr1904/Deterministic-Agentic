@@ -7,10 +7,12 @@ TMDL boilerplate is emitted here; the LLM only supplies measure DAX via decision
 from __future__ import annotations
 
 import argparse
+import csv as _csv
 import json
 import os
 import re
 import sys
+from datetime import datetime
 from typing import Dict, List
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -77,6 +79,13 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         lines.append(f"{B.TAB}dataCategory: Time")
     lines.append("")
     measures = [m for m in decisions.get("measures", []) if m["table"] == name]
+    # Names already claimed on this table (explicit measures + auto-injected
+    # ones). The SAME rank/last-order measure is commonly referenced by many
+    # visual tableColumns; without this guard each occurrence would emit a
+    # duplicate `measure 'X'` block and Power BI Desktop rejects the model
+    # ("TMDL objects cannot be merged because both declare the same property:
+    # expression"). One declaration per name is all the model needs.
+    _seen_measure = {m["name"].lower() for m in measures}
     # Auto-inject rankMeasure declared on visual tableColumns in decisions.json.
     # "rankMeasure": {"by": "CY Profit", "over": "DimCustomer", "overCol": "Customer Name"}
     # Generates: RANKX(ALLSELECTED(DimCustomer[Customer Name]), [CY Profit], , DESC, Dense)
@@ -86,6 +95,9 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         if tc.get("isMeasure") and tc.get("rankMeasure") and tc["table"] == name
     ]
     for rs in _rank_specs:
+        if rs["prop"].lower() in _seen_measure:
+            continue
+        _seen_measure.add(rs["prop"].lower())
         rm = rs["rankMeasure"]
         by_m, over_t, over_c = rm["by"], rm["over"], rm["overCol"]
         measures.append({
@@ -107,6 +119,9 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         if tc.get("isMeasure") and tc.get("lastOrderMeasure") and tc["table"] == name
     ]
     for ls in _last_specs:
+        if ls["prop"].lower() in _seen_measure:
+            continue
+        _seen_measure.add(ls["prop"].lower())
         lm = ls["lastOrderMeasure"]
         date_col = lm["dateColumn"]
         measures.append({
@@ -119,15 +134,15 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
     # Auto-inject Top-N rank measures from the IR (Tableau groupfilter count=N).
     # The category column lives on the fact table, so rank measures land here.
     if table.get("role") == "fact":
-        _seen_rank = {m["name"] for m in measures}
+        _seen_rank = _seen_measure
         for ws in ir.get("worksheets", []):
             tn = ws.get("topN")
             if not tn or not tn.get("field"):
                 continue
             rname, rdax, _count = T.spec(tn, name)
-            if rname in _seen_rank:
+            if rname.lower() in _seen_rank:
                 continue
-            _seen_rank.add(rname)
+            _seen_rank.add(rname.lower())
             measures.append({
                 "name": rname,
                 "table": name,
@@ -238,7 +253,30 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
     ds = table.get("sourceDatasource")
     cols = [c for c in ir["columns"] if ds is None or c["datasource"] == ds]
     cols = cols or ir["columns"]
-    return _dedupe_columns(cols, ir)
+    cols = _dedupe_columns(cols, ir)
+    cols = [c for c in cols if not _is_pseudo_column(c.get("name", ""))]
+    # The MODEL columns must reflect what the M partition actually loads. When the
+    # table is backed by a probeable CSV whose header set DIFFERS from the IR (e.g.
+    # the workbook's datasource was an Excel export but the supplied data file is a
+    # differently-shaped CSV), trust the CSV: declaring an IR-only column whose
+    # sourceColumn is absent from the file fails to load ("column 'X' wasn't found"),
+    # and CSV-only columns the visuals/measures need would otherwise be missing.
+    probe = _probe_for_table(table, ir)
+    if probe and probe["columns"]:
+        ir_norm = {_normalize_name(c["name"]) for c in cols}
+        csv_norm = {_normalize_name(c["name"]) for c in probe["columns"]}
+        if ir_norm != csv_norm:
+            return [c for c in probe["columns"] if not _is_pseudo_column(c.get("name", ""))]
+    return cols
+
+
+def _is_pseudo_column(name: str) -> bool:
+    """True for Tableau synthetic shelf fields that have no backing CSV column."""
+    n = (name or "").strip()
+    if n.startswith(":"):
+        return True
+    return n.lower() in {"measure names", "measure values",
+                         "number of records", "multiple values"}
 
 
 def _dedupe_columns(cols: List[Dict], ir: Dict) -> List[Dict]:
@@ -323,11 +361,15 @@ def _normalize_name(s: str) -> str:
     return re.sub(r"[_/\-\s]+", " ", s).strip().lower()
 
 
-def _build_csv_columns(csv_headers: List[str], ir_columns: List[Dict]) -> List[Dict]:
+def _build_csv_columns(csv_headers: List[str], ir_columns: List[Dict],
+                       inferred: Dict[str, str] | None = None) -> List[Dict]:
     """Match each CSV header to an IR logical column using normalized comparison.
     Returns a list of {name, csv_name, dataType} dicts ordered by CSV column order.
-    Unmatched headers keep their raw name with dataType='string'.
+    Unmatched headers keep their raw name; their dataType comes from value-sniffing
+    (``inferred``) so CSV-only numeric columns (e.g. measures materialized into the
+    export that the original Tableau datasource never declared) are typed correctly.
     """
+    inferred = inferred or {}
     ir_by_norm = {_normalize_name(c["name"]): c for c in ir_columns}
     result = []
     for h in csv_headers:
@@ -337,8 +379,66 @@ def _build_csv_columns(csv_headers: List[str], ir_columns: List[Dict]) -> List[D
             result.append({"name": col["name"], "csv_name": h,
                            "dataType": col.get("dataType", "string")})
         else:
-            result.append({"name": h, "csv_name": h, "dataType": "string"})
+            result.append({"name": h, "csv_name": h,
+                           "dataType": inferred.get(h, "string")})
     return result
+
+
+def _infer_csv_types(path: str, delimiter: str, headers: List[str],
+                     sample: int = 200) -> Dict[str, str]:
+    """Sniff each CSV column's dataType from up to ``sample`` data rows."""
+    buckets: "dict[str, list]" = {h: [] for h in headers}
+    try:
+        with open(path, encoding="utf-8-sig", errors="replace", newline="") as fh:
+            reader = _csv.reader(fh, delimiter=delimiter)
+            next(reader, None)  # skip header
+            for i, row in enumerate(reader):
+                if i >= sample:
+                    break
+                for h, v in zip(headers, row):
+                    if v is not None and v.strip() != "":
+                        buckets[h].append(v.strip())
+    except OSError:
+        return {}
+    return {h: _infer_one_type(vals) for h, vals in buckets.items()}
+
+
+def _infer_one_type(vals: List[str]) -> str:
+    if not vals:
+        return "string"
+
+    def _is_int(v: str) -> bool:
+        try:
+            int(v)
+            return True
+        except ValueError:
+            return False
+
+    def _is_float(v: str) -> bool:
+        try:
+            float(v)
+            return True
+        except ValueError:
+            return False
+
+    if all(_is_int(v) for v in vals):
+        return "integer"
+    if all(_is_float(v) for v in vals):
+        return "real"
+    _fmts = ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%Y %H:%M:%S")
+
+    def _is_date(v: str) -> bool:
+        for f in _fmts:
+            try:
+                datetime.strptime(v, f)
+                return True
+            except ValueError:
+                continue
+        return False
+
+    if all(_is_date(v) for v in vals):
+        return "date"
+    return "string"
 
 
 def _probe_for_table(table: Dict, ir: Dict) -> Dict | None:
@@ -349,9 +449,10 @@ def _probe_for_table(table: Dict, ir: Dict) -> Dict | None:
     if result is None:
         return None
     ir_cols = ir.get("columns", [])
+    inferred = _infer_csv_types(path, result["delimiter"], result["headers"])
     return {
         "delimiter": result["delimiter"],
-        "columns": _build_csv_columns(result["headers"], ir_cols),
+        "columns": _build_csv_columns(result["headers"], ir_cols, inferred),
     }
 
 
