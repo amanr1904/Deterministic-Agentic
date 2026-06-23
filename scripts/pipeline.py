@@ -53,6 +53,7 @@ EMIT_PBIR = os.path.join(HERE, "emit", "emit_pbir.py")
 VALIDATE_BINDINGS = os.path.join(HERE, "emit", "validate_bindings.py")
 VALIDATE = os.path.join(
     HERE, "..", "plugins", "pbip", "skills", "pbip", "scripts", "validate_pbip.py")
+SEM_VALIDATE = os.path.join(HERE, "validate_semantics.py")
 BIN_DIR = os.path.join(HERE, "..", "plugins", "pbip", "hooks", "bin")
 
 
@@ -152,7 +153,16 @@ def _print_gaps(analysis: str) -> None:
     with open(analysis, encoding="utf-8-sig") as fh:
         ir = json.load(fh)
     ambiguous = [w["name"] for w in ir.get("worksheets", [])
+<<<<<<< HEAD
+                 if (w.get("markClass") or "Automatic") == "Automatic"]
+    partial_path = os.path.join(os.path.dirname(analysis), "dax-partial.json")
+    complex_calcs = []
+    if os.path.isfile(partial_path):
+        with open(partial_path, encoding="utf-8-sig") as fh:
+            complex_calcs = [p["caption"] for p in json.load(fh).get("pending", [])]
+=======
                  if w.get("inferredVisualType") is None]
+>>>>>>> main
     out_dir = os.path.dirname(analysis)
     cls_path = os.path.join(out_dir, "classification.json")
     schema_route, agent_measures = "agent", []
@@ -214,12 +224,21 @@ def generate(args) -> int:
     sm_def = os.path.join(project_dir, f"{model_name}.SemanticModel", "definition")
     if os.path.isfile(TMDL_VALIDATE):
         run([TMDL_VALIDATE, sm_def])
+<<<<<<< HEAD
+    rc_pbip = run([sys.executable, VALIDATE, project_dir])
+    # Semantic check: every relationship/measure reference must resolve, types
+    # must match, no reserved VAR names, no illegal PBIR properties. This is the
+    # check that catches "won't open in Desktop" errors the syntax validators miss.
+    rc_sem = run([sys.executable, SEM_VALIDATE, project_dir])
+    return rc_sem if rc_sem != 0 else rc_pbip
+=======
     # Guard: every report visual field must bind to a column/measure that actually
     # exists on its table (catches fact columns mis-bound to a synthetic DimDate).
     rc = run([sys.executable, VALIDATE_BINDINGS, project_dir])
     if rc != 0:
         return rc
     return run([sys.executable, VALIDATE, project_dir])
+>>>>>>> main
 
 
 def _print_visual_gaps(analysis: str, decisions: str) -> None:

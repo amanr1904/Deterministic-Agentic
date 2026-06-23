@@ -1,0 +1,20 @@
+{
+  "measures": [],
+  "calculatedColumns": [],
+  "pending": [
+    {
+      "caption": "RLS",
+      "formula": "CONTAINS(\r\n    LOWER(IFNULL(ATTR([country]), \"\")),\r\n    LOWER(ATTR([country]))\r\n)\r\nAND LOWER(ATTR([Username])) = \"user2@maq.com\"",
+      "complexity": "complex",
+      "suggestedDaxKind": "measure",
+      "reason": "complex-token"
+    },
+    {
+      "caption": "Year",
+      "formula": "DATETIME([date_added])",
+      "complexity": "complex",
+      "suggestedDaxKind": "column",
+      "reason": "complex-token"
+    }
+  ]
+}

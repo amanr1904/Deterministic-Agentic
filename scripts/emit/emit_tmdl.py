@@ -266,6 +266,14 @@ def build_table_file(table: Dict, ir: Dict, decisions: Dict, seq: int) -> str:
         lines += [B.measure_block(m, seq * 100 + i + 1), ""]
     for i, col in enumerate(cols):
         lines += [B.column_block(col, seq * 1000 + i + 1), ""]
+    # Author-supplied calculated columns (decisions.calculatedColumns) for this
+    # table — e.g. a Peak/Normal flag used as a chart legend.
+    calc_cols = [c for c in decisions.get("calculatedColumns", [])
+                 if c.get("table") == name]
+    for j, c in enumerate(calc_cols):
+        lines += [B.calc_column_block(c["name"], c["dax"],
+                                      c.get("dataType", "string"),
+                                      c.get("formatString"), seq * 1000 + 700 + j), ""]
     # Calendar date table: Date key column + date intelligence calculated columns
     if table.get("role") == "date" and table.get("sourceType") == "calendar":
         lines += [B.date_key_column_block(seq * 1000 + 1), ""]
@@ -339,6 +347,7 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
     # Fall back to key-only when CSV cannot be probed.
     if role == "dim" and table.get("dedupKey"):
         key = (table.get("keyColumns") or [table["dedupKey"]])[0]
+        key = _logical_col(table, ir, key)
         probe = _probe_for_table(table, ir)
         if probe and probe["columns"]:
             return probe["columns"]
@@ -353,6 +362,82 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
     ds = table.get("sourceDatasource")
     cols = [c for c in ir["columns"] if ds is None or c["datasource"] == ds]
     cols = cols or ir["columns"]
+<<<<<<< HEAD
+    cols = _dedupe_columns(cols)
+    if table.get("role") != "date":
+        cols = _reconcile_with_csv(table, ir, cols)
+    return cols
+
+
+def _reconcile_with_csv(table: Dict, ir: Dict, ir_cols: List[Dict]) -> List[Dict]:
+    """Rebuild the column list from the CSV's physical header.
+
+    The Tableau metadata often omits physical columns and invents logical ones
+    (calc fields, ':Measure Names') that are not in the file. Anchoring on the
+    real header guarantees every emitted column maps to a column that actually
+    exists, so the model load never fails with 'column X wasn't found'. IR types
+    are kept for known columns; unknown columns get a light sampled inference.
+    """
+    path = table.get("sourceFile") or _first_csv(ir)
+    if not str(path).lower().endswith(".csv"):
+        return ir_cols
+    abs_path = _abs_csv(ir, path)
+    header, rows = B.read_csv_sample(abs_path)
+    if not header:
+        return ir_cols
+    ir_by_key = {c["name"].strip().lower(): c for c in ir_cols}
+    out, seen = [], set()
+    for idx, raw_name in enumerate(header):
+        key = raw_name.strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        match = ir_by_key.get(key)
+        if match:
+            col = dict(match)
+            col["name"] = raw_name
+        else:
+            col = {"name": raw_name, "dataType": B.infer_csv_type(rows, idx),
+                   "role": "dimension", "format": None}
+        out.append(col)
+    return out
+
+
+def _dedupe_columns(cols: List[Dict]) -> List[Dict]:
+    """Drop duplicate column names (case-insensitive), keeping first occurrence.
+
+    A workbook can expose the same column from several datasources (e.g. a Hyper
+    extract and its CSV template both define 'Census Date'). A single flat table
+    must declare each column once or TMDL load fails with 'objects cannot be
+    merged because both declare the same property: dataType'.
+    """
+    seen, out = set(), []
+    for c in cols:
+        key = c["name"].strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(c)
+    return out
+
+
+def _parse_settings_for(table: Dict, ir: Dict) -> Dict:
+    """Return the metadata CSV parse settings for a table (delimiter/codepage/...).
+
+    Looks up ir.physicalTables by the table's source-file basename so the emitter
+    can take the delimiter and encoding from WORKBOOK METADATA instead of sniffing
+    the data file. Returns {} when not found (caller falls back to probing).
+    """
+    src = table.get("sourceFile") or _first_csv(ir)
+    base = _normalize_name(os.path.basename(str(src)))
+    pts = ir.get("physicalTables", [])
+    for pt in pts:
+        if _normalize_name(pt.get("name", "")) == base:
+            return pt.get("parse") or {}
+    if len(pts) == 1:
+        return pts[0].get("parse") or {}
+    return {}
+=======
     # A workbook can expose several datasources that share column names (e.g. a
     # secondary "... NEW" extract alongside the CSV). Without a pinned
     # sourceDatasource every matching column is collected, so the same column is
@@ -386,22 +471,28 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
             if scoped:
                 deduped = scoped
     return deduped
+>>>>>>> main
 
 
 def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> str:
     role = table.get("role")
+    parse = _parse_settings_for(table, ir)
+    codepage = parse.get("codepage") or 65001
     # Dim with dedupKey: full M partition — load all CSV columns, rename, dedup.
     if role == "dim" and table.get("dedupKey"):
         key = (table.get("keyColumns") or [table["dedupKey"]])[0]
+        key = _logical_col(table, ir, key)
         path = _abs_csv(ir, table.get("sourceFile") or _first_csv(ir))
         probe = _probe_for_table(table, ir)
+        # Delimiter from metadata first, then the file probe, then comma.
+        delim = parse.get("delimiter") or (probe["delimiter"] if probe else ",")
         if probe and probe["columns"]:
-            return B.dim_partition(table["name"], path, probe["delimiter"],
-                                   key, probe["columns"])
+            return B.dim_partition(table["name"], path, delim,
+                                   key, probe["columns"], codepage)
         # Fallback: key-only slim partition when CSV cannot be probed
         src_col = _dim_source_column(table["name"], key, decisions)
         all_cols = [{"name": key, "csv_name": src_col, "dataType": "string"}]
-        return B.dim_partition(table["name"], path, ",", key, all_cols)
+        return B.dim_partition(table["name"], path, delim, key, all_cols, codepage)
     # Calendar date table: DAX CALENDAR calculated partition
     if role == "date" and table.get("sourceType") == "calendar":
         fact_tbl, date_col = _date_source_column(table["name"], decisions, ir)
@@ -411,20 +502,28 @@ def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> 
         return B.datatable_partition(table["name"], dt["columns"], dt["rows"])
     if table.get("mExpression"):
         return B.raw_partition(table["name"], table["mExpression"])
-    # Fact / other: probe CSV for delimiter; use robust parsing for European CSVs.
+    # Non-CSV source (Excel / Parquet / relational DB): generate the matching M
+    # connector from the detected datasource. CSV and Hyper fall through to the
+    # CSV path below (Hyper is materialised from its CSV sibling in these books).
+    src = _source_for_table(table, ir)
+    if src and src["sourceType"].lower() in _NONCSV_SOURCES:
+        return B.source_partition(table["name"], src, cols)
+    # Fact / other: delimiter from metadata (fallback to probe); robust parsing
+    # for European CSVs (non-comma delimiter or comma decimal separator).
     path = table.get("sourceFile") or _first_csv(ir)
     abs_path = _abs_csv(ir, path)
     probe = _probe_for_table(table, ir)
-    delimiter = probe["delimiter"] if probe else ","
+    delimiter = parse.get("delimiter") or (probe["delimiter"] if probe else ",")
     if probe and probe["columns"]:
         csv_names_norm = {_normalize_name(c["csv_name"]) for c in probe["columns"]}
         cols = [c for c in cols if _normalize_name(c["name"]) in csv_names_norm]
-    if delimiter != ",":
+    european = delimiter != "," or parse.get("decimalChar") == ","
+    if european:
         date_cs = [c["name"] for c in cols if c.get("dataType") in ("date", "datetime")]
         decimal_cs = [c["name"] for c in cols if c.get("dataType") == "real"]
         return B.robust_csv_partition(table["name"], abs_path, cols, delimiter,
-                                      date_cs, decimal_cs)
-    return B.csv_partition(table["name"], abs_path, cols, delimiter)
+                                      date_cs, decimal_cs, codepage)
+    return B.csv_partition(table["name"], abs_path, cols, delimiter, codepage)
 
 
 def _abs_csv(ir: Dict, path: str) -> str:
@@ -460,6 +559,53 @@ def _abs_csv(ir: Dict, path: str) -> str:
     if path and os.path.isabs(path):
         return path
     return os.path.abspath(os.path.join(wb_dir, base))
+
+
+# Source types whose partitions are built by B.source_partition (non-CSV).
+# CSV and Hyper deliberately excluded: CSV uses the physical-header path; Hyper
+# is materialised from its CSV sibling. Custom/unmapped sources reach the ODBC
+# stub inside source_partition, or use a decisions ``mExpression`` override.
+_NONCSV_SOURCES = {
+    "excel", "parquet", "sqlserver", "postgresql",
+    "mysql", "oracle", "odbc",
+    "snowflake", "databricks", "bigquery",
+}
+
+
+def _source_for_table(table: Dict, ir: Dict) -> Dict | None:
+    """Resolve the connection facts for a table's backing datasource.
+
+    Honours decisions overrides (sourceDatasource / sourceTable / sourceSchema /
+    sourceSheet / sourceFile) and falls back to the first active non-Parameters
+    datasource. Returns None when the IR has no usable datasource.
+    """
+    dss = [d for d in ir.get("dataSources", []) if d.get("internalName") != "Parameters"]
+    if not dss:
+        return None
+    want = table.get("sourceDatasource")
+    ds = None
+    if want:
+        ds = next((d for d in dss
+                   if d.get("name") == want or d.get("internalName") == want), None)
+    if ds is None:
+        ds = next((d for d in dss if d.get("active")), None) or dss[0]
+    file = table.get("sourceFile") or (ds.get("files") or [None])[0]
+    tables = ds.get("tables") or []
+    relations = ds.get("relations") or []
+    table_rel = next((r for r in relations if r.get("type") == "table"), None)
+    custom = next((r for r in relations if r.get("type") == "customSql"), None)
+    return {
+        "sourceType": ds.get("sourceType", "") or "",
+        "server": ds.get("server"),
+        "database": ds.get("database"),
+        "schema": (table.get("sourceSchema") or (table_rel or {}).get("schema")
+                   or ds.get("schema")),
+        "table": (table.get("sourceTable") or (table_rel or {}).get("table")
+                  or (tables[0] if tables else table["name"])),
+        "file": _abs_csv(ir, file) if file else "",
+        "sheet": table.get("sourceSheet") or table.get("sourceTable"),
+        "query": table.get("sourceQuery") or ds.get("customSql") or (custom or {}).get("sql"),
+    }
 
 
 def _first_csv(ir: Dict) -> str:
@@ -573,6 +719,26 @@ def _probe_for_table(table: Dict, ir: Dict) -> Dict | None:
     }
 
 
+def _logical_col(table: Dict, ir: Dict, col: str) -> str:
+    """Map a physical CSV column name to its logical (model) name.
+
+    A dim's emitted column is renamed from the CSV header (e.g. ``Customer_ID``)
+    to the IR/logical name (``Customer ID``).  Decisions authored with the raw
+    CSV name would then point at a column that does not exist, so relationships
+    fail to resolve in Power BI Desktop.  This normalises either spelling to the
+    logical name; unknown names pass through unchanged.
+    """
+    if table is None or table.get("role") not in ("dim", "fact"):
+        return col
+    probe = _probe_for_table(table, ir)
+    if not probe:
+        return col
+    for c in probe["columns"]:
+        if c.get("csv_name") == col and c["name"] != col:
+            return c["name"]
+    return col
+
+
 def build_model_file(decisions: Dict) -> str:
     tables = [t["name"] for t in decisions.get("tables", [])]
     tables += [fp["name"] for fp in decisions.get("fieldParameters", [])]
@@ -586,11 +752,14 @@ def build_model_file(decisions: Dict) -> str:
         f"{refs}\n")
 
 
-def build_relationships_file(decisions: Dict) -> str:
+def build_relationships_file(decisions: Dict, ir: Dict) -> str:
+    by_name = {t["name"]: t for t in decisions.get("tables", [])}
     blocks = []
     for i, rel in enumerate(decisions.get("relationships", [])):
         from_t, from_c = rel["fromColumn"].split(".", 1)
         to_t, to_c = rel["toColumn"].split(".", 1)
+        from_c = _logical_col(by_name.get(from_t), ir, from_c)
+        to_c = _logical_col(by_name.get(to_t), ir, to_c)
         block = (f"relationship {B.lineage(0xf000 + i)}\n"
                  f"\tfromColumn: {B.quote(from_t)}.{B.quote(from_c)}\n"
                  f"\ttoColumn: {B.quote(to_t)}.{B.quote(to_c)}\n")
@@ -645,7 +814,7 @@ def emit(ir: Dict, decisions: Dict, analysis_path: str) -> str:
     defin = os.path.join(root, "definition")
     write(os.path.join(defin, "database.tmdl"), "database\n\tcompatibilityLevel: 1600\n")
     write(os.path.join(defin, "model.tmdl"), build_model_file(decisions))
-    write(os.path.join(defin, "relationships.tmdl"), build_relationships_file(decisions))
+    write(os.path.join(defin, "relationships.tmdl"), build_relationships_file(decisions, ir))
     for i, table in enumerate(decisions.get("tables", []), start=1):
         fname = re.sub(r"[\\/:*?\"<>|]+", "_", table["name"])
         write(os.path.join(defin, "tables", f"{fname}.tmdl"),
