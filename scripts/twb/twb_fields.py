@@ -105,8 +105,13 @@ def _is_param_default(calc: Dict) -> bool:
     return bool(re.fullmatch(r'("[^"]*"|#[^#]*#|\[Parameters\]\.\[[^\]]+\])', f))
 
 
-def resolve_ref(ref: Optional[str], calc_map: Dict[str, str]) -> Optional[str]:
-    """Resolve one Tableau field reference token to a display field name."""
+def resolve_ref(ref: Optional[str], calc_map: Dict[str, str],
+                passthrough: Optional[Dict[str, str]] = None) -> Optional[str]:
+    """Resolve one Tableau field reference token to a display field name.
+
+    A passthrough calc (Year = DATETIME([date_added])) resolves to its base
+    physical column so the date-part column is emitted/bound on the real column.
+    """
     if not ref:
         return None
     m = _TRIPLE.search(ref)
@@ -117,6 +122,8 @@ def resolve_ref(ref: Optional[str], calc_map: Dict[str, str]) -> Optional[str]:
         name = ref.split("].[")[-1].strip("[]() ")
     if not name or name.startswith("federated"):
         return None  # leftover datasource GUID, not a field
+    if passthrough:
+        name = passthrough.get(name, name)
     return calc_map.get(name, name)
 
 
@@ -137,12 +144,15 @@ def _dedupe(items: List[Optional[str]]) -> List[str]:
     return seen
 
 
-def date_level(rows: List[str], cols: List[str], category: Optional[str]) -> Optional[str]:
+def date_level(rows: List[str], cols: List[str], category: Optional[str],
+               passthrough: Optional[Dict[str, str]] = None) -> Optional[str]:
     """Detect the date-truncation level a category field is shown at.
 
     Tableau encodes the part in the shelf token prefix (yr/qr/mn/wk/dy/none).
     Returns 'year'|'quarter'|'month'|'week'|'day' for a truncated date, or None
-    when the category is not a date placed at a coarser-than-exact grain.
+    when the category is not a date placed at a coarser-than-exact grain. Token
+    field names are canonicalised through the passthrough map so a truncated
+    passthrough date calc is attributed to its base physical column.
     """
     if not category:
         return None
@@ -150,7 +160,10 @@ def date_level(rows: List[str], cols: List[str], category: Optional[str]) -> Opt
     has_date_prefix = False
     for ref in list(rows) + list(cols):
         for pfx, nm in _PART.findall(ref or ""):
-            if nm.strip() != category:
+            nm = nm.strip()
+            if passthrough:
+                nm = passthrough.get(nm, nm)
+            if nm != category:
                 continue
             if pfx in _DATE_PREFIXES:
                 has_date_prefix = True
@@ -162,15 +175,16 @@ def date_level(rows: List[str], cols: List[str], category: Optional[str]) -> Opt
 
 
 def summarize(rows: List[str], cols: List[str], enc: Dict[str, Optional[str]],
-              calc_map: Dict[str, str], measures: set) -> Dict:
+              calc_map: Dict[str, str], measures: set,
+              passthrough: Optional[Dict[str, str]] = None) -> Dict:
     """Pick the primary category (dimension) and value (measure) for a visual."""
-    rrefs = _dedupe(resolve_ref(r, calc_map) for r in rows)
-    crefs = _dedupe(resolve_ref(c, calc_map) for c in cols)
-    erefs = _dedupe(resolve_ref(v, calc_map) for v in enc.values())
+    rrefs = _dedupe(resolve_ref(r, calc_map, passthrough) for r in rows)
+    crefs = _dedupe(resolve_ref(c, calc_map, passthrough) for c in cols)
+    erefs = _dedupe(resolve_ref(v, calc_map, passthrough) for v in enc.values())
     pool = rrefs + crefs + erefs
     value = next((f for f in pool if f in measures), None)
     category = next((f for f in (crefs + rrefs) if f not in measures), None)
     dims = [f for f in (crefs + rrefs) if f not in measures]
     vals = [f for f in pool if f in measures]
     return {"category": category, "value": value, "dimensions": dims, "values": vals,
-            "categoryDateLevel": date_level(rows, cols, category)}
+            "categoryDateLevel": date_level(rows, cols, category, passthrough)}

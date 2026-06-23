@@ -143,12 +143,17 @@ def worksheet_datasources(root: ET.Element) -> set:
 
 def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
                        measures: Optional[set] = None,
-                       param_map: Optional[Dict] = None) -> List[Dict]:
+                       param_map: Optional[Dict] = None,
+                       passthrough: Optional[Dict] = None) -> List[Dict]:
     """Return IR worksheets with mark type, shelves, encodings and resolved fields."""
     calc_map = calc_map or {}
     measures = measures or set()
     param_map = param_map or {}
+<<<<<<< HEAD
     color_maps = _discrete_color_maps(root, calc_map)
+=======
+    passthrough = passthrough or {}
+>>>>>>> main
     sheets: List[Dict] = []
     for ws in root.iter("worksheet"):
         name = X.attr(ws, "name", "")
@@ -158,6 +163,7 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
         rows = _shelf_fields(ws, "rows", calc_map)
         cols = _shelf_fields(ws, "cols", calc_map)
         encodings = _encodings(pane)
+<<<<<<< HEAD
         instances = _column_instances(ws, calc_map)
         fields = _resolve_fields(instances, rows, cols, encodings, calc_map, measures)
         rows_text = (ws.findtext(".//rows") or "")
@@ -176,6 +182,9 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
             formatting = formatting or {}
             formatting["colorMap"] = {"field": color_field,
                                       "values": color_maps[color_field]}
+=======
+        fields = F.summarize(rows, cols, encodings, calc_map, measures, passthrough)
+>>>>>>> main
         sheets.append({
             "name": name, "datasource": _primary_ds(ws), "markClass": mark_class,
             "rows": rows, "cols": cols, "encodings": encodings,
@@ -186,6 +195,7 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
             "axes": _axes(fields, orientation),
             "orientation": orientation,
             "caption": _worksheet_caption(ws, calc_map, param_map),
+<<<<<<< HEAD
             "title": _worksheet_title(ws, calc_map, param_map),
             "tooltip": _customized_tooltip(ws, calc_map, param_map),
             "tooltipFields": _tooltip_fields(instances, fmt_map),
@@ -195,13 +205,57 @@ def extract_worksheets(root: ET.Element, calc_map: Optional[Dict] = None,
             "sort": _worksheet_sort(ws, calc_map),
             "referenceLines": _reference_lines(ws, calc_map),
             "formatting": formatting,
+=======
+            "topN": _extract_topn(ws, calc_map, passthrough),
+            "inferredVisualType": _infer_type(mark_class, rows, cols, encodings),
+>>>>>>> main
         })
     return sheets
 
 
+<<<<<<< HEAD
 def _resolve_fields(instances: List[Dict], rows: List[str], cols: List[str],
                     enc: Dict, calc_map: Dict, measures: set) -> Dict:
     """Pick category/value/dimensions/values from column-instances when present.
+=======
+def _extract_topn(ws: ET.Element, calc_map: Dict,
+                  passthrough: Dict) -> Optional[Dict]:
+    """Extract a Tableau Top-N groupfilter (count=N end=top/bottom) for a worksheet.
+
+    Tableau nests: <filter><groupfilter count='10' end='top' function='end'>
+    <groupfilter direction='DESC' expression='COUNTD([show_id])' function='order'>
+    <groupfilter level='[none:listed_in:nk]'/></groupfilter></groupfilter></filter>.
+    Returns {field, count, end, direction, byExpr} or None.
+    """
+    for filt in ws.iter("filter"):
+        top = next((g for g in filt.iter("groupfilter") if g.get("count")), None)
+        if top is None:
+            continue
+        try:
+            count = int(top.get("count"))
+        except (TypeError, ValueError):
+            continue
+        end = (top.get("end") or "top").lower()
+        order = next((g for g in top.iter("groupfilter")
+                      if g.get("expression")), None)
+        by_expr = (X.decode_entities(order.get("expression"))
+                   if order is not None else None)
+        direction = (order.get("direction") if order is not None else "DESC") or "DESC"
+        field = F.resolve_ref(filt.get("column"), calc_map, passthrough)
+        if not field:
+            lvl = next((g for g in top.iter("groupfilter") if g.get("level")), None)
+            if lvl is not None:
+                field = F.resolve_ref(lvl.get("level"), calc_map, passthrough)
+        if not field:
+            continue
+        return {"field": field, "count": count, "end": end,
+                "direction": direction.upper(), "byExpr": by_expr}
+    return None
+
+
+def _worksheet_caption(ws: ET.Element, calc_map: Dict, param_map: Dict) -> Optional[str]:
+    """Resolve a worksheet's dynamic <caption> to a static label skeleton.
+>>>>>>> main
 
     The <column-instance> block is authoritative (it carries the aggregation), so
     it is preferred. When a worksheet has no dependency block we fall back to the

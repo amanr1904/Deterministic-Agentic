@@ -15,6 +15,7 @@ from typing import Dict, List, Optional, Set
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import date_levels as D  # noqa: E402
 import field_param as FP  # noqa: E402
+<<<<<<< HEAD
 import tmdl_blocks as TB  # noqa: E402
 
 # Cache of physical CSV headers so we read each file at most once.
@@ -41,6 +42,61 @@ def _table_columns(table: Dict, ir: Dict) -> Set[str]:
     if src is not None:
         return {c["name"] for c in ir.get("columns", []) if c.get("datasource") == src}
     return {c["name"] for c in ir.get("columns", [])}
+=======
+import emit_tmdl as ET  # noqa: E402  (reuse the same CSV probe the model emitter uses)
+
+_TWB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "twb")
+sys.path.insert(0, os.path.normpath(_TWB_DIR))
+import csv_probe as CP  # noqa: E402
+
+
+def _norm(s: Optional[str]) -> str:
+    """Normalize a column name (underscores/slashes/hyphens/spaces -> space)."""
+    return re.sub(r"[_/\-\s]+", " ", s or "").strip().lower()
+
+
+_COL_ENTITY_CACHE: Dict[int, Dict[str, str]] = {}
+
+
+def column_entity_map(decisions: Dict) -> Dict[str, str]:
+    """Map each normalized column name to its owning table (entity).
+
+    Probes every fact/dim/date table's CSV headers (mirrors emit_tmdl's column
+    assignment) so a chart category like 'Sub-Category' resolves to DimProduct,
+    'Region' -> DimLocation, etc. Dim/date tables override the fact on shared
+    names (keys) so dimension attributes bind to their dimension. Calculated
+    columns map to their declared table.
+    """
+    key = id(decisions)
+    cached = _COL_ENTITY_CACHE.get(key)
+    if cached is not None:
+        return cached
+    tables = decisions.get("tables", [])
+    ordered = ([t for t in tables if t.get("role") == "fact"]
+               + [t for t in tables if t.get("role") in ("dim", "date")])
+    mapping: Dict[str, str] = {}
+    for t in ordered:
+        src = t.get("sourceFile")
+        if not src:
+            continue
+        probe = CP.probe(src)
+        if not probe:
+            continue
+        for h in probe.get("headers", []):
+            mapping[_norm(h)] = t["name"]
+    for cc in decisions.get("calculatedColumns", []):
+        if cc.get("table") and cc.get("name"):
+            mapping[_norm(cc["name"])] = cc["table"]
+    _COL_ENTITY_CACHE[key] = mapping
+    return mapping
+
+
+def column_entity(prop: Optional[str], decisions: Dict, default_entity: str) -> str:
+    """Resolve the owning table for a non-measure category/column field."""
+    if not prop:
+        return default_entity
+    return column_entity_map(decisions).get(_norm(prop), default_entity)
+>>>>>>> main
 
 
 def fact_entity(decisions: Dict) -> str:
@@ -172,11 +228,51 @@ def suppressed_worksheets(decisions: Dict) -> set:
     return FP.suppressed_worksheets(decisions.get("fieldParameters", []))
 
 
+def _owned_columns(table: Dict, ir: Dict) -> Set[str]:
+    """Logical column names a dim/date table actually owns.
+
+    A synthetic table (calendar / datatable, ``sourceDatasource`` is None) owns
+    only its declared key/datatable columns — without this guard a calendar
+    DimDate would claim every IR column and mis-bind their slicers.
+
+    A real source-backed dim is normally scoped by its datasource, but a
+    *federated multi-CSV* datasource exposes every CSV's columns under ONE
+    datasource name (e.g. "Sales DataSource" spanning Orders/Customers/Location/
+    Products). In that case the dim's ``sourceFile`` is probed so each dim claims
+    only its own CSV's columns, matching exactly what emit_tmdl declares.
+    """
+    src = table.get("sourceDatasource")
+    if src is None:
+        own = set(table.get("keyColumns", []))
+        dt = table.get("datatable") or {}
+        own |= {c["name"] for c in dt.get("columns", [])}
+        return own
+    if table.get("sourceFile"):
+        probe = ET._probe_for_table(table, ir)
+        if probe and probe.get("columns"):
+            return {c["name"] for c in probe["columns"]}
+    return {c["name"] for c in ir.get("columns", []) if c.get("datasource") == src}
+
+
+def entity_for_field(field: Optional[str], default_entity: str,
+                     decisions: Dict, ir: Dict) -> str:
+    """Resolve a category/table column field to its owning dim/date table.
+
+    Falls back to ``default_entity`` (typically the fact) when the field is not
+    owned by any dimension — e.g. fact columns or date-part derived columns.
+    """
+    if not field:
+        return default_entity
+    for table in decisions.get("tables", []):
+        if table.get("role") in ("dim", "date") and field in _owned_columns(table, ir):
+            return table["name"]
+    return default_entity
+
+
 def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
     """Return the correct entity (table name) for a slicer field.
 
-    Looks up the field in dim tables first; falls back to the fact entity.
-    This ensures Category/Sub-Category → DimProduct, Region/State/City → DimLocation, etc.
+    Falls back to the table name only if no datatable/key column is declared.
     """
     if not field:
         return fact_entity(decisions)
@@ -185,13 +281,70 @@ def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
     # the fact entity.
     for table in decisions.get("tables", []):
         if table.get("role") in ("dim", "date"):
+<<<<<<< HEAD
             if field in _table_columns(table, ir):
+=======
+            if field in _owned_columns(table, ir):
+>>>>>>> main
                 return table["name"]
     # Check param tables
     for t in decisions.get("tables", []):
-        if t.get("role") == "param" and t["name"] == field:
-            return field
-    return fact_entity(decisions)
+        if t["name"] != table_name:
+            continue
+        dt = t.get("datatable") or {}
+        cols = dt.get("columns") or []
+        if cols:
+            return cols[0]["name"]
+        keys = t.get("keyColumns") or []
+        if keys:
+            return keys[0]
+    return table_name
+
+
+def _param_candidates(t: Dict) -> Set[str]:
+    """All slugs a param table can be matched against (name, value column,
+    key columns and any declared sourceFields/aliases). The value column often
+    carries the real Tableau parameter caption (e.g. 'Filter Adults/Peds')."""
+    cands = {slug(t.get("name", ""))}
+    dt = t.get("datatable") or {}
+    for c in dt.get("columns") or []:
+        cands.add(slug(c.get("name", "")))
+    for k in t.get("keyColumns") or []:
+        cands.add(slug(k))
+    for a in (t.get("sourceFields") or t.get("aliases") or []):
+        cands.add(slug(a))
+    return {c for c in cands if c}
+
+
+def param_table_for_field(field: Optional[str], decisions: Dict,
+                          zone_type: Optional[str] = None) -> Optional[str]:
+    """Resolve the disconnected param table a Tableau zone field maps to.
+
+    The decisions.json param table is frequently RENAMED (e.g. ViewMode,
+    AdultsPeds) while the dashboard zone keeps the original Tableau parameter
+    caption ('View', 'Filter Adults/Peds'). Match on table name slug, value
+    column slug and aliases (any zone); for paramctrl zones also allow a safe
+    containment match (>=4 chars) so 'View'->'ViewMode' and
+    'Filter Adults/Peds'->'AdultsPeds' resolve instead of falling back to the
+    fact date column. Containment is gated to paramctrl so real data filters
+    (type='filter') are never redirected to a parameter table."""
+    if not field:
+        return None
+    fs = slug(field)
+    params = [t for t in decisions.get("tables", []) if t.get("role") == "param"]
+    for t in params:
+        if fs in _param_candidates(t):
+            return t["name"]
+    if zone_type == "paramctrl":
+        best: Optional[tuple] = None
+        for t in params:
+            for cand in _param_candidates(t):
+                if len(fs) >= 4 and len(cand) >= 4 and (fs in cand or cand in fs):
+                    if best is None or len(cand) > best[1]:
+                        best = (t["name"], len(cand))
+        if best:
+            return best[0]
+    return None
 
 
 def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
@@ -202,7 +355,6 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
     """
     field = zone.get("field")
     cols = column_names(ir)
-    ptables = param_tables(decisions)
     title = field or zone.get("worksheet") or "Filter"
     # Date-range parameter (e.g. 'Start Date' / 'End Date') -> Between slicer on
     # the fact date column, so Start and End are independent bounds.
@@ -211,13 +363,18 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
         dcol = first_date_col(ir)
         if dcol:
             return entity, dcol, title, "Between"
-    # Parameter list-slicers bind to a disconnected table (column shares name).
-    pmap = {slug(t): t for t in ptables}
-    if field and slug(field) in pmap:
-        tbl = pmap[slug(field)]
-        return tbl, tbl, title, "Dropdown"
-    # Resolve the correct entity (dim table or fact) for this field
-    entity = _field_entity(field, decisions, ir)
+    # Parameter list-slicers bind to a disconnected table on its value column
+    # (e.g. SelectYear[Year]), NOT the table name. Match by table name, value
+    # column or alias so a RENAMED param table (ViewMode, AdultsPeds) still
+    # resolves the original Tableau zone caption ('View', 'Filter Adults/Peds').
+    pname = param_table_for_field(field, decisions, zone.get("type"))
+    if pname:
+        return pname, _param_value_column(pname, decisions), title, "Dropdown"
+    # Resolve the correct entity (dim table or fact) for this field via the
+    # CSV-header owner map so Category/Sub-Category -> DimProduct,
+    # Region/State/City -> DimLocation, etc. (single denormalized IR datasource
+    # means the field cannot be attributed by datasource alone).
+    entity = column_entity(field, decisions, fact_entity(decisions))
     if field and field in cols:
         return entity, field, title, "Dropdown"
     if zone.get("type") == "paramctrl":
@@ -239,18 +396,24 @@ def _is_date_param(field: Optional[str], decisions: Dict) -> bool:
 
 
 def category_binding(ws: Optional[Dict], entity: str, cols: Set[str],
-                     ir: Dict) -> Dict:
+                     ir: Dict, decisions: Optional[Dict] = None) -> Dict:
     """Resolve a chart category, aggregating dates to the Tableau date level."""
     catf = ws.get("categoryField") if ws else None
     level = ws.get("categoryDateLevel") if ws else None
     dcols = date_cols(ir)
     prop = part_prop(catf, level, dcols)
+
+    def _ent(p: str) -> str:
+        return entity_for_field(p, entity, decisions, ir) if decisions else entity
+
     if prop and (prop in cols or (catf in dcols)):
+        # date-part columns live on the fact table that owns the base date column
         return {"entity": entity, "prop": prop}
     if catf and catf in cols:
-        return {"entity": entity, "prop": catf}
+        return {"entity": _ent(catf), "prop": catf}
     dim = first_dim_col(ir)
-    return {"entity": entity, "prop": dim or (next(iter(cols)) if cols else "Column")}
+    return {"entity": _ent(dim) if dim else entity,
+            "prop": dim or (next(iter(cols)) if cols else "Column")}
 
 
 def value_binding(valf: Optional[str], entity: str, mset: Set[str],
@@ -266,23 +429,42 @@ def value_binding(valf: Optional[str], entity: str, mset: Set[str],
 
 
 def table_columns(ws: Optional[Dict], ir: Dict, entity: str,
-                  mset: Set[str], cols: Set[str]) -> List[Dict]:
+                  mset: Set[str], cols: Set[str],
+                  decisions: Optional[Dict] = None) -> List[Dict]:
     out: List[Dict] = []
     dcols = date_cols(ir)
     level = ws.get("categoryDateLevel") if ws else None
+
+    def _ent(prop: str) -> str:
+        return entity_for_field(prop, entity, decisions, ir) if decisions else entity
+
     if ws:
         for d in ws.get("dimensions", []) or []:
+            if _is_pseudo_field(d):
+                continue  # Tableau [:Measure Names]/[:Measure Values] have no model column
             if d in dcols and D.needs_part(level):
                 out.append({"entity": entity, "prop": D.part_column_name(d, level),
                             "isMeasure": False})
             elif d in cols:
-                out.append({"entity": entity, "prop": d, "isMeasure": False})
+                out.append({"entity": _ent(d), "prop": d, "isMeasure": False})
         for v in ws.get("values", []) or []:
+            if _is_pseudo_field(v):
+                continue
             if v in mset:
                 out.append({"entity": entity, "prop": v, "isMeasure": True})
             elif v in cols:
-                out.append({"entity": entity, "prop": v, "isMeasure": False})
+                out.append({"entity": _ent(v), "prop": v, "isMeasure": False})
     if not out:
-        out = [{"entity": entity, "prop": c["name"], "isMeasure": False}
+        out = [{"entity": _ent(c["name"]), "prop": c["name"], "isMeasure": False}
                for c in ir.get("columns", [])[:6]]
     return out or [{"entity": entity, "prop": "Column", "isMeasure": False}]
+
+
+def _is_pseudo_field(name: str) -> bool:
+    """Tableau synthetic shelf fields ([:Measure Names], [:Measure Values], etc.)
+    that have no backing model column/measure — binding them errors the visual."""
+    n = (name or "").strip()
+    if n.startswith(":"):
+        return True
+    return n.lower() in {"measure names", "measure values",
+                         "number of records", "multiple values"}

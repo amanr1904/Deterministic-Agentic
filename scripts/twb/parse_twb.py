@@ -39,6 +39,7 @@ def build_ir(twb_path: str) -> Dict:
     calc_map = F.build_calc_map(calc_fields)
     param_map = F.build_param_map(parameters)
     measures = F.measure_captions(calc_fields, columns)
+    passthrough = DS.build_passthrough_map(root)
 
     # Inline inter-calc references ([Calculation_<id>] / [Name (copy)_<hash>] ->
     # [Caption]) so the IR formulas are readable and the DAX translator can
@@ -75,7 +76,8 @@ def build_ir(twb_path: str) -> Dict:
         "columns": columns,
         "calculatedFields": calc_fields,
         "parameters": parameters,
-        "worksheets": V.extract_worksheets(root, calc_map, measures, param_map),
+        "worksheets": V.extract_worksheets(root, calc_map, measures, param_map,
+                                            passthrough),
         "dashboards": V.extract_dashboards(root, calc_map, param_map),
         "actions": V.extract_actions(root, calc_map),
         "physicalTables": M.extract_physical_tables(root),
