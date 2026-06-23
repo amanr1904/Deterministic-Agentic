@@ -17,6 +17,58 @@ import date_levels as D  # noqa: E402
 import field_param as FP  # noqa: E402
 import emit_tmdl as ET  # noqa: E402  (reuse the same CSV probe the model emitter uses)
 
+_TWB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "twb")
+sys.path.insert(0, os.path.normpath(_TWB_DIR))
+import csv_probe as CP  # noqa: E402
+
+
+def _norm(s: Optional[str]) -> str:
+    """Normalize a column name (underscores/slashes/hyphens/spaces -> space)."""
+    return re.sub(r"[_/\-\s]+", " ", s or "").strip().lower()
+
+
+_COL_ENTITY_CACHE: Dict[int, Dict[str, str]] = {}
+
+
+def column_entity_map(decisions: Dict) -> Dict[str, str]:
+    """Map each normalized column name to its owning table (entity).
+
+    Probes every fact/dim/date table's CSV headers (mirrors emit_tmdl's column
+    assignment) so a chart category like 'Sub-Category' resolves to DimProduct,
+    'Region' -> DimLocation, etc. Dim/date tables override the fact on shared
+    names (keys) so dimension attributes bind to their dimension. Calculated
+    columns map to their declared table.
+    """
+    key = id(decisions)
+    cached = _COL_ENTITY_CACHE.get(key)
+    if cached is not None:
+        return cached
+    tables = decisions.get("tables", [])
+    ordered = ([t for t in tables if t.get("role") == "fact"]
+               + [t for t in tables if t.get("role") in ("dim", "date")])
+    mapping: Dict[str, str] = {}
+    for t in ordered:
+        src = t.get("sourceFile")
+        if not src:
+            continue
+        probe = CP.probe(src)
+        if not probe:
+            continue
+        for h in probe.get("headers", []):
+            mapping[_norm(h)] = t["name"]
+    for cc in decisions.get("calculatedColumns", []):
+        if cc.get("table") and cc.get("name"):
+            mapping[_norm(cc["name"])] = cc["table"]
+    _COL_ENTITY_CACHE[key] = mapping
+    return mapping
+
+
+def column_entity(prop: Optional[str], decisions: Dict, default_entity: str) -> str:
+    """Resolve the owning table for a non-measure category/column field."""
+    if not prop:
+        return default_entity
+    return column_entity_map(decisions).get(_norm(prop), default_entity)
+
 
 def fact_entity(decisions: Dict) -> str:
     for t in decisions.get("tables", []):
@@ -191,8 +243,7 @@ def entity_for_field(field: Optional[str], default_entity: str,
 def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
     """Return the correct entity (table name) for a slicer field.
 
-    Looks up the field in dim tables first; falls back to the fact entity.
-    This ensures Category/Sub-Category → DimProduct, Region/State/City → DimLocation, etc.
+    Falls back to the table name only if no datatable/key column is declared.
     """
     if not field:
         return fact_entity(decisions)
@@ -203,9 +254,62 @@ def _field_entity(field: Optional[str], decisions: Dict, ir: Dict) -> str:
                 return table["name"]
     # Check param tables
     for t in decisions.get("tables", []):
-        if t.get("role") == "param" and t["name"] == field:
-            return field
-    return fact_entity(decisions)
+        if t["name"] != table_name:
+            continue
+        dt = t.get("datatable") or {}
+        cols = dt.get("columns") or []
+        if cols:
+            return cols[0]["name"]
+        keys = t.get("keyColumns") or []
+        if keys:
+            return keys[0]
+    return table_name
+
+
+def _param_candidates(t: Dict) -> Set[str]:
+    """All slugs a param table can be matched against (name, value column,
+    key columns and any declared sourceFields/aliases). The value column often
+    carries the real Tableau parameter caption (e.g. 'Filter Adults/Peds')."""
+    cands = {slug(t.get("name", ""))}
+    dt = t.get("datatable") or {}
+    for c in dt.get("columns") or []:
+        cands.add(slug(c.get("name", "")))
+    for k in t.get("keyColumns") or []:
+        cands.add(slug(k))
+    for a in (t.get("sourceFields") or t.get("aliases") or []):
+        cands.add(slug(a))
+    return {c for c in cands if c}
+
+
+def param_table_for_field(field: Optional[str], decisions: Dict,
+                          zone_type: Optional[str] = None) -> Optional[str]:
+    """Resolve the disconnected param table a Tableau zone field maps to.
+
+    The decisions.json param table is frequently RENAMED (e.g. ViewMode,
+    AdultsPeds) while the dashboard zone keeps the original Tableau parameter
+    caption ('View', 'Filter Adults/Peds'). Match on table name slug, value
+    column slug and aliases (any zone); for paramctrl zones also allow a safe
+    containment match (>=4 chars) so 'View'->'ViewMode' and
+    'Filter Adults/Peds'->'AdultsPeds' resolve instead of falling back to the
+    fact date column. Containment is gated to paramctrl so real data filters
+    (type='filter') are never redirected to a parameter table."""
+    if not field:
+        return None
+    fs = slug(field)
+    params = [t for t in decisions.get("tables", []) if t.get("role") == "param"]
+    for t in params:
+        if fs in _param_candidates(t):
+            return t["name"]
+    if zone_type == "paramctrl":
+        best: Optional[tuple] = None
+        for t in params:
+            for cand in _param_candidates(t):
+                if len(fs) >= 4 and len(cand) >= 4 and (fs in cand or cand in fs):
+                    if best is None or len(cand) > best[1]:
+                        best = (t["name"], len(cand))
+        if best:
+            return best[0]
+    return None
 
 
 def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
@@ -216,7 +320,6 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
     """
     field = zone.get("field")
     cols = column_names(ir)
-    ptables = param_tables(decisions)
     title = field or zone.get("worksheet") or "Filter"
     # Date-range parameter (e.g. 'Start Date' / 'End Date') -> Between slicer on
     # the fact date column, so Start and End are independent bounds.
@@ -225,13 +328,18 @@ def resolve_slicer(zone: Dict, ir: Dict, decisions: Dict):
         dcol = first_date_col(ir)
         if dcol:
             return entity, dcol, title, "Between"
-    # Parameter list-slicers bind to a disconnected table (column shares name).
-    pmap = {slug(t): t for t in ptables}
-    if field and slug(field) in pmap:
-        tbl = pmap[slug(field)]
-        return tbl, tbl, title, "Dropdown"
-    # Resolve the correct entity (dim table or fact) for this field
-    entity = _field_entity(field, decisions, ir)
+    # Parameter list-slicers bind to a disconnected table on its value column
+    # (e.g. SelectYear[Year]), NOT the table name. Match by table name, value
+    # column or alias so a RENAMED param table (ViewMode, AdultsPeds) still
+    # resolves the original Tableau zone caption ('View', 'Filter Adults/Peds').
+    pname = param_table_for_field(field, decisions, zone.get("type"))
+    if pname:
+        return pname, _param_value_column(pname, decisions), title, "Dropdown"
+    # Resolve the correct entity (dim table or fact) for this field via the
+    # CSV-header owner map so Category/Sub-Category -> DimProduct,
+    # Region/State/City -> DimLocation, etc. (single denormalized IR datasource
+    # means the field cannot be attributed by datasource alone).
+    entity = column_entity(field, decisions, fact_entity(decisions))
     if field and field in cols:
         return entity, field, title, "Dropdown"
     if zone.get("type") == "paramctrl":
@@ -297,12 +405,16 @@ def table_columns(ws: Optional[Dict], ir: Dict, entity: str,
 
     if ws:
         for d in ws.get("dimensions", []) or []:
+            if _is_pseudo_field(d):
+                continue  # Tableau [:Measure Names]/[:Measure Values] have no model column
             if d in dcols and D.needs_part(level):
                 out.append({"entity": entity, "prop": D.part_column_name(d, level),
                             "isMeasure": False})
             elif d in cols:
                 out.append({"entity": _ent(d), "prop": d, "isMeasure": False})
         for v in ws.get("values", []) or []:
+            if _is_pseudo_field(v):
+                continue
             if v in mset:
                 out.append({"entity": entity, "prop": v, "isMeasure": True})
             elif v in cols:
@@ -311,3 +423,13 @@ def table_columns(ws: Optional[Dict], ir: Dict, entity: str,
         out = [{"entity": _ent(c["name"]), "prop": c["name"], "isMeasure": False}
                for c in ir.get("columns", [])[:6]]
     return out or [{"entity": entity, "prop": "Column", "isMeasure": False}]
+
+
+def _is_pseudo_field(name: str) -> bool:
+    """Tableau synthetic shelf fields ([:Measure Names], [:Measure Values], etc.)
+    that have no backing model column/measure — binding them errors the visual."""
+    n = (name or "").strip()
+    if n.startswith(":"):
+        return True
+    return n.lower() in {"measure names", "measure values",
+                         "number of records", "multiple values"}

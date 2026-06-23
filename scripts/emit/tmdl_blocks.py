@@ -6,6 +6,7 @@ pure string formatting consumed by emit_tmdl.py — no parsing, no LLM.
 """
 from __future__ import annotations
 
+import csv as _csv
 from typing import Dict, List, Optional
 
 TAB = "\t"
@@ -28,6 +29,41 @@ def quote(name: str) -> str:
     return name
 
 
+def _csv_physical_columns(path: str, delimiter: str, fallback: int) -> int:
+    """Return the number of PHYSICAL columns in the CSV header.
+
+    ``Csv.Document``'s ``Columns=`` must equal the file's actual column count, NOT
+    the number of columns the model keeps. If the model drops columns (dedup,
+    unreferenced) the two differ; using the model count truncates the file and
+    later ``Table.TransformColumnTypes`` fails with "column 'X' wasn't found".
+    Reads the first line at emit time; falls back to ``fallback`` if unreadable.
+    """
+    try:
+        with open(path, "r", encoding="utf-8-sig", newline="") as fh:
+            header = next(_csv.reader(fh, delimiter=delimiter), None)
+        if header:
+            return len(header)
+    except Exception:
+        pass
+    return fallback
+
+
+def partition_name(table: str) -> str:
+    """Return an M partition name that is DISTINCT from the table name.
+
+    Power BI's engine treats a Power Query/partition whose name equals its
+    table name (when that table is a relationship target / one-side) as a
+    self-reference, raising "A cyclic reference was encountered during
+    evaluation." on load. Naming the partition differently (clean alphanumeric
+    ``<Table>Source``) breaks the cycle while leaving column/relationship refs
+    (which use table.column) unaffected. Hyphens are avoided — they are risky
+    Power Query identifiers even though tmdl-validate accepts them.
+    """
+    import re
+    safe = re.sub(r"[^0-9A-Za-z]+", "", table) or "Table"
+    return f"{safe}Source"
+
+
 def lineage(seq: int) -> str:
     """Deterministic lineage tag from a sequence number."""
     return f"a1000000-0000-4000-9000-{seq:012x}"
@@ -36,6 +72,7 @@ def lineage(seq: int) -> str:
 def column_block(col: Dict, seq: int) -> str:
     """Build a TMDL column block from an IR column dict."""
     name = col["name"]
+    source = col.get("csv_name") or name
     tmdl_type, summarize, is_date = TYPE_MAP.get(col["dataType"], ("string", "none", False))
     if col["dataType"] in ("integer", "real") and summarize == "sum":
         summarize = "sum" if col.get("role") == "measure" else "none"
@@ -48,7 +85,7 @@ def column_block(col: Dict, seq: int) -> str:
     if fmt:
         lines.insert(2, f"{TAB}{TAB}formatString: {fmt}")
     lines.append(f"{TAB}{TAB}summarizeBy: {summarize}")
-    lines.append(f"{TAB}{TAB}sourceColumn: {name}")
+    lines.append(f"{TAB}{TAB}sourceColumn: {source}")
     lines.append("")
     lines.append(f"{TAB}{TAB}annotation SummarizationSetBy = Automatic")
     if is_date:
@@ -99,16 +136,17 @@ def measure_block(m: Dict, seq: int) -> str:
 def csv_partition(table: str, path: str, columns: List[Dict], delimiter: str = ",") -> str:
     """Build an Import-mode CSV partition M block."""
     typed = ",\n".join(
-        f'{TAB}{TAB}{TAB}{TAB}{{"{ c["name"]}", {_m_type(c["dataType"])}}}'
+        f'{TAB}{TAB}{TAB}{TAB}{{"{ c.get("csv_name") or c["name"]}", {_m_type(c["dataType"])}}}'
         for c in columns
     )
+    col_count = _csv_physical_columns(path, delimiter, len(columns))
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"
         f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
-        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
+        f'[Delimiter="{delimiter}", Columns={col_count}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
         f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n"
         f"{TAB}{TAB}{TAB}{TAB}Typed = Table.TransformColumnTypes(Promoted, {{\n{typed}\n"
         f'{TAB}{TAB}{TAB}{TAB}}}, "en-US")\n'
@@ -134,7 +172,7 @@ def robust_csv_partition(
         if c["name"] not in date_cols and c["name"] not in decimal_cols
     ]
     typed_base = ",\n".join(
-        f'{TAB}{TAB}{TAB}{TAB}\t{{"{ c["name"]}", {_m_type(c["dataType"])}}}'
+        f'{TAB}{TAB}{TAB}{TAB}\t{{"{ c.get("csv_name") or c["name"]}", {_m_type(c["dataType"])}}}'
         for c in non_special
     )
     date_transforms = ",\n".join(
@@ -148,10 +186,11 @@ def robust_csv_partition(
         for d in decimal_cols
     )
     # Build steps conditionally
+    col_count = _csv_physical_columns(path, delimiter, len(columns))
     steps = (
         f"{TAB}{TAB}{TAB}let\n"
         f'{TAB}{TAB}{TAB}{TAB}Source = Csv.Document(File.Contents("{path}"), '
-        f'[Delimiter="{delimiter}", Columns={len(columns)}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
+        f'[Delimiter="{delimiter}", Columns={col_count}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n'
         f"{TAB}{TAB}{TAB}{TAB}Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true])"
     )
     prev = "Promoted"
@@ -176,7 +215,7 @@ def robust_csv_partition(
         prev = "Typed"
     steps += f"\n{TAB}{TAB}{TAB}in\n{TAB}{TAB}{TAB}{TAB}{prev}\n"
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{steps}"
@@ -192,7 +231,7 @@ def raw_partition(table: str, m_body: str) -> str:
     """
     body = "\n".join(f"{TAB}{TAB}{TAB}{ln}" for ln in m_body.strip("\n").splitlines())
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{body}\n"
@@ -267,7 +306,7 @@ def dim_partition(
         else f"[{logical_key}]"
     )
     return (
-        f"{TAB}partition {quote(table)} = m\n"
+        f"{TAB}partition {quote(partition_name(table))} = m\n"
         f"{TAB}{TAB}mode: import\n"
         f"{TAB}{TAB}source =\n"
         f"{TAB}{TAB}{TAB}let\n"
