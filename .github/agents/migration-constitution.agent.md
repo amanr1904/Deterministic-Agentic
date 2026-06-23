@@ -8,12 +8,9 @@ handoffs:
   - label: Clarify Spec Requirements
     agent: speckit.clarify
     prompt: "Clarify and validate all requirements in the feature specification against the migration constitution."
-  - label: Generate DAX Measures
+  - label: Generate Semantic Model (DAX + Star Schema, combined)
     agent: dax-measures
-    prompt: "Generate DAX measures for the semantic model based on the specified requirements and calculated fields."
-  - label: Design Star Schema
-    agent: star-schema
-    prompt: "Design a star schema structure following the constitution rules, with dimension and fact tables."
+    prompt: "ONE combined gap-fill call authoring BOTH the DAX measures AND the star schema for the semantic model (Copilot Chat cannot run these in parallel, so they are fused into a single call). Read agent-todo.json, design the schema, translate the remaining calcs, and write agent-fragment.json."
   - label: Create Implementation Plan
     agent: speckit.plan
     prompt: "Create a detailed implementation plan for the PBIP generation and deployment."
@@ -58,30 +55,58 @@ Before proceeding, read these skills for guidance:
 ## ⚡ Hybrid Deterministic + Agentic Flow (token-saving — use first)
 
 Four token-heavy stages now have deterministic Python engines under `scripts/`. The
-agents on those stages call the scripts and only fill the reasoning gaps. The flow is:
+agents on those stages call the scripts and only fill the reasoning gaps. The flow is
+**three bracket phases** around a single combined agent call:
 
 ```
-prepare (deterministic)        →  agent gap-fill  →  generate (deterministic)
-parse_twb.py + map_dax.py          decisions.json     emit_tmdl.py + emit_pbir.py + validators
+prepare (deterministic)   →  ONE combined gap-fill  →  merge (deterministic)  →  generate (deterministic)
+parse_twb + map_dax            agent-fragment.json       merge_decisions.py        emit_tmdl + emit_pbir
++ classify                     (Sonnet, 1 call)          -> decisions.json         + validators
 ```
 
-Run the two bracket phases via the orchestrator:
+Run the bracket phases via the orchestrator:
 
 ```powershell
-# Stage 1 + 6 — writes Output/{PascalName}/analysis.json + dax-partial.json, prints gaps
+# Phase A — Stage 1 + 6 + 6.5: analysis.json + dax-partial.json + classification.json
+#           + schema-easy.json (single-flat only) + agent-todo.json (the agent work list)
 python scripts/pipeline.py prepare "Data/{Subfolder}/{workbook}.twb"
 
-# Stage 10 + 13 + 11/14 — after decisions.json exists, emits model + report + validates
+# [ ONE combined agent call authors Output/{PascalName}/agent-fragment.json — see protocol below ]
+
+# Phase B — Stage 6.9: assemble fragments -> decisions.json (validated + reconciled by script)
+python scripts/pipeline.py merge "Output/{PascalName}/analysis.json"
+
+# Phase C — Stage 10 + 13 + 11/14: emit model + report + validate
 python scripts/pipeline.py generate "Output/{PascalName}/analysis.json" --decisions "Output/{PascalName}/decisions.json"
 ```
 
-- Subagents still run (`runSubagent`), but their `.agent.md` files now point them at the
-  scripts first and tell them to read the slim IR (`analysis.json`) instead of raw `.twb`
-  XML, reuse template DAX from `dax-partial.json`, and author only `decisions.json`.
-- `decisions.json` (schema: `scripts/contracts/decisions_schema.json`) is the single
-  artifact the LLM produces for code generation; the emitters do all boilerplate.
-- The mandatory subagent rule below is unchanged — the scripts run *inside* the relevant
-  stages, they do not replace the agents.
+### Combined gap-fill protocol (replaces the separate DAX + star-schema calls)
+
+Copilot Chat has **no true parallelism** (subagents are blocking/sequential), so the
+DAX-measure and star-schema reasoning are fused into **ONE** `runSubagent` call — this
+beats two sequential calls and keeps the agent's work to a single small JSON artifact.
+
+1. **`prepare`** binary-routes every calc and the schema. Deterministic items are already
+   done (DAX in `dax-partial.json`, single-flat schema in `schema-easy.json`). Only the
+   `route: "agent"` items remain, listed in `agent-todo.json` (self-contained: formulas,
+   `hint` pattern tags, `baseColumns`, `siblingMeasures`, `parameters`, `tableMap`).
+2. **ONE combined agent call** (`runSubagent`, `model: claude-sonnet-4.6`): read ONLY
+   `agent-todo.json`; author `Output/{PascalName}/agent-fragment.json` per
+   `scripts/contracts/fragment_schema.json` — the remaining `measures` (`source: "llm"`),
+   any `calculatedColumns`, and (when `schemaNeeded: true`) `tableStrategy` + `tables` +
+   `relationships`. Do NOT re-author deterministic measures or the single-flat schema.
+3. **`merge`** assembles `dax-partial.json` + `schema-easy.json` + `agent-fragment.json`
+   into `decisions.json` (template+llm measures deduped, orphans re-homed to the fact),
+   schema-validates it, and runs reconcile.
+4. **Opus-on-fail (reactive only):** if `merge` exits **4** (reconcile found a dropped
+   pending measure) OR validation fails, retry the gap-fill with **ONE** `runSubagent`
+   call `model: claude-opus-4.6`, passing `measures-todo.json` (the exact missing items),
+   then re-run `merge`. Opus is never used for pre-classification — only this fallback.
+
+- `decisions.json` (schema: `scripts/contracts/decisions_schema.json`) remains the single
+  artifact consumed by the emitters; `merge` builds it deterministically from fragments.
+- The mandatory subagent rule below is unchanged — the combined call still goes through
+  `runSubagent`; the scripts run *inside* the relevant stages, they do not replace it.
 
 **⚠️ CRITICAL RULE — SUBAGENT ENFORCEMENT ⚠️**
 
@@ -89,8 +114,9 @@ python scripts/pipeline.py generate "Output/{PascalName}/analysis.json" --decisi
 
 - Stage 4 → CALL `runSubagent` with `agentName: "speckit.specify"`
 - Stage 5 → CALL `runSubagent` with `agentName: "speckit.clarify"`
-- Stage 6 → CALL `runSubagent` with `agentName: "dax-measures"`
-- Stage 7 → CALL `runSubagent` with `agentName: "star-schema"`
+- Stage 6 → CALL `runSubagent` with `agentName: "dax-measures"` — **ONE combined call that
+  authors BOTH DAX measures AND the star schema** (DAX + schema are fused into this single
+  call; Copilot Chat cannot run them in parallel, so there is no separate star-schema stage)
 - Stage 8 → CALL `runSubagent` with `agentName: "speckit.plan"`
 - Stage 9 → CALL `runSubagent` with `agentName: "speckit.tasks"`
 - Stage 10 → CALL `runSubagent` with `agentName: "pbip-generator"`
@@ -99,8 +125,8 @@ python scripts/pipeline.py generate "Output/{PascalName}/analysis.json" --decisi
 
 **DO NOT:**
 - ❌ Write spec content yourself — CALL speckit.specify
-- ❌ Write DAX measures yourself — CALL dax-measures
-- ❌ Design star schema yourself — CALL star-schema
+- ❌ Write DAX measures or design the star schema yourself — CALL the combined Stage 6
+- ❌ Split DAX and star schema into two separate calls — they are ONE fused call
 - ❌ Write plan/tasks yourself — CALL speckit.plan / speckit.tasks
 - ❌ Generate TMDL/PBIP files yourself — CALL pbip-generator
 - ❌ Generate report visuals yourself — CALL report-visual-migration
@@ -207,25 +233,30 @@ runSubagent(
 )
 ```
 
-### Stage 6: Generate DAX Measures (via dax-measures agent)
+### Stage 6: Generate Semantic Model — DAX Measures + Star Schema (ONE combined call)
+
+> **DAX and the star schema are produced by a SINGLE `runSubagent` call, not two.**
+> Copilot Chat runs subagents sequentially (no true parallelism), so fusing them into
+> one call is strictly better than two back-to-back calls. There is **no separate
+> Stage 7** — star-schema design happens inside this same call.
 
 ```
 runSubagent(
   agentName: "dax-measures",
-  prompt: "Generate DAX measures for the '{workbook_name}' Tableau → Power BI migration. Read .specify/memory/{WorkbookName}/tableau-analysis-output.md for all calculated fields to migrate. Read .specify/memory/constitution.md for DAX standards (§3). Follow .github/skills/dax-measures/SKILL.md for detailed instructions. Map each Tableau calculated field to equivalent DAX (measures, calculated columns, What-If parameters). Apply DAX best practices: DIVIDE(), COUNTROWS, VAR/RETURN, display folders. Handle patterns: simple aggregations → DAX measures; IF/CASE → IF()/SWITCH(TRUE()); table calculations (RANK, LOOKUP, WINDOW) → RANKX/OFFSET/MAXX; LOD expressions → CALCULATE with REMOVEFILTERS/VALUES; Parameters with range → What-If parameter (GENERATESERIES disconnected table); Parameters with list → Field parameter or slicer table. Also generate standard aggregate measures for the fact table (row counts, distinct counts, percentages using DIVIDE(), MIN/MAX/AVG for numeric fields). Save output to .specify/memory/{WorkbookName}/dax-measures-output.md.",
-  description: "Generate DAX measures"
+  prompt: "ONE combined gap-fill for the '{workbook_name}' Tableau → Power BI migration: author BOTH the DAX measures AND the star schema in this single call. INPUT: read Output/{WorkbookName}/agent-todo.json (self-contained: agent-route measures with formulas + hint tags, baseColumns, siblingMeasures, full parameters, tableMap, schemaNeeded). Deterministic measures are ALREADY in dax-partial.json and the single-flat schema (if any) in schema-easy.json — do NOT re-author those. (A) MEASURES: translate every measure in agent-todo.json 'measures' to DAX (IF/CASE → IF()/SWITCH(TRUE()); table calcs → RANKX/OFFSET/WINDOW; LOD → CALCULATE + REMOVEFILTERS/VALUES; range params → What-If GENERATESERIES; list params → field-parameter/slicer table). Apply DAX best practices (DIVIDE, VAR/RETURN, display folders). (B) SCHEMA (only when schemaNeeded=true): identify fact grain, dimension candidates, keys, relationships (from/to column, cardinality, cross-filter); create DimDate if any date fields; for many-to-many comma fields use a bridge table; if RLS detected, include the user-mapping table + security relationship. OUTPUT: write a single Output/{WorkbookName}/agent-fragment.json per scripts/contracts/fragment_schema.json containing measures[] (source:'llm'), calculatedColumns[], and (if schemaNeeded) tableStrategy + tables[] + relationships[]. Also mirror to .specify/memory/{WorkbookName}/dax-measures-output.md and star-schema-output.md for the downstream plan/tasks stages. Follow .github/skills/dax-measures/SKILL.md and .github/skills/star-schema/SKILL.md and constitution §1 + §3.",
+  description: "DAX + star schema (combined)"
 )
 ```
 
-### Stage 7: Design Star Schema (via star-schema agent)
+After this call, the orchestrator runs the deterministic assembly so NO measure is
+silently dropped (the cause of 'not all measures generated'):
 
+```powershell
+python scripts/pipeline.py merge "Output/{WorkbookName}/analysis.json"
 ```
-runSubagent(
-  agentName: "star-schema",
-  prompt: "Design a star schema for the '{workbook_name}' Tableau → Power BI migration. Read .specify/memory/{WorkbookName}/tableau-analysis-output.md for source tables, columns, relationships. Read .specify/memory/constitution.md for star schema rules (§1). Follow .github/skills/star-schema/SKILL.md for detailed instructions. Identify fact table grain (one row = ?). Identify dimension candidates (categorical/descriptive columns). Determine key strategy: single source → natural keys, multi-source/joins → keep existing table structure with join keys. Handle many-to-many fields (comma-separated) → Bridge tables. Always create DimDate if any date fields exist. Define all relationships (from/to table, from/to column, direction, cardinality). IF the analysis Row-Level Security section reports Detected: Yes, include the user-mapping table (e.g. User_Access) as a model table and define the security relationship mapping.[entitlement] → securedTable.[entitlement]; mark that relationship bothDirections if the user filter must reach the fact, so pbip-generator can wire dynamic RLS. Save output to .specify/memory/{WorkbookName}/star-schema-output.md.",
-  description: "Design star schema"
-)
-```
+
+If `merge` exits 4 (reconcile found a missing pending measure), re-run the combined call
+with `model: claude-opus-4.6` passing `measures-todo.json`, then re-run `merge`.
 
 ### Stage 8: Write Plan (via speckit.plan agent)
 
@@ -380,7 +411,7 @@ Get-ChildItem "Output\{WorkbookName}\{ModelName}.Report" -Recurse -Include "*.js
 ## Notes
 
 - Full pipeline is AUTOMATIC — all 14 stages execute in sequence without user interaction
-- **⚠️ ALL 9 designated agents MUST be called via the `runSubagent` TOOL** — this is the single most important rule of this agent
+- **⚠️ ALL 8 designated agents MUST be called via the `runSubagent` TOOL** — this is the single most important rule of this agent (DAX + star schema are ONE combined call, not two)
 - **NEVER do an agent's work inline** — if a stage has a designated agent listed above, you MUST invoke `runSubagent` with that agent name
 - **NEVER skip a `runSubagent` call** because you think you can do it faster or the work is simple
 - **NEVER fall back to inline execution** — if `runSubagent()` fails, retry or report the error; do NOT replicate the agent's work yourself

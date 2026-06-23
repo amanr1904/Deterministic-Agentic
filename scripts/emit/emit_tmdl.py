@@ -25,6 +25,11 @@ _TWB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "twb")
 sys.path.insert(0, os.path.normpath(_TWB_DIR))
 import csv_probe as CP  # noqa: E402
 
+# Repo root (…/scripts/emit/emit_tmdl.py -> two levels up) used to resolve CSVs
+# against the local workspace, independent of any path baked into decisions.json.
+_REPO_ROOT = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+
 PBISM = {
     "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json",
     "version": "4.2", "settings": {},
@@ -56,6 +61,101 @@ def pbip_root(model_name: str) -> str:
 def load_json(path: str) -> Dict:
     with open(path, encoding="utf-8-sig") as fh:
         return json.load(fh)
+
+
+def _norm_name(name: str) -> str:
+    """Case/punctuation-insensitive measure-name key for de-duplication."""
+    return re.sub(r"[^0-9a-z]", "", (name or "").lower())
+
+
+def merge_partial_measures(decisions: Dict, analysis_path: str) -> Dict:
+    """Defense-in-depth: fold deterministically-translated measures from
+    dax-partial.json into ``decisions['measures']`` so they are emitted even if
+    the agent omitted them. Agent-authored measures always win on a name clash.
+    """
+    partial_path = os.path.join(
+        os.path.dirname(os.path.abspath(analysis_path)), "dax-partial.json")
+    if not os.path.isfile(partial_path):
+        return decisions
+    try:
+        det = load_json(partial_path).get("measures", [])
+    except (OSError, json.JSONDecodeError):
+        return decisions
+    if not det:
+        return decisions
+    measures = decisions.setdefault("measures", [])
+    existing = {_norm_name(m.get("name", "")) for m in measures}
+    table_names = {t.get("name") for t in decisions.get("tables", [])}
+    fact = next((t["name"] for t in decisions.get("tables", [])
+                 if t.get("role") == "fact"), None)
+    added = 0
+    for m in det:
+        key = _norm_name(m.get("name", ""))
+        if not key or key in existing:
+            continue  # agent already authored this measure -> keep theirs
+        home = m.get("table") if m.get("table") in table_names else (fact or m.get("table"))
+        if home not in table_names:
+            continue  # no valid host table -> let reconciliation flag it instead
+        measures.append({
+            "table": home,
+            "name": m["name"],
+            "dax": m["dax"],
+            "formatString": m.get("formatString"),
+            "displayFolder": m.get("displayFolder", "Base Measures"),
+            "description": m.get("description"),
+            "source": "deterministic",
+        })
+        existing.add(key)
+        added += 1
+    if added:
+        print(f"  merged {added} deterministic measure(s) from dax-partial.json")
+    return decisions
+
+
+def reassign_orphan_measures(decisions: Dict) -> Dict:
+    """Guarantee every measure lands on an emitted table (no silent drops).
+
+    ``build_table_file`` writes a measure into a table only when ``m["table"]``
+    EXACTLY equals that table's name. A measure whose ``table`` does not match any
+    emitted table — wrong case/spacing, a stale or guessed name, or a multi-
+    datasource naming mismatch (e.g. Midnight Census exposes both
+    "Midnight Census NEW" and "Midnight_Census_Template") — would otherwise be
+    dropped from the model with no error. This normalizes each measure's ``table``
+    to the matching emitted table, and routes any still-unmatched measure to the
+    fact table (else the first table) with a warning, so a measure can never
+    vanish without a trace.
+    """
+    tables = decisions.get("tables", [])
+    measures = decisions.get("measures", [])
+    if not measures:
+        return decisions
+    # Valid hosts: regular tables + calculated tables (real tables that can carry
+    # measures). Field-parameter tables are intentionally excluded as hosts.
+    host_names = [t["name"] for t in tables]
+    host_names += [ct["name"] for ct in decisions.get("calculatedTables", [])]
+    if not host_names:
+        raise ValueError(
+            "decisions.json defines measures but no tables to host them; "
+            "cannot emit measures.")
+    by_norm = {_norm_name(n): n for n in host_names}
+    fact = next((t["name"] for t in tables if t.get("role") == "fact"), None)
+    fallback = fact or host_names[0]
+    reassigned = 0
+    for m in measures:
+        want = m.get("table", "")
+        if want in host_names:
+            continue  # already an exact, valid host
+        match = by_norm.get(_norm_name(want))
+        if match:
+            m["table"] = match  # fix case/spacing/punctuation mismatch
+            continue
+        print(f"  WARNING: measure '{m.get('name')}' targets unknown table "
+              f"'{want}' -> routed to '{fallback}'")
+        m["table"] = fallback
+        reassigned += 1
+    if reassigned:
+        print(f"  reassigned {reassigned} orphan measure(s) to '{fallback}'")
+    return decisions
 
 
 def model_dir(analysis_path: str, model_name: str) -> str:
@@ -253,49 +353,39 @@ def _columns_for(table: Dict, ir: Dict, decisions: Dict) -> List[Dict]:
     ds = table.get("sourceDatasource")
     cols = [c for c in ir["columns"] if ds is None or c["datasource"] == ds]
     cols = cols or ir["columns"]
-    cols = _dedupe_columns(cols, ir)
-    cols = [c for c in cols if not _is_pseudo_column(c.get("name", ""))]
-    # The MODEL columns must reflect what the M partition actually loads. When the
-    # table is backed by a probeable CSV whose header set DIFFERS from the IR (e.g.
-    # the workbook's datasource was an Excel export but the supplied data file is a
-    # differently-shaped CSV), trust the CSV: declaring an IR-only column whose
-    # sourceColumn is absent from the file fails to load ("column 'X' wasn't found"),
-    # and CSV-only columns the visuals/measures need would otherwise be missing.
-    probe = _probe_for_table(table, ir)
-    if probe and probe["columns"]:
-        ir_norm = {_normalize_name(c["name"]) for c in cols}
-        csv_norm = {_normalize_name(c["name"]) for c in probe["columns"]}
-        if ir_norm != csv_norm:
-            return [c for c in probe["columns"] if not _is_pseudo_column(c.get("name", ""))]
-    return cols
-
-
-def _is_pseudo_column(name: str) -> bool:
-    """True for Tableau synthetic shelf fields that have no backing CSV column."""
-    n = (name or "").strip()
-    if n.startswith(":"):
-        return True
-    return n.lower() in {"measure names", "measure values",
-                         "number of records", "multiple values"}
-
-
-def _dedupe_columns(cols: List[Dict], ir: Dict) -> List[Dict]:
-    """Collapse duplicate column names (Power BI rejects a table that declares the
-    same column twice — "TMDL objects cannot be merged ... same property: dataType").
-    Duplicates arise when several datasources (e.g. an inactive Hyper extract plus the
-    active CSV) each expose a same-named field and they flatten into one table.
-    Keep the first occurrence per normalized name, but prefer a column sourced from an
-    ACTIVE datasource over an inactive one. Insertion order is preserved.
-    """
-    active_ds = {d.get("name") for d in ir.get("dataSources", []) if d.get("active")}
-    seen: "dict[str, Dict]" = {}
+    # A workbook can expose several datasources that share column names (e.g. a
+    # secondary "... NEW" extract alongside the CSV). Without a pinned
+    # sourceDatasource every matching column is collected, so the same column is
+    # emitted twice -> Power BI rejects the model ("TMDL objects cannot be merged
+    # because both declare the same property: dataType"). Prefer the datasource
+    # whose name matches this table, then deduplicate by normalized name.
+    if ds is None:
+        preferred = table.get("name")
+        if any(c.get("datasource") == preferred for c in cols):
+            cols = ([c for c in cols if c.get("datasource") == preferred]
+                    + [c for c in cols if c.get("datasource") != preferred])
+    seen = set()
+    deduped = []
     for c in cols:
-        key = _normalize_name(c.get("name", ""))
-        if key not in seen:
-            seen[key] = c
-        elif c.get("datasource") in active_ds and seen[key].get("datasource") not in active_ds:
-            seen[key] = c  # replace inactive-source duplicate with the active-source one
-    return list(seen.values())
+        key = _normalize_name(c["name"])
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(c)
+    # Federated multi-CSV datasource: every column shares ONE datasource name
+    # (e.g. "Sales DataSource" spanning Orders/Customers/Location/Products CSVs),
+    # so a fact backed by a single CSV would otherwise DECLARE the dimensions'
+    # columns too (they exist in the IR but not in the fact's CSV) and refresh
+    # would fail. Restrict a CSV-backed fact's declared columns to those actually
+    # present in its backing CSV, mirroring the partition's probe filtering.
+    if role == "fact":
+        probe = _probe_for_table(table, ir)
+        if probe and probe["columns"]:
+            csv_norm = {_normalize_name(c["csv_name"]) for c in probe["columns"]}
+            scoped = [c for c in deduped if _normalize_name(c["name"]) in csv_norm]
+            if scoped:
+                deduped = scoped
+    return deduped
 
 
 def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> str:
@@ -338,11 +428,38 @@ def _partition_for(table: Dict, ir: Dict, cols: List[Dict], decisions: Dict) -> 
 
 
 def _abs_csv(ir: Dict, path: str) -> str:
-    """Resolve a CSV filename to an absolute path (File.Contents needs it)."""
-    if os.path.isabs(path):
+    """Resolve a CSV filename to an absolute path that exists on THIS machine.
+
+    ``File.Contents`` needs an absolute path. A path baked into decisions.json may
+    come from another machine, so an absolute path is only trusted when it exists
+    locally; otherwise the CSV's basename is resolved against the local workspace
+    (next to the workbook, then anywhere under the repo ``Data/`` tree).
+    """
+    # 1) Trust an absolute path only if it actually exists on this machine.
+    if path and os.path.isabs(path) and os.path.isfile(path):
         return path
-    data_dir = os.path.dirname(ir.get("workbook", {}).get("sourcePath", ""))
-    return os.path.abspath(os.path.join(data_dir, os.path.basename(path)))
+
+    base = os.path.basename(path) if path else ""
+    wb = ir.get("workbook", {}).get("sourcePath", "")
+    wb_dir = os.path.dirname(wb if os.path.isabs(wb) else os.path.join(_REPO_ROOT, wb))
+
+    candidates = []
+    if base:
+        candidates.append(os.path.join(wb_dir, base))  # 2) next to the workbook
+    data_root = os.path.join(_REPO_ROOT, "Data")
+    if base and os.path.isdir(data_root):  # 3) search the workspace Data/ tree
+        for root, _dirs, files in os.walk(data_root):
+            if base in files:
+                candidates.append(os.path.join(root, base))
+                break
+    for c in candidates:
+        if os.path.isfile(c):
+            return os.path.abspath(c)
+
+    # 4) Fallbacks: keep prior behavior so a valid absolute path still works.
+    if path and os.path.isabs(path):
+        return path
+    return os.path.abspath(os.path.join(wb_dir, base))
 
 
 def _first_csv(ir: Dict) -> str:
@@ -559,6 +676,8 @@ def main(argv=None) -> int:
         if not os.path.isfile(p):
             print(f"ERROR: file not found: {p}", file=sys.stderr); return 2
     ir, decisions = load_json(args.analysis), load_json(args.decisions)
+    decisions = merge_partial_measures(decisions, args.analysis)
+    decisions = reassign_orphan_measures(decisions)
     root = emit(ir, decisions, args.analysis)
     print(f"Wrote semantic model: {root}\n  tables: {len(decisions.get('tables', []))}  "
           f"measures: {len(decisions.get('measures', []))}  "

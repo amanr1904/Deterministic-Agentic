@@ -46,6 +46,29 @@ COORD_SPACE = 100000.0
 # so it does not overlap the active visual. A genuine visual is never this short.
 MIN_VISUAL_PX = 16
 
+# Many Tableau dashboards float a filter/parameter panel over the right edge of a
+# full-width content grid. Scaling content across the whole canvas then slides it
+# UNDER that rail. We instead compress content into the area left of the rail and
+# keep the rail at its real right-hand position, leaving this pixel gap between.
+RAIL_GAP = 16
+# A zone counts as part of the rail only if its left edge sits within this many
+# Tableau coordinate units of the rail column's x (so content labels that merely
+# happen to start at a large x — e.g. table header captions — stay with content).
+RAIL_X_TOL = 2000
+
+
+def _rail_left_tableau(dashboard: Dict) -> Optional[float]:
+    """Detect a right-edge floating filter rail; return its Tableau x or None.
+
+    Heuristic: two or more filter/paramctrl zones whose left edges align on the
+    right third of the dashboard indicate a dedicated filter column.
+    """
+    xs = [z.get("x", 0) for z in dashboard.get("zones", [])
+          if z.get("type") in ("filter", "paramctrl")]
+    if len(xs) >= 2 and min(xs) > 0.6 * COORD_SPACE:
+        return min(xs)
+    return None
+
 
 def _logical_id(seed: str) -> str:
     import hashlib
@@ -228,12 +251,16 @@ def _build_kpi_stack(name: str, pos: Dict, x: int, y: int, w: int, h: int,
     return [card, pct, spark]
 
 
-def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Optional[Dict]:
-    """Build one visual.json dict from a classified dashboard zone."""
-    sx, sy = scale
+def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, geom) -> Optional[Dict]:
+    """Build one visual.json dict from a classified dashboard zone.
+
+    ``geom`` is the pre-scaled pixel rectangle ``(x, y, w, h, raw_h)`` computed by
+    ``build_page`` (which compresses content to the left of any floating filter
+    rail and clamps it on-canvas). ``raw_h`` is the unclamped scaled height, used
+    only for the collapsed-sliver test.
+    """
+    x, y, w, h, raw_h = geom
     theme = decisions.get("theme")
-    x, y = round(zone["x"] * sx), round(zone["y"] * sy)
-    w, h = max(round(zone["w"] * sx), 80), max(round(zone["h"] * sy), 40)
     pos = P.position(x, y, w, h, z)
     entity = primary_entity(decisions)
     ztype = zone.get("type")
@@ -263,7 +290,7 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         return None
     # Suppress Tableau show/hide collapsed slivers (inactive parameter states)
     # so they never overlap the active visual. Generic across workbooks.
-    if round(zone.get("h", 0) * sy) < MIN_VISUAL_PX:
+    if raw_h < MIN_VISUAL_PX:
         return None
     ws = B.ws_by_name(ir, ws_name)
     name = f"visual_{sanitize(ws_name or 'zone')[:18]}_{z}".lower()
@@ -309,7 +336,8 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     # Pie / donut: category from color encoding, value measure, branded slices.
     if vtype in ("pieChart", "donutChart"):
         cat = vd.get("category") or B.color_field(ws, ir, cols)
-        catbind = {"entity": entity, "prop": cat or B.first_dim_col(ir)}
+        cprop = cat or B.first_dim_col(ir)
+        catbind = {"entity": B.entity_for_field(cprop, entity, decisions, ir), "prop": cprop}
         return P.pie_visual(name, pos, catbind, value_bind(), ws_name, theme=theme,
                             donut=(vtype == "donutChart"),
                             series_colors=vd.get("seriesColors"))
@@ -317,7 +345,7 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
     # Filled choropleth map: location column + measure-driven saturation.
     if vtype in ("filledMap", "map"):
         loc = vd.get("location") or B.geo_column(ir) or B.first_dim_col(ir)
-        locbind = {"entity": entity, "prop": loc}
+        locbind = {"entity": B.entity_for_field(loc, entity, decisions, ir), "prop": loc}
         return P.map_visual(name, pos, locbind, value_bind(), ws_name, theme=theme,
                             gradient=vd.get("gradient"))
 
@@ -337,12 +365,8 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
         if vd.get("category") and vd.get("categoryIsMeasure"):
             catbind = {"entity": entity, "prop": vd["category"], "isMeasure": True}
         elif vd.get("category"):
-            # Resolve the owning table so dimension attributes (Sub-Category ->
-            # DimProduct, Region -> DimLocation) don't bind to the fact entity.
-            # An explicit categoryEntity wins (e.g. a calc table not in any CSV).
-            cat_entity = (vd.get("categoryEntity")
-                          or B.column_entity(vd["category"], decisions, entity))
-            catbind = {"entity": cat_entity, "prop": vd["category"]}
+            catbind = {"entity": B.entity_for_field(vd["category"], entity, decisions, ir),
+                       "prop": vd["category"]}
         else:
             catbind = None  # resolved below
         valbind = value_bind()
@@ -351,18 +375,10 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
             if fp is not None:
                 catbind = {"entity": fp["name"], "prop": fp["name"]}
             else:
-                catbind = B.category_binding(ws, entity, cols, ir)
-        # Generic date grain: bind a base date category to its derived part
-        # column (e.g. 'Order Date (Week)') when the worksheet truncates the date
-        # level. Field-parameter and measure categories are left untouched.
-        if (catbind and not catbind.get("isMeasure")
-                and catbind.get("entity") == entity and ws):
-            catbind = {"entity": entity,
-                       "prop": _date_level_prop(catbind["prop"],
-                                                ws.get("categoryDateLevel"),
-                                                date_cols)}
+                catbind = B.category_binding(ws, entity, cols, ir, decisions)
         series = vd.get("series")
-        seriesbind = {"entity": entity, "prop": series} if series else None
+        seriesbind = ({"entity": B.entity_for_field(series, entity, decisions, ir),
+                       "prop": series} if series else None)
         sort = None
         sd = vd.get("sort")
         if sd == "valueDesc":
@@ -405,24 +421,8 @@ def build_visual(zone: Dict, ir: Dict, decisions: Dict, z: int, scale) -> Option
                   "isMeasure": tc.get("isMeasure", False)}
                  for tc in vd["tableColumns"]]
     else:
-        tcols = B.table_columns(ws, ir, entity, mset, cols)
-    # Top-N table: limit rows to the top N by a rank measure (mirrors a Tableau
-    # INDEX()/groupfilter on a ranked customer/product table) and sort by rank.
-    tbl_sort = None
-    tbl_filter = None
-    rank_tc = next((tc for tc in (vd.get("tableColumns") or [])
-                    if tc.get("rankMeasure")), None)
-    if rank_tc:
-        rank_entity = rank_tc.get("table") or rank_tc["entity"]
-        rank_prop = rank_tc["prop"]
-        ws_topn = (ws.get("topN") or {}) if ws else {}
-        count = int((vd.get("tableTopN") or {}).get("count")
-                    or ws_topn.get("count") or 10)
-        tbl_filter = P.filter_config(
-            P.measure_le_filter(rank_entity, rank_prop, count))
-        tbl_sort = P.measure_sort(rank_entity, rank_prop, direction="Ascending")
-    return P.table_visual(name, pos, tcols, ws_name, theme=theme,
-                          sort=tbl_sort, visual_filter=tbl_filter)
+        tcols = B.table_columns(ws, ir, entity, mset, cols, decisions)
+    return P.table_visual(name, pos, tcols, ws_name, theme=theme)
 
 
 def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> str:
@@ -435,10 +435,27 @@ def build_page(dashboard: Dict, ir: Dict, decisions: Dict, pages_dir: str) -> st
                P.page_json(page_name, dashboard["name"], pw, ph,
                            background=theme.get("pageBackground"),
                            outspace=theme.get("outspace")))
-    scale = (pw / COORD_SPACE, ph / COORD_SPACE)
+    sx, sy = pw / COORD_SPACE, ph / COORD_SPACE
+    rail = _rail_left_tableau(dashboard)
+    # Content (non-rail) zones are compressed into the area LEFT of the floating
+    # filter rail so they never slide underneath it; rail zones keep their real
+    # right-hand position. With no rail, content spans the full canvas width.
+    content_sx = ((round(rail * sx) - RAIL_GAP) / COORD_SPACE) if rail else sx
     z = 100
     for zone in dashboard.get("zones", []):
-        result = build_visual(zone, ir, decisions, z, scale)
+        in_rail = rail is not None and abs(zone.get("x", 0) - rail) <= RAIL_X_TOL
+        zsx = sx if in_rail else content_sx
+        raw_h = zone.get("h", 0) * sy
+        gx = round(zone.get("x", 0) * zsx)
+        gy = round(zone.get("y", 0) * sy)
+        gw = max(round(zone.get("w", 0) * zsx), 80)
+        gh = max(round(raw_h), 40)
+        # Clamp fully on-canvas so nothing renders off the page edge.
+        gx = max(0, min(gx, pw - 1))
+        gy = max(0, min(gy, ph - 1))
+        gw = min(gw, pw - gx)
+        gh = min(gh, ph - gy)
+        result = build_visual(zone, ir, decisions, z, (gx, gy, gw, gh, raw_h))
         if result is None:
             continue
         # kpiStack returns a list of 3 visuals: [card, pct_card, sparkline]
